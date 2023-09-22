@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { AddNewSubscriptionButton } from "@/components/common/AddNewSubscriptionButton";
+
 import {
   Card,
   CardContent,
@@ -6,17 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus } from "lucide-react";
 
 export default function Home() {
   return (
     <main>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Welcome, user</h1>
-        <Button variant="outline" size="icon">
-          <span className="sr-only">Add new subscription</span>
-          <Plus className="h-6 w-6" />
-        </Button>
+        <AddNewSubscriptionButton />
       </div>
       <Card>
         <CardHeader>
