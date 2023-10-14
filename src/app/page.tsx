@@ -89,6 +89,52 @@ export default function Home() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold">All subscriptions</h2>
         </div>
+
+        <ul className="flex flex-col gap-2">
+          <li>
+            <Card>
+              <CardContent className="p-4">
+                <div className=" flex items-center justify-between">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Youtube premium
+                    </p>
+                    <p className="text-sm text-muted-foreground">24/4/2024</p>
+                  </div>
+                  <span>14,33$</span>
+                </div>
+              </CardContent>
+            </Card>
+          </li>
+
+          <li>
+            <Card className="border-l-2 border-l-green-400">
+              <CardContent className="my-auto p-4">
+                <div className=" flex items-center justify-between">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">Netflix</p>
+                    <p className="text-sm text-muted-foreground">24/4/2024</p>
+                  </div>
+                  <span>14,33$</span>
+                </div>
+              </CardContent>
+            </Card>
+          </li>
+
+          <li>
+            <Card className="border-l-2 border-l-red-400">
+              <CardContent className="my-auto  p-4">
+                <div className=" flex items-center justify-between">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">wolt</p>
+                    <p className="text-sm text-muted-foreground">24/4/2024</p>
+                  </div>
+                  <span>234.32,33$</span>
+                </div>
+              </CardContent>
+            </Card>
+          </li>
+        </ul>
       </section>
     </main>
   );
