@@ -1,12 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export default function LoginPage() {
   async function loginWithMagicLinkAction(formData: FormData) {
     "use server";
 
-    console.log(formData.get("email"));
+    const supabase = createServerComponentClient({ cookies });
+    const email = formData.get("email") as string;
+
+    await supabase.auth.signInWithOtp({
+      email,
+    });
   }
 
   return (
@@ -24,7 +31,7 @@ export default function LoginPage() {
             autoFocus
           />
         </fieldset>
-        <Button>Login</Button>
+        <Button type="submit">Login</Button>
       </form>
     </main>
   );
