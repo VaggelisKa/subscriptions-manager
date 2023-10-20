@@ -16,7 +16,6 @@ export async function loginWithMagicLinkAction(formData: FormData) {
       email,
     });
   } catch (error: any) {
-    console.log(error);
     return { error: error?.message || "Could not generate one time password" };
   }
 

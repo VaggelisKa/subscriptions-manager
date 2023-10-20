@@ -1,4 +1,5 @@
 import { AddNewSubscriptionButton } from "@/components/common/AddNewSubscriptionButton";
+import { LogoutButton } from "@/components/common/LogoutButton";
 
 import {
   Card,
@@ -25,8 +26,11 @@ export default async function Home() {
     <main className="flex flex-col gap-8">
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Welcome, user</h1>
-          <AddNewSubscriptionButton />
+          <h1 className="text-2xl font-bold">Overview</h1>
+          <div className="flex gap-2">
+            <AddNewSubscriptionButton />
+            <LogoutButton />
+          </div>
         </div>
         <Card>
           <CardHeader>

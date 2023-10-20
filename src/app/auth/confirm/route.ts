@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+
     if (!error) {
       return NextResponse.redirect(new URL(`/${next.slice(1)}`, req.url));
     }
