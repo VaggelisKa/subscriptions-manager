@@ -74,29 +74,27 @@ export default async function Home() {
           <h2 className="text-2xl font-bold">Charged soon</h2>
         </div>
 
-        <ul className="flex gap-2 overflow-x-scroll">
+        <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
           {subscriptions?.map(({ id, name, price, billed_at }) => (
-            <>
-              <li key={id} className="max-w-[150px]">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="whitespace-nowrap">{name}</CardTitle>
-                    <CardDescription>
-                      {getRelativeDateFromTimestamp(billed_at ?? "")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <span className="text-2xl font-semibold">
-                      {price?.toLocaleString("en-DK", {
-                        ...numberFormatOptions,
-                        maximumFractionDigits: 0,
-                        minimumFractionDigits: 0,
-                      })}
-                    </span>
-                  </CardContent>
-                </Card>
-              </li>
-            </>
+            <li key={id} className="max-w-[200px] md:max-w-[250px]">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="whitespace-nowrap">{name}</CardTitle>
+                  <CardDescription>
+                    {getRelativeDateFromTimestamp(billed_at ?? "")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-2xl font-semibold">
+                    {price?.toLocaleString("en-DK", {
+                      ...numberFormatOptions,
+                      maximumFractionDigits: 0,
+                      minimumFractionDigits: 0,
+                    })}
+                  </span>
+                </CardContent>
+              </Card>
+            </li>
           ))}
         </ul>
       </section>
@@ -108,27 +106,23 @@ export default async function Home() {
 
         <ul className="flex flex-col gap-2">
           {subscriptions?.map(({ id, name, billed_at, price }) => (
-            <>
-              <li key={id}>
-                <Card className="border-l-2 border-l-green-400">
-                  <CardContent className="my-auto p-4">
-                    <div className=" flex items-center justify-between">
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {getShortDateFromTimestamp(billed_at ?? "")}
-                        </p>
-                      </div>
-                      <span>
-                        {price?.toLocaleString("en-DK", numberFormatOptions)}
-                      </span>
+            <li key={`all-${id}`}>
+              <Card>
+                <CardContent className="my-auto p-4">
+                  <div className=" flex items-center justify-between">
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-medium leading-none">{name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {getShortDateFromTimestamp(billed_at ?? "")}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </li>
-            </>
+                    <span>
+                      {price?.toLocaleString("en-DK", numberFormatOptions)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </li>
           ))}
         </ul>
       </section>

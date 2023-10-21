@@ -17,7 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={cn(font.className, " px-6 py-12")}>{children}</body>
+      <body
+        className={cn(font.className, "px-6 py-12 md:mx-auto md:max-w-4xl ")}
+      >
+        {children}
+      </body>
     </html>
   );
 }
