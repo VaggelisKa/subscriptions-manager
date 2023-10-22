@@ -67,7 +67,7 @@ export function NewSubscriptionSheet() {
           <Plus className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="min-h-screen" side="bottom">
+      <SheetContent side="bottom">
         <SheetHeader>
           <SheetTitle>Add a new subscription</SheetTitle>
         </SheetHeader>

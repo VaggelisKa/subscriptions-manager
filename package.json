@@ -23,9 +23,7 @@
     "react": "18.2.0",
     "react-day-picker": "^8.9.1",
     "react-dom": "18.2.0",
-    "supabase": "^1.106.1",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^1.14.0"
+    "supabase": "^1.106.1"
   },
   "devDependencies": {
     "@types/node": "20.8.6",
@@ -33,6 +31,8 @@
     "@types/react-dom": "18.2.14",
     "autoprefixer": "10.4.16",
     "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^1.14.0",
     "eslint": "8.51.0",
     "eslint-config-next": "13.5.4",
     "postcss": "8.4.31",
