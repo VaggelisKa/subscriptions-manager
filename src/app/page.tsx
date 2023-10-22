@@ -1,5 +1,5 @@
-import { AddNewSubscriptionButton } from "@/components/common/AddNewSubscriptionButton";
 import { LogoutButton } from "@/components/common/LogoutButton";
+import { NewSubscriptionSheet } from "@/components/common/NewSubscriptionSheet";
 
 import {
   Card,
@@ -50,7 +50,7 @@ export default async function Home() {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Overview</h1>
           <div className="flex gap-2">
-            <AddNewSubscriptionButton />
+            <NewSubscriptionSheet />
             <LogoutButton />
           </div>
         </div>
