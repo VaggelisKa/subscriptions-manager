@@ -4,7 +4,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
-  const supabase = createServerComponentClient({ cookies });
+  const cookieStore = cookies();
+  const supabase = createServerComponentClient<Database>({
+    cookies: () => cookieStore,
+  });
   const {
     data: { session },
   } = await supabase.auth.getSession();
