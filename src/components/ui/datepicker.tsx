@@ -18,11 +18,13 @@ export function DatePicker() {
 
   return (
     <>
+      {/* This will sync with the calendar chosen date and expose a value to the overlying form action */}
       <input
         name="billed_at"
         defaultValue={date?.toString()}
         type="text"
         hidden
+        aria-hidden
       />
 
       <Popover>

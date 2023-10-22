@@ -75,7 +75,7 @@ export default async function Home() {
         </div>
 
         <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
-          {subscriptions?.map(({ id, name, price, billed_at }) => (
+          {subscriptions?.slice(0, 3)?.map(({ id, name, price, billed_at }) => (
             <li key={id} className="max-w-[200px] md:max-w-[250px]">
               <Card>
                 <CardHeader>

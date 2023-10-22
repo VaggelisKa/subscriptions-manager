@@ -21,13 +21,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { DatePicker } from "../ui/datepicker";
+import { DatePicker } from "@/components/ui/datepicker";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export function NewSubscriptionSheet() {
   async function handleSubmit(data: FormData) {
     "use server";
 
-    console.log(data);
+    const supabase = createServerComponentClient<Database>({ cookies });
+    const inputs = Object.fromEntries(data) as {
+      name: string;
+      description: string;
+      price: string;
+      interval: string;
+      billed_at: string;
+    };
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not found");
+
+    const { error } = await supabase.from("subscriptions").insert({
+      name: inputs.name,
+      description: inputs.description,
+      price: parseFloat(inputs.price),
+      interval: inputs.interval,
+      billed_at: new Date(inputs.billed_at).toISOString(),
+      user_id: user.id,
+    });
+
+    console.log(error);
+
+    revalidatePath("/");
   }
 
   return (
@@ -65,8 +94,10 @@ export function NewSubscriptionSheet() {
               <Input
                 name="price"
                 className="flex-grow-0"
-                placeholder="14"
+                placeholder="0,00"
                 type="number"
+                step="0.01"
+                pattern="^\d+(?:\.\d{1,2})?$"
               ></Input>
             </div>
 
@@ -94,10 +125,9 @@ export function NewSubscriptionSheet() {
           </fieldset>
 
           <SheetFooter className="mt-4 flex flex-col gap-2">
-            {/* <SheetClose>
-            <Button type="submit">Save changes</Button>
-            </SheetClose> */}
-            <Button type="submit">Add Subscription</Button>
+            <SheetClose asChild>
+              <Button type="submit">Add Subscription</Button>
+            </SheetClose>
 
             <SheetClose asChild>
               <Button className="w-full" variant="secondary" type="button">

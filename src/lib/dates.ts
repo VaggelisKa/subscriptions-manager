@@ -3,7 +3,7 @@ export function getRelativeDateFromTimestamp(timestamp: string) {
     style: "narrow",
   });
 
-  const dayDifference = Math.floor(
+  const dayDifference = Math.ceil(
     // subtract the current date from the billed_at date
     (new Date(timestamp).getTime() - new Date().getTime()) / 86400000,
   );
@@ -17,7 +17,7 @@ export function getRelativeDateFromTimestamp(timestamp: string) {
   }
 
   if (dayDifference === 0) {
-    return relativeTimeFormat.format(Math.ceil(dayDifference / 24), "hours");
+    return "in 1d";
   }
 
   return relativeTimeFormat.format(dayDifference, "days");
