@@ -3,6 +3,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getURL } from "@/lib/utils";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
@@ -14,6 +15,9 @@ export async function loginWithMagicLinkAction(formData: FormData) {
 
     await supabase.auth.signInWithOtp({
       email,
+      options: {
+        emailRedirectTo: getURL(),
+      },
     });
   } catch (error: any) {
     return { error: error?.message || "Could not generate one time password" };
