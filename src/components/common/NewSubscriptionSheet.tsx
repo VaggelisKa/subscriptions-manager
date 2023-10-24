@@ -26,7 +26,11 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-export function NewSubscriptionSheet() {
+export function NewSubscriptionSheet({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
   async function handleSubmit(data: FormData) {
     "use server";
 
@@ -62,10 +66,14 @@ export function NewSubscriptionSheet() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
-          <span className="sr-only">Add new subscription</span>
-          <Plus className="h-6 w-6" />
-        </Button>
+        {children ? (
+          children
+        ) : (
+          <Button variant="outline" size="icon">
+            <span className="sr-only">Add new subscription</span>
+            <Plus className="h-6 w-6" />
+          </Button>
+        )}
       </SheetTrigger>
       <SheetContent side="bottom">
         <SheetHeader>

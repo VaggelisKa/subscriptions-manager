@@ -1,5 +1,6 @@
 import { LogoutButton } from "@/components/common/LogoutButton";
 import { NewSubscriptionSheet } from "@/components/common/NewSubscriptionSheet";
+import { Button } from "@/components/ui/button";
 
 import {
   Card,
@@ -14,7 +15,9 @@ import {
 } from "@/lib/dates";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { redirect } from "next/navigation";
+import NotFoundImage from "public/not-found.svg";
 
 const numberFormatOptions: Intl.NumberFormatOptions = {
   currency: "DKK",
@@ -24,6 +27,24 @@ const numberFormatOptions: Intl.NumberFormatOptions = {
   maximumFractionDigits: 2,
   minimumFractionDigits: 2,
 };
+
+function NoSubscriptions() {
+  return (
+    <section className="flex w-full justify-center">
+      <div className="flex flex-col items-center justify-center gap-6 md:max-w-2xl">
+        <p className="text-2xl font-bold">No subscriptions</p>
+        <Image src={NotFoundImage} height={200} alt="" objectFit="fill" />
+        <p className="text-center text-muted-foreground">
+          You do not have any subscriptions yet. <br />
+          Add one to get started!
+        </p>
+        <NewSubscriptionSheet>
+          <Button className="w-full">Add your first one</Button>
+        </NewSubscriptionSheet>
+      </div>
+    </section>
+  );
+}
 
 export default async function Home() {
   const cookieStore = cookies();
@@ -43,7 +64,11 @@ export default async function Home() {
     .select("id, name, price, billed_at")
     .order("billed_at", { ascending: true });
 
-  const subscriptionsSum = subscriptions?.reduce((acc, curr) => {
+  if (!subscriptions?.length) {
+    return <NoSubscriptions />;
+  }
+
+  const subscriptionsSum = subscriptions.reduce((acc, curr) => {
     return acc + (curr?.price || 0);
   }, 0);
 
@@ -78,7 +103,7 @@ export default async function Home() {
         </div>
 
         <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
-          {subscriptions?.slice(0, 3)?.map(({ id, name, price, billed_at }) => (
+          {subscriptions.slice(0, 3)?.map(({ id, name, price, billed_at }) => (
             <li key={id} className="max-w-[200px] md:max-w-[250px]">
               <Card>
                 <CardHeader>
@@ -108,7 +133,7 @@ export default async function Home() {
         </div>
 
         <ul className="flex flex-col gap-2">
-          {subscriptions?.map(({ id, name, billed_at, price }) => (
+          {subscriptions.map(({ id, name, billed_at, price }) => (
             <li key={`all-${id}`}>
               <Card>
                 <CardContent className="my-auto p-4">
