@@ -78,7 +78,7 @@ export default async function Home() {
   }, 0);
 
   return (
-    <main className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Overview</h1>
@@ -159,6 +159,6 @@ export default async function Home() {
           ))}
         </ul>
       </section>
-    </main>
+    </div>
   );
 }

@@ -17,8 +17,8 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="absolute bottom-[50%] left-[50%] w-full -translate-x-[50%] px-6">
+    <section className="absolute bottom-[50%] left-[50%] w-full -translate-x-[50%] px-6">
       <LoginForm />
-    </main>
+    </section>
   );
 }
