@@ -2,7 +2,6 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -11,7 +10,7 @@ import {
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "../ui/label";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,7 +19,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/datepicker";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -39,7 +38,7 @@ export function NewSubscriptionSheet({
       name: string;
       description: string;
       price: string;
-      interval: string;
+      interval: "week" | "month" | "year";
       billed_at: string;
     };
 
@@ -53,7 +52,7 @@ export function NewSubscriptionSheet({
       name: inputs.name,
       description: inputs.description,
       price: parseFloat(inputs.price),
-      interval: inputs.interval as "week" | "month" | "year",
+      interval: inputs.interval,
       billed_at: new Date(inputs.billed_at).toISOString(),
       user_id: user.id,
     });
