@@ -53,7 +53,7 @@ export function NewSubscriptionSheet({
       name: inputs.name,
       description: inputs.description,
       price: parseFloat(inputs.price),
-      interval: inputs.interval,
+      interval: inputs.interval as "week" | "month" | "year",
       billed_at: new Date(inputs.billed_at).toISOString(),
       user_id: user.id,
     });
@@ -118,9 +118,9 @@ export function NewSubscriptionSheet({
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Intervals</SelectLabel>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="week">Weekly</SelectItem>
+                    <SelectItem value="month">Monthly</SelectItem>
+                    <SelectItem value="year">Yearly</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

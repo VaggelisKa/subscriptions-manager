@@ -33,7 +33,12 @@ function NoSubscriptions() {
     <section className="flex w-full justify-center">
       <div className="flex flex-col items-center justify-center gap-6 md:max-w-2xl">
         <p className="text-2xl font-bold">No subscriptions</p>
-        <Image src={NotFoundImage} height={200} alt="" objectFit="fill" />
+        <Image
+          className="object-fill"
+          src={NotFoundImage}
+          height={200}
+          alt=""
+        />
         <p className="text-center text-muted-foreground">
           You do not have any subscriptions yet. <br />
           Add one to get started!

@@ -16,9 +16,9 @@ export interface Database {
           created_at: string;
           description: string | null;
           id: string;
-          interval: string | null;
+          interval: Database["public"]["Enums"]["interval_enum"];
           name: string;
-          price: number | null;
+          price: number;
           user_id: string;
         };
         Insert: {
@@ -27,9 +27,9 @@ export interface Database {
           created_at?: string;
           description?: string | null;
           id?: string;
-          interval?: string | null;
+          interval?: Database["public"]["Enums"]["interval_enum"];
           name: string;
-          price?: number | null;
+          price: number;
           user_id: string;
         };
         Update: {
@@ -38,9 +38,9 @@ export interface Database {
           created_at?: string;
           description?: string | null;
           id?: string;
-          interval?: string | null;
+          interval?: Database["public"]["Enums"]["interval_enum"];
           name?: string;
-          price?: number | null;
+          price?: number;
           user_id?: string;
         };
         Relationships: [
@@ -60,7 +60,8 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      interval: "week" | "month" | "year";
+      interval_enum: "week" | "month" | "year";
     };
     CompositeTypes: {
       [_ in never]: never;
