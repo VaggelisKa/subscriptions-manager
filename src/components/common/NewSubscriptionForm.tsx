@@ -15,7 +15,7 @@ import { DatePicker } from "@/components/ui/datepicker";
 import { Input } from "@/components/ui/input";
 import { SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { addNewSubscription } from "@/lib/actions";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/lib/hooks/useToast";
 
 export function NewSubscriptionForm() {
   const { toast } = useToast();
