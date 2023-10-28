@@ -66,7 +66,7 @@ export async function addNewSubscription(data: FormData) {
     description: inputs.description,
     price: parseFloat(inputs.price),
     interval: inputs.interval,
-    billed_at: inputs.billed_at,
+    billed_at: new Date(inputs.billed_at).toUTCString(),
     user_id: user.id,
   });
 
