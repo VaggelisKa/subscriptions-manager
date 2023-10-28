@@ -66,7 +66,7 @@ export default async function Home() {
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("id, name, price, billed_at")
+    .select("id, name, price, billed_at, interval")
     .order("billed_at", { ascending: true });
 
   if (!subscriptions?.length) {
@@ -75,6 +75,10 @@ export default async function Home() {
 
   const subscriptionsSum = subscriptions.reduce((acc, curr) => {
     return acc + (curr?.price || 0);
+  }, 0);
+
+  const monthlySubscriptionsSum = subscriptions.reduce((acc, curr) => {
+    return curr.interval === "month" ? acc + (curr?.price || 0) : acc;
   }, 0);
 
   return (
@@ -96,8 +100,23 @@ export default async function Home() {
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-semibold">
-              {subscriptionsSum?.toLocaleString("en-DK", numberFormatOptions)}
+              {subscriptionsSum?.toLocaleString("en-DK", {
+                ...numberFormatOptions,
+                notation: "standard",
+              })}
             </span>
+
+            {monthlySubscriptionsSum > 0 && (
+              <p className="mt-[6px] text-sm font-semibold">
+                {monthlySubscriptionsSum.toLocaleString(
+                  "en-DK",
+                  numberFormatOptions,
+                )}{" "}
+                <span className="font-normal text-muted-foreground">
+                  of which is monthly
+                </span>
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>
