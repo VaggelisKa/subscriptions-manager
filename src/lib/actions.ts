@@ -6,9 +6,11 @@ import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
+const cookiesStore = cookies();
+
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
-    const supabase = createServerActionClient({ cookies });
+    const supabase = createServerActionClient({ cookies: () => cookiesStore });
     const email = formData.get("email") as string;
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -28,7 +30,9 @@ export async function loginWithMagicLinkAction(formData: FormData) {
 }
 
 export async function addNewSubscription(data: FormData) {
-  const supabase = createServerActionClient<Database>({ cookies });
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookiesStore,
+  });
   const inputs = Object.fromEntries(data) as {
     name: string;
     description: string;
@@ -42,7 +46,7 @@ export async function addNewSubscription(data: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect("/login");
+    redirect("/login");
   }
 
   if (!inputs.name) {
@@ -70,7 +74,7 @@ export async function addNewSubscription(data: FormData) {
     return { message: "Server error" };
   }
 
-  console.log(error);
-
   revalidatePath("/");
+
+  return { success: true };
 }

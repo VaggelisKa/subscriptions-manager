@@ -33,7 +33,9 @@ export function NewSubscriptionForm() {
             variant: "destructive",
             "aria-live": "assertive",
           });
-        } else {
+        }
+
+        if (res.success) {
           toast({
             title: "Subscription saved",
             description: "Your subscription has been saved successfully",
