@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
-    const supabase = createServerComponentClient({ cookies });
+    const supabase = createServerActionClient({ cookies });
     const email = formData.get("email") as string;
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -28,7 +28,7 @@ export async function loginWithMagicLinkAction(formData: FormData) {
 }
 
 export async function addNewSubscription(data: FormData) {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerActionClient<Database>({ cookies });
   const inputs = Object.fromEntries(data) as {
     name: string;
     description: string;
@@ -62,7 +62,7 @@ export async function addNewSubscription(data: FormData) {
     description: inputs.description,
     price: parseFloat(inputs.price),
     interval: inputs.interval,
-    billed_at: new Date(inputs.billed_at).toISOString(),
+    billed_at: inputs.billed_at,
     user_id: user.id,
   });
 

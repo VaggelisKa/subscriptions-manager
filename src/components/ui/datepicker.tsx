@@ -21,7 +21,7 @@ export function DatePicker() {
       {/* This will sync with the calendar chosen date and expose a value to the overlying form action */}
       <input
         name="billed_at"
-        defaultValue={date?.toString()}
+        defaultValue={date?.toISOString()}
         type="text"
         hidden
         aria-hidden
