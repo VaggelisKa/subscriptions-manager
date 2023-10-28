@@ -1,3 +1,5 @@
+import { utcToZonedTime } from "date-fns-tz";
+
 export function getRelativeDateFromTimestamp(timestamp: string) {
   const relativeTimeFormat = new Intl.RelativeTimeFormat("en", {
     style: "narrow",
@@ -24,9 +26,12 @@ export function getRelativeDateFromTimestamp(timestamp: string) {
 }
 
 export function getShortDateFromTimestamp(timestamp: string) {
-  return new Date(timestamp).toLocaleDateString("en-DK", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-  });
+  return utcToZonedTime(timestamp, "Europe/Copenhagen").toLocaleDateString(
+    "en-DK",
+    {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    },
+  );
 }
