@@ -33,6 +33,13 @@ export function NewSubscriptionForm() {
             variant: "destructive",
             "aria-live": "assertive",
           });
+        } else {
+          toast({
+            title: "Subscription saved",
+            description: "Your subscription has been saved successfully",
+            variant: "success",
+            "aria-live": "polite",
+          });
         }
       }}
     >
