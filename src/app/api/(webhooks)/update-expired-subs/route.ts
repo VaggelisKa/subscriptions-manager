@@ -35,10 +35,6 @@ export async function PUT() {
   for (let row of data) {
     const { billed_at, id, interval } = row;
 
-    if (!billed_at) {
-      continue;
-    }
-
     const newDate = add(new Date(billed_at), {
       weeks: interval === "week" ? 1 : 0,
       months: interval === "month" ? 1 : 0,

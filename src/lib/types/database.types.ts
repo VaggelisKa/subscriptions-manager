@@ -11,7 +11,7 @@ export interface Database {
     Tables: {
       subscriptions: {
         Row: {
-          billed_at: string | null;
+          billed_at: string;
           category: string | null;
           created_at: string;
           description: string | null;
@@ -22,7 +22,7 @@ export interface Database {
           user_id: string;
         };
         Insert: {
-          billed_at?: string | null;
+          billed_at: string;
           category?: string | null;
           created_at?: string;
           description?: string | null;
@@ -33,7 +33,7 @@ export interface Database {
           user_id: string;
         };
         Update: {
-          billed_at?: string | null;
+          billed_at?: string;
           category?: string | null;
           created_at?: string;
           description?: string | null;
