@@ -102,35 +102,41 @@ export default async function Home() {
         </Card>
       </section>
 
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Charged soon</h2>
-        </div>
+      {subscriptions.length > 2 && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Charged soon</h2>
+          </div>
 
-        <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
-          {subscriptions.slice(0, 3)?.map(({ id, name, price, billed_at }) => (
-            <li key={id} className="max-w-[200px] md:max-w-[250px]">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="whitespace-nowrap">{name}</CardTitle>
-                  <CardDescription>
-                    {getRelativeDateFromTimestamp(billed_at ?? "")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <span className="text-2xl font-semibold">
-                    {price?.toLocaleString("en-DK", {
-                      ...numberFormatOptions,
-                      maximumFractionDigits: 0,
-                      minimumFractionDigits: 0,
-                    })}
-                  </span>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
+            {subscriptions
+              .slice(0, 3)
+              ?.map(({ id, name, price, billed_at }) => (
+                <li key={id} className="max-w-[200px] md:max-w-[250px]">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="whitespace-nowrap">
+                        {name}
+                      </CardTitle>
+                      <CardDescription>
+                        {getRelativeDateFromTimestamp(billed_at ?? "")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <span className="text-2xl font-semibold">
+                        {price?.toLocaleString("en-DK", {
+                          ...numberFormatOptions,
+                          maximumFractionDigits: 0,
+                          minimumFractionDigits: 0,
+                        })}
+                      </span>
+                    </CardContent>
+                  </Card>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <div className="mb-4 flex items-center justify-between">
