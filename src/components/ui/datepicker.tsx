@@ -20,6 +20,7 @@ export function DatePicker() {
     <>
       {/* This will sync with the calendar chosen date and expose a value to the overlying form action */}
       <input
+        id="billed_at"
         name="billed_at"
         defaultValue={date?.toString()}
         type="text"

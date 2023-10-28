@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
 
 export function getRelativeDateFromTimestamp(timestamp: string) {
@@ -10,12 +10,5 @@ export function getRelativeDateFromTimestamp(timestamp: string) {
 }
 
 export function getShortDateFromTimestamp(timestamp: string) {
-  return utcToZonedTime(timestamp, "Europe/Copenhagen").toLocaleDateString(
-    "en-DK",
-    {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    },
-  );
+  return format(utcToZonedTime(timestamp, "Europe/Copenhagen"), "dd/MM/yy");
 }
