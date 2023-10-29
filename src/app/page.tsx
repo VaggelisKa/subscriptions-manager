@@ -108,10 +108,11 @@ export default async function Home() {
 
             {monthlySubscriptionsSum > 0 && (
               <p className="mt-[6px] text-sm font-semibold">
-                {monthlySubscriptionsSum.toLocaleString(
-                  "en-DK",
-                  numberFormatOptions,
-                )}{" "}
+                {monthlySubscriptionsSum.toLocaleString("en-DK", {
+                  ...numberFormatOptions,
+                  notation: "standard",
+                  minimumFractionDigits: 0,
+                })}{" "}
                 <span className="font-normal text-muted-foreground">
                   of which is monthly
                 </span>
