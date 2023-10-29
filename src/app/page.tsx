@@ -1,5 +1,5 @@
-import { LogoutButton } from "@/components/common/LogoutButton";
-import { NewSubscriptionSheet } from "@/components/common/NewSubscriptionSheet";
+import { LogoutButton } from "@/components/features/LogoutButton";
+import { NewSubscriptionSheet } from "@/components/features/NewSubscriptionSheet";
 import { Button } from "@/components/ui/button";
 
 import {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 import { loginWithMagicLinkAction } from "@/lib/actions";
-import { LoginButton } from "@/components/common/LoginButton";
+import { LoginButton } from "@/components/features/LoginButton";
 
 export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
