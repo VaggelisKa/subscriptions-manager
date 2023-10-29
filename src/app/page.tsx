@@ -1,5 +1,7 @@
 import { LogoutButton } from "@/components/features/LogoutButton";
-import { NewSubscriptionSheet } from "@/components/features/NewSubscriptionSheet";
+import { SubscriptionCard } from "@/components/features/SubscriptionCard";
+import { SubscriptionForm } from "@/components/features/SubscriptionForm";
+import { SubscriptionSheet } from "@/components/features/SubscriptionSheet";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -9,24 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  getRelativeDateFromTimestamp,
-  getShortDateFromTimestamp,
-} from "@/lib/dates";
+import { numberFormatOptions } from "@/lib/constants";
+import { getRelativeDateFromTimestamp } from "@/lib/dates";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
-
-const numberFormatOptions: Intl.NumberFormatOptions = {
-  currency: "DKK",
-  style: "currency",
-  compactDisplay: "short",
-  notation: "compact",
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
-};
 
 function NoSubscriptions() {
   return (
@@ -43,9 +34,9 @@ function NoSubscriptions() {
           You do not have any subscriptions yet. <br />
           Add one to get started!
         </p>
-        <NewSubscriptionSheet>
-          <Button className="w-full">Add your first one</Button>
-        </NewSubscriptionSheet>
+        <SubscriptionSheet
+          customTrigger={<Button className="w-full">Add your first one</Button>}
+        />
       </div>
     </section>
   );
@@ -66,7 +57,7 @@ export default async function Home() {
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("id, name, price, billed_at, interval")
+    .select("id, name, price, billed_at, interval, description")
     .order("billed_at", { ascending: true });
 
   if (!subscriptions?.length) {
@@ -87,7 +78,7 @@ export default async function Home() {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Overview</h1>
           <div className="flex gap-2">
-            <NewSubscriptionSheet />
+            <SubscriptionSheet />
             <LogoutButton />
           </div>
         </div>
@@ -164,23 +155,14 @@ export default async function Home() {
         </div>
 
         <ul className="flex flex-col gap-2">
-          {subscriptions.map(({ id, name, billed_at, price }) => (
-            <li key={`all-${id}`}>
-              <Card>
-                <CardContent className="my-auto p-4">
-                  <div className=" flex items-center justify-between">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">{name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {getShortDateFromTimestamp(billed_at ?? "")}
-                      </p>
-                    </div>
-                    <span>
-                      {price?.toLocaleString("en-DK", numberFormatOptions)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+          {subscriptions.map((subscription) => (
+            <li key={`all-${subscription.id}`}>
+              <SubscriptionSheet
+                customTrigger={<SubscriptionCard subscription={subscription} />}
+                isEditMode
+              >
+                <SubscriptionForm subscription={subscription} />
+              </SubscriptionSheet>
             </li>
           ))}
         </ul>

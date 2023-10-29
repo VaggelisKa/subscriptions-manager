@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Label } from "@radix-ui/react-label";
 import {
   Select,
@@ -14,30 +15,38 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/datepicker";
 import { Input } from "@/components/ui/input";
 import { SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { addNewSubscription } from "@/lib/actions";
+import { addNewSubscription, updateSubscription } from "@/lib/actions";
 import { useToast } from "@/lib/hooks/useToast";
 
-export function NewSubscriptionForm() {
+// Cross check over-sharing of DB (in the future)
+type SubscriptionFormProps = {
+  subscription?: Partial<Subscription>;
+};
+
+export function SubscriptionForm({ subscription }: SubscriptionFormProps) {
+  const isEditMode = useMemo(() => !!subscription, [subscription]);
   const { toast } = useToast();
 
   return (
     <form
       className="mt-8 flex flex-col gap-4"
       action={async (formData) => {
-        const res = await addNewSubscription(formData);
+        const res = await (isEditMode
+          ? updateSubscription(formData)
+          : addNewSubscription(formData));
 
         if (res?.message) {
           toast({
-            title: "An error has occurred while savings your subscription",
+            title: "An error has occurred while saving your subscription",
             description: res.message,
             variant: "destructive",
             "aria-live": "assertive",
           });
         }
 
-        if (res.success) {
+        if (res?.success) {
           toast({
-            title: "Subscription saved",
+            title: isEditMode ? "Subscription updated" : "Subscription saved",
             description: "Your subscription has been saved successfully",
             variant: "success",
             "aria-live": "polite",
@@ -45,15 +54,30 @@ export function NewSubscriptionForm() {
         }
       }}
     >
+      {isEditMode && (
+        <input
+          name="id"
+          defaultValue={subscription?.id}
+          type="text"
+          hidden
+          aria-hidden
+        />
+      )}
+
       <fieldset className="flex flex-col gap-4">
         <div>
           <Label htmlFor="name">Name</Label>
-          <Input name="name" placeholder="Netflix"></Input>
+          <Input
+            defaultValue={subscription?.name ?? ""}
+            name="name"
+            placeholder="Netflix"
+          ></Input>
         </div>
 
         <div>
           <Label htmlFor="description">Description</Label>
           <Input
+            defaultValue={subscription?.description ?? ""}
             name="description"
             placeholder="Shared netflix account"
           ></Input>
@@ -64,6 +88,7 @@ export function NewSubscriptionForm() {
         <div>
           <Label htmlFor="price">Price</Label>
           <Input
+            defaultValue={subscription?.price ?? ""}
             name="price"
             className="flex-grow-0"
             placeholder="0,00"
@@ -75,7 +100,7 @@ export function NewSubscriptionForm() {
 
         <div className="flex-shrink-0 flex-grow">
           <Label htmlFor="interval">Interval</Label>
-          <Select name="interval">
+          <Select defaultValue={subscription?.interval} name="interval">
             <SelectTrigger>
               <SelectValue placeholder="Select interval" />
             </SelectTrigger>
@@ -93,12 +118,20 @@ export function NewSubscriptionForm() {
 
       <fieldset>
         <Label htmlFor="billed_at">Billing Date</Label>
-        <DatePicker />
+        <DatePicker
+          defaultValue={
+            !!subscription?.billed_at
+              ? new Date(subscription.billed_at)
+              : undefined
+          }
+        />
       </fieldset>
 
       <SheetFooter className="mt-4 flex flex-col gap-2">
         <SheetClose asChild>
-          <Button type="submit">Add Subscription</Button>
+          <Button type="submit">
+            {isEditMode ? "Update" : "Add"} Subscription
+          </Button>
         </SheetClose>
 
         <SheetClose asChild>

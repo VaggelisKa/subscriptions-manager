@@ -78,3 +78,59 @@ export async function addNewSubscription(data: FormData) {
 
   return { success: true };
 }
+
+export async function updateSubscription(data: FormData) {
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookiesStore,
+  });
+  const inputs = Object.fromEntries(data) as {
+    name: string;
+    description: string;
+    price: string;
+    interval: "week" | "month" | "year";
+    billed_at: string;
+    id?: string;
+  };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (!inputs.name) {
+    return { message: "Name of subscription is required" };
+  }
+
+  if (!inputs.price) {
+    return { message: "Price of subscription should be given" };
+  }
+
+  if (!inputs.interval) {
+    return { message: "Interval period should be passed" };
+  }
+
+  console.log(inputs);
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({
+      name: inputs.name,
+      description: inputs.description,
+      price: parseFloat(inputs.price),
+      interval: inputs.interval,
+      billed_at: new Date(inputs.billed_at).toUTCString(),
+    })
+    .eq("id", inputs.id ?? "")
+    .select();
+
+  if (error) {
+    return { message: "Server error" };
+  }
+
+  revalidatePath("/");
+
+  return { success: true };
+}
