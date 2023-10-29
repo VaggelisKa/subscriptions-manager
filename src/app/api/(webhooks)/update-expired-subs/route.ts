@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { add } from "date-fns";
+import { NextResponse } from "next/server";
 
-export async function PUT() {
+export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
   if (!supabaseUrl || !supabaseKey) {
-    return Response.json({ error: "No credentials" }, { status: 401 });
+    return NextResponse.json(
+      { error: "No credentials", success: false },
+      { status: 401 },
+    );
   }
 
   const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
@@ -22,12 +26,15 @@ export async function PUT() {
     .lte("billed_at", new Date().toISOString());
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message, success: false },
+      { status: 500 },
+    );
   }
 
   if (!data?.length) {
-    return Response.json(
-      { message: "No subscriptions to update" },
+    return NextResponse.json(
+      { message: "No subscriptions to update", success: true },
       { status: 200 },
     );
   }
@@ -47,5 +54,5 @@ export async function PUT() {
       .eq("id", id);
   }
 
-  return Response.json({}, { status: 201 });
+  return NextResponse.json({ success: true }, { status: 201 });
 }
