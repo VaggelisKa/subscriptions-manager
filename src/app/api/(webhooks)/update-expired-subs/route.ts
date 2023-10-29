@@ -23,7 +23,7 @@ export async function GET() {
   const { error, data } = await supabase
     .from("subscriptions")
     .select("billed_at, id, interval")
-    .lte("billed_at", new Date().toISOString());
+    .lte("billed_at", new Date().toUTCString());
 
   if (error) {
     return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET() {
       weeks: interval === "week" ? 1 : 0,
       months: interval === "month" ? 1 : 0,
       years: interval === "year" ? 1 : 0,
-    }).toISOString();
+    }).toUTCString();
 
     await supabase
       .from("subscriptions")
