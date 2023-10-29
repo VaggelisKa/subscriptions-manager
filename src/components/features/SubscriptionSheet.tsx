@@ -13,16 +13,25 @@ type SubscriptionSheetProps = {
   customTrigger?: React.ReactNode;
   children?: React.ReactNode;
   isEditMode?: boolean;
+  triggerAsChild?: boolean;
 };
 
 export function SubscriptionSheet({
   children,
   customTrigger,
   isEditMode,
+  triggerAsChild = true,
 }: SubscriptionSheetProps) {
   return (
     <Sheet>
-      <SheetTrigger asChild>
+      <SheetTrigger
+        className={
+          triggerAsChild
+            ? ""
+            : "h-full w-full rounded-xl focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        }
+        asChild={triggerAsChild}
+      >
         {customTrigger ? (
           customTrigger
         ) : (

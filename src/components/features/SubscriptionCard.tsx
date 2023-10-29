@@ -8,10 +8,10 @@ export function SubscriptionCard({
   subscription: Partial<Subscription>;
 }) {
   return (
-    <Card>
+    <Card className="hover:bg-muted">
       <CardContent className="my-auto p-4">
         <div className=" flex items-center justify-between">
-          <div className="flex-1 space-y-1">
+          <div className="flex flex-col items-start justify-start space-y-1">
             <p className="text-sm font-medium leading-none">
               {subscription.name}
             </p>

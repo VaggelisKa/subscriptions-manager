@@ -160,6 +160,7 @@ export default async function Home() {
               <SubscriptionSheet
                 customTrigger={<SubscriptionCard subscription={subscription} />}
                 isEditMode
+                triggerAsChild={false}
               >
                 <SubscriptionForm subscription={subscription} />
               </SubscriptionSheet>

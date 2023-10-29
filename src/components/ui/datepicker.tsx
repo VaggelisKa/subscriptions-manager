@@ -20,8 +20,6 @@ type DatepickerProps = {
 export function DatePicker({ defaultValue }: DatepickerProps) {
   const [date, setDate] = React.useState<Date | undefined>(defaultValue);
 
-  console.log(date);
-
   return (
     <>
       {/* This will sync with the calendar chosen date and expose a value to the overlying form action */}
@@ -29,6 +27,7 @@ export function DatePicker({ defaultValue }: DatepickerProps) {
         id="billed_at"
         name="billed_at"
         defaultValue={date?.toString()}
+        value={date?.toString()}
         type="text"
         hidden
         aria-hidden
