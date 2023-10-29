@@ -1,8 +1,8 @@
-import { formatDistanceToNow, format } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
 
 export function getRelativeDateFromTimestamp(timestamp: string) {
-  return formatDistanceToNow(
+  return formatDistanceToNowStrict(
     utcToZonedTime(timestamp, "Europe/Copenhagen", {
       roundingMethod: "ceil",
     }),
