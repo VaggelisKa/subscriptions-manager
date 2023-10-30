@@ -134,3 +134,32 @@ export async function updateSubscription(data: FormData) {
 
   return { success: true };
 }
+
+export async function deleteSubscription(formData: FormData) {
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookiesStore,
+  });
+
+  const subscriptionId = formData.get("id") as string;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .delete()
+    .eq("id", subscriptionId);
+
+  if (error) {
+    return { message: "Server error" };
+  }
+
+  revalidatePath("/");
+
+  return { success: true };
+}

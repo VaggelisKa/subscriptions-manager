@@ -15,7 +15,11 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/datepicker";
 import { Input } from "@/components/ui/input";
 import { SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { addNewSubscription, updateSubscription } from "@/lib/actions";
+import {
+  addNewSubscription,
+  deleteSubscription,
+  updateSubscription,
+} from "@/lib/actions";
 import { useToast } from "@/lib/hooks/useToast";
 
 // Cross check over-sharing of DB (in the future)
@@ -129,10 +133,42 @@ export function SubscriptionForm({ subscription }: SubscriptionFormProps) {
 
       <SheetFooter className="mt-4 flex flex-col gap-2">
         <SheetClose asChild>
-          <Button type="submit">
-            {isEditMode ? "Update" : "Add"} Subscription
-          </Button>
+          <Button type="submit">{isEditMode ? "Update" : "Add"}</Button>
         </SheetClose>
+
+        {isEditMode && (
+          <SheetClose asChild>
+            <Button
+              type="submit"
+              formAction={async (formData) => {
+                const res = await deleteSubscription(formData);
+
+                if (res?.message) {
+                  toast({
+                    title:
+                      "An error has occurred while deleting your subscription",
+                    description: "please try again later",
+                    variant: "destructive",
+                    "aria-live": "assertive",
+                  });
+                }
+
+                if (res?.success) {
+                  toast({
+                    title: "Subscription deleted",
+                    description:
+                      "Your subscription has been deleted successfully",
+                    variant: "success",
+                    "aria-live": "polite",
+                  });
+                }
+              }}
+              variant="destructive"
+            >
+              Delete
+            </Button>
+          </SheetClose>
+        )}
 
         <SheetClose asChild>
           <Button className="w-full" variant="secondary" type="button">

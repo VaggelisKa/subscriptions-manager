@@ -37,7 +37,7 @@ export function SubscriptionSheet({
         ) : (
           <Button variant="outline" size="icon">
             <span className="sr-only">
-              {isEditMode ? "Update your subscription" : "Add new subscription"}
+              {isEditMode ? "Modify your subscription" : "Add new subscription"}
             </span>
             <Plus className="h-6 w-6" />
           </Button>
@@ -46,7 +46,7 @@ export function SubscriptionSheet({
       <SheetContent side="bottom">
         <SheetHeader>
           <SheetTitle>
-            {isEditMode ? "Update your subscription" : "Add a new subscription"}
+            {isEditMode ? "Modify your subscription" : "Add a new subscription"}
           </SheetTitle>
         </SheetHeader>
 
