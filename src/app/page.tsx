@@ -14,6 +14,8 @@ import {
 import { numberFormatOptions } from "@/lib/constants";
 import { getRelativeDateFromTimestamp } from "@/lib/dates";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { isPast } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
@@ -72,6 +74,10 @@ export default async function Home() {
     return curr.interval === "month" ? acc + (curr?.price || 0) : acc;
   }, 0);
 
+  const subscriptionsWithoutExpired = subscriptions.filter(
+    ({ billed_at }) => !isPast(utcToZonedTime(billed_at, "Europe/Copenhagen")),
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <section>
@@ -113,14 +119,14 @@ export default async function Home() {
         </Card>
       </section>
 
-      {subscriptions.length > 2 && (
+      {subscriptionsWithoutExpired.length > 2 && (
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold">Charged soon</h2>
           </div>
 
           <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
-            {subscriptions
+            {subscriptionsWithoutExpired
               .slice(0, 3)
               ?.map(({ id, name, price, billed_at }) => (
                 <li key={id} className="max-w-[200px] md:max-w-[250px]">
