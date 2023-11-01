@@ -47,7 +47,7 @@ function NoSubscriptions() {
 export default async function Home() {
   const cookieStore = cookies();
   const supabase = createServerComponentClient<Database>({
-    cookies: () => cookieStore,
+    cookies: () => cookieStore
   });
   const {
     data: { user },
