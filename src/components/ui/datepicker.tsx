@@ -15,9 +15,13 @@ import {
 
 type DatepickerProps = {
   defaultValue?: Date | (() => Date);
+  disablePastDates?: boolean;
 };
 
-export function DatePicker({ defaultValue }: DatepickerProps) {
+export function DatePicker({
+  defaultValue,
+  disablePastDates,
+}: DatepickerProps) {
   const [date, setDate] = React.useState<Date | undefined>(defaultValue);
 
   return (
@@ -47,7 +51,12 @@ export function DatePicker({ defaultValue }: DatepickerProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="z-[60] w-auto p-0">
-          <Calendar mode="single" selected={date} onSelect={setDate} />
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            disabled={disablePastDates && { before: new Date() }}
+          />
         </PopoverContent>
       </Popover>
     </>

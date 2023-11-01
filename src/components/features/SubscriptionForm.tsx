@@ -128,6 +128,7 @@ export function SubscriptionForm({ subscription }: SubscriptionFormProps) {
               ? new Date(subscription.billed_at)
               : undefined
           }
+          disablePastDates
         />
       </fieldset>
 
