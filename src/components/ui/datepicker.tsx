@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, getMonth, getYear } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -56,6 +56,7 @@ export function DatePicker({
             selected={date}
             onSelect={setDate}
             disabled={disablePastDates && { before: new Date() }}
+            fromMonth={new Date(getYear(new Date()), getMonth(new Date()))}
           />
         </PopoverContent>
       </Popover>
