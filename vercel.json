@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/update-expired-subs",
-      "schedule": "0 4,17 * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
