@@ -1,4 +1,10 @@
 import { Check } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "View email",
+  description: "View email to get your one time password",
+};
 
 export default function LoginConfirmationPage() {
   return (

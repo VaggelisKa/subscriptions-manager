@@ -1,0 +1,3 @@
+User-Agent: *
+Allow: /
+Sitemap: https://subscriptions-manager.vercel.app/sitemap.xml

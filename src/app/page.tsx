@@ -16,10 +16,16 @@ import { getRelativeDateFromTimestamp } from "@/lib/dates";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { isPast } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
+import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
+
+export const metadata: Metadata = {
+  title: "Your subscriptions",
+  description: "Overview of your subscriptions",
+};
 
 function NoSubscriptions() {
   return (

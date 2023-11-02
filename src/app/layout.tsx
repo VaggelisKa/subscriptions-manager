@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/toaster";
 const font = Nunito({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Your subscriptions",
-  description: "Overview of your subscriptions",
+  title: "Subscriptions manager",
+  description: "Register and track your subscriptions",
 };
 
 export default function RootLayout({
