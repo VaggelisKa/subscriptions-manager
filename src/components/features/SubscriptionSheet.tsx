@@ -42,7 +42,7 @@ export function SubscriptionSheet({
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent side="bottom">
+      <SheetContent>
         <SheetHeader>
           <SheetTitle>
             {isEditMode ? "Modify your subscription" : "Add a new subscription"}

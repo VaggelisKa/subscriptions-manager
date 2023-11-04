@@ -137,11 +137,11 @@ export default async function Home() {
             <h2 className="text-2xl font-bold">Charged soon</h2>
           </div>
 
-          <ul className="flex gap-2 overflow-x-scroll md:overflow-x-auto">
+          <ul className="flex gap-2 overflow-x-scroll md:grid md:grid-cols-3 md:overflow-x-auto">
             {subscriptionsWithoutExpired
               .slice(0, 3)
               ?.map(({ id, name, price, billed_at }) => (
-                <li key={id} className="max-w-[200px] md:max-w-[250px]">
+                <li key={id} className="max-w-[200px] md:max-w-[unset]">
                   <Card>
                     <CardHeader>
                       <CardTitle className="whitespace-nowrap">
