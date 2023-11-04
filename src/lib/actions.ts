@@ -115,8 +115,6 @@ export async function updateSubscription(data: FormData) {
     return { message: "Interval period should be passed" };
   }
 
-  console.log(inputs);
-
   const { error } = await supabase
     .from("subscriptions")
     .update({
