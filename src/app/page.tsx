@@ -72,8 +72,6 @@ export default async function Home() {
 
   const { data: categories } = await supabase.from("categories").select("*");
 
-  console.log(subscriptions);
-
   if (!subscriptions?.length) {
     return <NoSubscriptions categories={categories || []} />;
   }
