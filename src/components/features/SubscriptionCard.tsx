@@ -5,10 +5,20 @@ import { numberFormatOptions } from "@/lib/constants";
 export function SubscriptionCard({
   subscription,
 }: {
-  subscription: Partial<Subscription>;
+  subscription: Partial<Subscription & { categories: Category | null }>;
 }) {
   return (
-    <Card className="hover:bg-muted">
+    <Card
+      style={
+        subscription.categories?.color_hex
+          ? {
+              borderLeftColor: subscription.categories.color_hex,
+              borderLeftWidth: "2px",
+            }
+          : {}
+      }
+      className="hover:bg-muted"
+    >
       <CardContent className="my-auto p-4">
         <div className=" flex items-center justify-between">
           <div className="flex flex-col items-start justify-start space-y-1">

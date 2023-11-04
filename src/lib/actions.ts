@@ -39,6 +39,7 @@ export async function addNewSubscription(data: FormData) {
     price: string;
     interval: "week" | "month" | "year";
     billed_at: string;
+    category?: string;
   };
 
   const {
@@ -68,6 +69,7 @@ export async function addNewSubscription(data: FormData) {
     interval: inputs.interval,
     billed_at: new Date(inputs.billed_at).toUTCString(),
     user_id: user.id,
+    ...(!!inputs.category?.length && { category_id: inputs.category }),
   });
 
   if (error) {
@@ -90,6 +92,7 @@ export async function updateSubscription(data: FormData) {
     interval: "week" | "month" | "year";
     billed_at: string;
     id?: string;
+    category?: string;
   };
 
   const {
@@ -122,6 +125,7 @@ export async function updateSubscription(data: FormData) {
       price: parseFloat(inputs.price),
       interval: inputs.interval,
       billed_at: new Date(inputs.billed_at).toUTCString(),
+      category_id: inputs.category,
     })
     .eq("id", inputs.id ?? "")
     .select();

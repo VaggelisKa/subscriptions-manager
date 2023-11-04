@@ -7,11 +7,10 @@ import {
 } from "@/components/ui/sheet";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SubscriptionForm } from "./SubscriptionForm";
 
 type SubscriptionSheetProps = {
+  children: React.ReactNode;
   customTrigger?: React.ReactNode;
-  children?: React.ReactNode;
   isEditMode?: boolean;
   triggerAsChild?: boolean;
 };
@@ -50,7 +49,7 @@ export function SubscriptionSheet({
           </SheetTitle>
         </SheetHeader>
 
-        {children ? children : <SubscriptionForm />}
+        {children}
       </SheetContent>
     </Sheet>
   );

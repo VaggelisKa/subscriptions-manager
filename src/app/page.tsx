@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description: "Overview of your subscriptions",
 };
 
-function NoSubscriptions() {
+function NoSubscriptions({ categories }: { categories: Category[] }) {
   return (
     <section className="flex w-full justify-center">
       <div className="flex flex-col items-center justify-center gap-6 md:max-w-2xl">
@@ -44,7 +44,9 @@ function NoSubscriptions() {
         </p>
         <SubscriptionSheet
           customTrigger={<Button className="w-full">Add your first one</Button>}
-        />
+        >
+          <SubscriptionForm categories={categories || []} />
+        </SubscriptionSheet>
       </div>
     </section>
   );
@@ -65,11 +67,15 @@ export default async function Home() {
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("id, name, price, billed_at, interval, description")
+    .select("id, name, price, billed_at, interval, description, categories(*)")
     .order("billed_at", { ascending: true });
 
+  const { data: categories } = await supabase.from("categories").select("*");
+
+  console.log(subscriptions);
+
   if (!subscriptions?.length) {
-    return <NoSubscriptions />;
+    return <NoSubscriptions categories={categories || []} />;
   }
 
   const subscriptionsSum = subscriptions.reduce((acc, curr) => {
@@ -90,7 +96,9 @@ export default async function Home() {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Overview</h1>
           <div className="flex gap-2">
-            <SubscriptionSheet />
+            <SubscriptionSheet>
+              <SubscriptionForm categories={categories || []} />
+            </SubscriptionSheet>
             <LogoutButton />
           </div>
         </div>
@@ -174,7 +182,10 @@ export default async function Home() {
                 isEditMode
                 triggerAsChild={false}
               >
-                <SubscriptionForm subscription={subscription} />
+                <SubscriptionForm
+                  subscription={subscription}
+                  categories={categories || []}
+                />
               </SubscriptionSheet>
             </li>
           ))}

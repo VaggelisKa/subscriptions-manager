@@ -24,10 +24,14 @@ import { useToast } from "@/lib/hooks/useToast";
 
 // Cross check over-sharing of DB (in the future)
 type SubscriptionFormProps = {
-  subscription?: Partial<Subscription>;
+  subscription?: Partial<SubscriptionWithCategory>;
+  categories: Category[];
 };
 
-export function SubscriptionForm({ subscription }: SubscriptionFormProps) {
+export function SubscriptionForm({
+  subscription,
+  categories,
+}: SubscriptionFormProps) {
   const isEditMode = useMemo(() => !!subscription, [subscription]);
   const { toast } = useToast();
 
@@ -86,6 +90,32 @@ export function SubscriptionForm({ subscription }: SubscriptionFormProps) {
             placeholder="Shared netflix account"
           ></Input>
         </div>
+
+        <Label htmlFor="interval">Category</Label>
+        <Select
+          defaultValue={subscription?.categories?.id ?? undefined}
+          name="category"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Categories</SelectLabel>
+              {categories?.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  <div className="flex items-center justify-start gap-2">
+                    <span
+                      style={{ backgroundColor: category.color_hex }}
+                      className="h-3 w-3 rounded-full"
+                    />{" "}
+                    {category.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </fieldset>
 
       <fieldset className="flex w-full gap-4">
