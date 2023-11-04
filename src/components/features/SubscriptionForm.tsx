@@ -91,31 +91,33 @@ export function SubscriptionForm({
           ></Input>
         </div>
 
-        <Label htmlFor="interval">Category</Label>
-        <Select
-          defaultValue={subscription?.categories?.id ?? undefined}
-          name="category"
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Categories</SelectLabel>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  <div className="flex items-center justify-start gap-2">
-                    <span
-                      style={{ backgroundColor: category.color_hex }}
-                      className="h-3 w-3 rounded-full"
-                    />{" "}
-                    {category.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <div>
+          <Label htmlFor="interval">Category</Label>
+          <Select
+            defaultValue={subscription?.categories?.id ?? undefined}
+            name="category"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Categories</SelectLabel>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <div className="flex items-center justify-start gap-2">
+                      <span
+                        style={{ backgroundColor: category.color_hex }}
+                        className="h-3 w-3 rounded-full"
+                      />{" "}
+                      {category.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </fieldset>
 
       <fieldset className="flex w-full gap-4">
