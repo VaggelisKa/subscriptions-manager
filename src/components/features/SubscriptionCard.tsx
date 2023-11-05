@@ -26,7 +26,7 @@ export function SubscriptionCard({
               {subscription.name}
             </p>
             {!!subscription.categories?.name && (
-              <span className="translate-y-1 text-sm text-muted-foreground">
+              <span className="translate-y-[4.5px] text-sm text-muted-foreground">
                 {subscription.categories.name}
               </span>
             )}
