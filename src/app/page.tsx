@@ -21,6 +21,7 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
+import { DarkModeToggle } from "@/components/features/DarkModeToggle";
 
 export const metadata: Metadata = {
   title: "Your subscriptions",
@@ -97,6 +98,7 @@ export default async function Home() {
             <SubscriptionSheet>
               <SubscriptionForm categories={categories || []} />
             </SubscriptionSheet>
+            <DarkModeToggle />
             <LogoutButton />
           </div>
         </div>
