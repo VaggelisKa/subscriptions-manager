@@ -5,7 +5,7 @@ import { numberFormatOptions } from "@/lib/constants";
 export function SubscriptionCard({
   subscription,
 }: {
-  subscription: Partial<Subscription & { categories: Category | null }>;
+  subscription: Partial<SubscriptionWithCategory>;
 }) {
   return (
     <Card
@@ -21,17 +21,25 @@ export function SubscriptionCard({
     >
       <CardContent className="my-auto p-4">
         <div className=" flex items-center justify-between">
-          <div className="flex flex-col items-start justify-start space-y-1">
+          <div className="flex flex-col items-start justify-start">
             <p className="text-sm font-medium leading-none">
               {subscription.name}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {getShortDateFromTimestamp(subscription.billed_at ?? "")}
-            </p>
+            {!!subscription.categories?.name && (
+              <span className="translate-y-1 text-sm text-muted-foreground">
+                {subscription.categories.name}
+              </span>
+            )}
           </div>
-          <span>
-            {subscription.price?.toLocaleString("en-DK", numberFormatOptions)}
-          </span>
+
+          <div className="flex flex-col justify-end">
+            <span>
+              {subscription.price?.toLocaleString("en-DK", numberFormatOptions)}
+            </span>
+            <span className="text-end text-sm text-muted-foreground">
+              {getShortDateFromTimestamp(subscription.billed_at ?? "")}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
