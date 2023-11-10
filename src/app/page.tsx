@@ -22,6 +22,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
 import { DarkModeToggle } from "@/components/features/DarkModeToggle";
+import { SubscriptionGroupSwitchForm } from "@/components/features/SubscriptionGroupSwitch";
 
 export const metadata: Metadata = {
   title: "Your subscriptions",
@@ -53,7 +54,11 @@ function NoSubscriptions({ categories }: { categories: Category[] }) {
   );
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient<Database>({
     cookies: () => cookieStore,
@@ -88,6 +93,30 @@ export default async function Home() {
   const subscriptionsWithoutExpired = subscriptions.filter(
     ({ billed_at }) => !isPast(utcToZonedTime(billed_at, "Europe/Copenhagen")),
   );
+
+  let groupedSubscriptions: {
+    [key: string]: SubscriptionWithCategory[];
+  } | null = null;
+
+  if (searchParams.group === "category") {
+    groupedSubscriptions = subscriptions.reduce(
+      (acc, curr) => {
+        const category = curr.categories?.name;
+        if (!category) {
+          return acc;
+        }
+
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+
+        acc[category].push(curr as SubscriptionWithCategory);
+
+        return acc;
+      },
+      {} as { [key: string]: SubscriptionWithCategory[] },
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -170,25 +199,50 @@ export default async function Home() {
       )}
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-col ">
           <h2 className="text-2xl font-bold">All subscriptions</h2>
+          <SubscriptionGroupSwitchForm />
         </div>
 
         <ul className="flex flex-col gap-2">
-          {subscriptions.map((subscription) => (
-            <li key={`all-${subscription.id}`}>
-              <SubscriptionSheet
-                customTrigger={<SubscriptionCard subscription={subscription} />}
-                isEditMode
-                triggerAsChild={false}
-              >
-                <SubscriptionForm
-                  subscription={subscription}
-                  categories={categories || []}
-                />
-              </SubscriptionSheet>
-            </li>
-          ))}
+          {!!groupedSubscriptions
+            ? Object.keys(groupedSubscriptions).map((key) => (
+                <div key={key}>
+                  <div className="mb-2">{key}</div>
+                  {groupedSubscriptions![key].map((subscription) => (
+                    <li className="mb-2" key={`all-grouped-${subscription.id}`}>
+                      <SubscriptionSheet
+                        customTrigger={
+                          <SubscriptionCard subscription={subscription} />
+                        }
+                        isEditMode
+                        triggerAsChild={false}
+                      >
+                        <SubscriptionForm
+                          subscription={subscription}
+                          categories={categories || []}
+                        />
+                      </SubscriptionSheet>
+                    </li>
+                  ))}
+                </div>
+              ))
+            : subscriptions.map((subscription) => (
+                <li key={`all-${subscription.id}`}>
+                  <SubscriptionSheet
+                    customTrigger={
+                      <SubscriptionCard subscription={subscription} />
+                    }
+                    isEditMode
+                    triggerAsChild={false}
+                  >
+                    <SubscriptionForm
+                      subscription={subscription}
+                      categories={categories || []}
+                    />
+                  </SubscriptionSheet>
+                </li>
+              ))}
         </ul>
       </section>
     </div>
