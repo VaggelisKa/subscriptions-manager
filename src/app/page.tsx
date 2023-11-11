@@ -57,7 +57,7 @@ function NoSubscriptions({ categories }: { categories: Category[] }) {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: NextURLSearchParams;
 }) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient<Database>({

@@ -7,4 +7,6 @@ declare global {
     categories: Category | null;
   };
   type Category = Database["public"]["Tables"]["categories"]["Row"];
+
+  type NextURLSearchParams = { [key: string]: string | string[] | undefined };
 }
