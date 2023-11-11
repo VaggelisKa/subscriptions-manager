@@ -1,5 +1,5 @@
 import LoginForm from "@/components/features/LoginForm";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,10 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const cookieStore = cookies();
-  const supabase = createServerComponentClient<Database>({
-    cookies: () => cookieStore,
-  });
+  const supabase = getSupabaseServerClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

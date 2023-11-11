@@ -13,16 +13,16 @@ import {
 } from "@/components/ui/card";
 import { numberFormatOptions } from "@/lib/constants";
 import { getRelativeDateFromTimestamp } from "@/lib/dates";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { isPast } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
 import { Metadata } from "next";
-import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
 import { DarkModeToggle } from "@/components/features/DarkModeToggle";
 import { SubscriptionGroupSwitchForm } from "@/components/features/SubscriptionGroupSwitch";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Your subscriptions",
@@ -59,10 +59,7 @@ export default async function Home({
 }: {
   searchParams: NextURLSearchParams;
 }) {
-  const cookieStore = cookies();
-  const supabase = createServerComponentClient<Database>({
-    cookies: () => cookieStore,
-  });
+  const supabase = getSupabaseServerClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

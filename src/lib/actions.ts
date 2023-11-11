@@ -1,21 +1,19 @@
 "use server";
 
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
-
-const cookiesStore = cookies();
+import { getSupabaseServerClient } from "./supabase-server";
+import { cookies } from "next/headers";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
-    const supabase = createServerActionClient({ cookies: () => cookiesStore });
     const email = formData.get("email") as string;
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) throw new Error("Invalid email address");
 
+    const supabase = getSupabaseServerClient(cookies());
     await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -30,9 +28,6 @@ export async function loginWithMagicLinkAction(formData: FormData) {
 }
 
 export async function addNewSubscription(data: FormData) {
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookiesStore,
-  });
   const inputs = Object.fromEntries(data) as {
     name: string;
     description: string;
@@ -42,6 +37,7 @@ export async function addNewSubscription(data: FormData) {
     category?: string;
   };
 
+  const supabase = getSupabaseServerClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -82,9 +78,6 @@ export async function addNewSubscription(data: FormData) {
 }
 
 export async function updateSubscription(data: FormData) {
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookiesStore,
-  });
   const inputs = Object.fromEntries(data) as {
     name: string;
     description: string;
@@ -95,6 +88,7 @@ export async function updateSubscription(data: FormData) {
     category?: string;
   };
 
+  const supabase = getSupabaseServerClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -138,12 +132,9 @@ export async function updateSubscription(data: FormData) {
 }
 
 export async function deleteSubscription(formData: FormData) {
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookiesStore,
-  });
-
   const subscriptionId = formData.get("id") as string;
 
+  const supabase = getSupabaseServerClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
