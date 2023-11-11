@@ -98,13 +98,12 @@ export default async function Home({
     [key: string]: SubscriptionWithCategory[];
   } | null = null;
 
+  let groupedCategoryTotal: { [key: string]: number } | null = null;
+
   if (searchParams.group === "category") {
     groupedSubscriptions = subscriptions.reduce(
       (acc, curr) => {
         const category = curr.categories?.name || "Other";
-        if (!category) {
-          return acc;
-        }
 
         if (!acc[category]) {
           acc[category] = [];
@@ -115,6 +114,19 @@ export default async function Home({
         return acc;
       },
       {} as { [key: string]: SubscriptionWithCategory[] },
+    );
+
+    groupedCategoryTotal = Object.keys(groupedSubscriptions).reduce(
+      (acc, curr) => {
+        const total = groupedSubscriptions?.[curr].reduce((acc, curr) => {
+          return acc + (curr?.price || 0);
+        }, 0);
+
+        acc[curr] = total ?? 0;
+
+        return acc;
+      },
+      {} as { [key: string]: number },
     );
   }
 
@@ -206,10 +218,25 @@ export default async function Home({
 
         <ul className="flex flex-col gap-2">
           {!!groupedSubscriptions
-            ? Object.keys(groupedSubscriptions).map((key) => (
-                <div key={key}>
-                  <div className="mb-2">{key}</div>
-                  {groupedSubscriptions![key].map((subscription) => (
+            ? Object.keys(groupedSubscriptions).map((category) => (
+                <div key={category}>
+                  <div className="mb-1 flex items-center justify-between">
+                    <div>{category}</div>
+                    {groupedCategoryTotal !== null && (
+                      <span className="text-xs text-foreground">
+                        {groupedCategoryTotal[category].toLocaleString(
+                          "en-DK",
+                          {
+                            ...numberFormatOptions,
+                            maximumFractionDigits: 0,
+                            minimumFractionDigits: 0,
+                          },
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {groupedSubscriptions![category].map((subscription) => (
                     <li className="mb-2" key={`all-grouped-${subscription.id}`}>
                       <SubscriptionSheet
                         customTrigger={
