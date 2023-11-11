@@ -101,7 +101,7 @@ export default async function Home({
   if (searchParams.group === "category") {
     groupedSubscriptions = subscriptions.reduce(
       (acc, curr) => {
-        const category = curr.categories?.name;
+        const category = curr.categories?.name || "Other";
         if (!category) {
           return acc;
         }
