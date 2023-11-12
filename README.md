@@ -2,11 +2,13 @@
 
 ## Preview
 
-<img width="248" alt="image" src="https://github.com/VaggelisKa/subscriptions-manager/assets/63293880/ee6b5365-3e1e-457d-80dd-879ce40d95a9">
+<img width="246" alt="image" src="https://github.com/VaggelisKa/subscriptions-manager/assets/63293880/324f1896-8283-4750-b16b-d606f6340dd5">
 
 
 
-<img width="240" alt="image" src="https://github.com/VaggelisKa/subscriptions-manager/assets/63293880/74ef40d2-debb-4b31-b9b8-c0e8c83166c4">
+
+<img width="248" alt="image" src="https://github.com/VaggelisKa/subscriptions-manager/assets/63293880/1f52fcc4-9931-4794-b0cb-8b7209e4052a">
+
 
 
 
