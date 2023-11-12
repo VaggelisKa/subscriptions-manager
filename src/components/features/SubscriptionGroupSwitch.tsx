@@ -23,14 +23,14 @@ export function SubscriptionGroupSwitchForm() {
 
   return (
     <div className="flex items-center space-x-2">
-      <Label htmlFor="airplane-mode">Group by category</Label>
+      <Label htmlFor="group-switch">Group by category</Label>
 
       <Switch
         checked={toggled}
         onClick={() => {
           setToggled(!toggled);
         }}
-        id="airplane-mode"
+        id="group-switch"
       />
     </div>
   );
