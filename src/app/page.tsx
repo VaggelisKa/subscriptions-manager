@@ -21,7 +21,7 @@ import { redirect } from "next/navigation";
 import NotFoundImage from "public/not-found.svg";
 import { DarkModeToggle } from "@/components/features/DarkModeToggle";
 import { SubscriptionGroupSwitchForm } from "@/components/features/SubscriptionGroupSwitch";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getServerComponentClient } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
@@ -59,7 +59,7 @@ export default async function Home({
 }: {
   searchParams: NextURLSearchParams;
 }) {
-  const supabase = getSupabaseServerClient(cookies());
+  const supabase = getServerComponentClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

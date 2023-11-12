@@ -1,5 +1,5 @@
 import LoginForm from "@/components/features/LoginForm";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getServerComponentClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const supabase = getSupabaseServerClient(cookies());
+  const supabase = getServerComponentClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
