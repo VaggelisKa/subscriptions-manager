@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { add } from "date-fns";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
@@ -35,7 +37,12 @@ export async function GET() {
   if (!data?.length) {
     return NextResponse.json(
       { message: "No subscriptions to update", success: true },
-      { status: 200 },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-cache no-store must-revalidate",
+        },
+      },
     );
   }
 
@@ -54,5 +61,13 @@ export async function GET() {
       .eq("id", id);
   }
 
-  return NextResponse.json({ success: true }, { status: 201 });
+  return NextResponse.json(
+    { success: true },
+    {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-cache no-store must-revalidate",
+      },
+    },
+  );
 }
