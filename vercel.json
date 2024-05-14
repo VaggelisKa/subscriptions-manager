@@ -4,10 +4,6 @@
     {
       "path": "/api/update-expired-subs",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron",
-      "schedule": "0 5 * * *"
     }
   ]
 }
