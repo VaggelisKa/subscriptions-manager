@@ -18,7 +18,6 @@ import { utcToZonedTime } from "date-fns-tz";
 import { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import NotFoundImage from "public/not-found.svg";
 import { DarkModeToggle } from "@/components/features/DarkModeToggle";
 import { SubscriptionGroupSwitchForm } from "@/components/features/SubscriptionGroupSwitch";
 import { getServerComponentClient } from "@/lib/supabase-server";
@@ -36,7 +35,8 @@ function NoSubscriptions({ categories }: { categories: Category[] }) {
         <p className="text-2xl font-bold">No subscriptions</p>
         <Image
           className="object-fill"
-          src={NotFoundImage}
+          src="/not-found.svg"
+          width={200}
           height={200}
           alt=""
         />
