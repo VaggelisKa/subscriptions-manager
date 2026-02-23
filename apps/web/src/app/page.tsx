@@ -11,8 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { numberFormatOptions } from "@/lib/constants";
-import { getRelativeDateFromTimestamp } from "@/lib/dates";
+import {
+  numberFormatOptions,
+  getRelativeDateFromTimestamp,
+} from "@subscriptions-manager/shared";
 import { isPast } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
 import { Metadata } from "next";

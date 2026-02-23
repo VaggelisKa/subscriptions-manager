@@ -1,6 +1,8 @@
-import { getShortDateFromTimestamp } from "@/lib/dates";
+import {
+  getShortDateFromTimestamp,
+  numberFormatOptions,
+} from "@subscriptions-manager/shared";
 import { Card, CardContent } from "@/components/ui/card";
-import { numberFormatOptions } from "@/lib/constants";
 
 export function SubscriptionCard({
   subscription,
