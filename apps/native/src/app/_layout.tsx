@@ -42,9 +42,12 @@ function RootLayoutInner() {
             presentation: "formSheet",
             sheetGrabberVisible: true,
             sheetAllowedDetents: [1],
-            headerTransparent: Platform.OS === "ios",
+            headerTransparent: true,
+            contentStyle: { backgroundColor: "transparent" },
           }}
-        />
+        >
+          <Stack.Header style={{ backgroundColor: "transparent" }} />
+        </Stack.Screen>
       </Stack>
     </>
   );

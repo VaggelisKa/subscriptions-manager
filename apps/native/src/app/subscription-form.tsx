@@ -1,28 +1,30 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Alert, ActivityIndicator } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import { Picker } from "@react-native-picker/picker";
+import {
+  Picker,
+  Host,
+  Text as SwiftText,
+  Form,
+  Section,
+  TextField,
+  DatePicker,
+  Button,
+} from "@expo/ui/swift-ui";
+import {
+  pickerStyle,
+  tag,
+  datePickerStyle,
+  disabled,
+} from "@expo/ui/swift-ui/modifiers";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
-import { useThemeColors } from "@/providers/theme-provider";
+import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
-import { fonts, radius, spacing } from "@/lib/theme";
 import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 
-const INTERVALS = ["week", "month", "year"] as const;
-const INTERVAL_LABELS = ["Weekly", "Monthly", "Yearly"];
-
 export default function SubscriptionFormScreen() {
+  const { colorScheme } = useTheme();
   const colors = useThemeColors();
   const params = useLocalSearchParams<{ id?: string }>();
   const { user } = useAuth();
@@ -124,16 +126,6 @@ export default function SubscriptionFormScreen() {
     );
   }
 
-  const inputStyle = {
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    color: colors.foreground,
-    backgroundColor: colors.muted,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderCurve: "continuous" as const,
-  };
-
   return (
     <>
       <Stack.Screen
@@ -166,163 +158,79 @@ export default function SubscriptionFormScreen() {
           />
         )}
       </Stack.Toolbar>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{
-          padding: spacing.xl,
-          gap: spacing.lg,
-          paddingBottom: spacing.xxxl,
-        }}
-        keyboardShouldPersistTaps="handled"
-        style={{ backgroundColor: colors.background }}
+      <Host
+        style={{ flex: 1 }}
+        colorScheme={colorScheme}
+        key={existing?.id ?? "new"}
       >
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Name
-          </Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Netflix"
-            placeholderTextColor={colors.mutedForeground}
-            style={inputStyle}
-          />
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Description
-          </Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Shared netflix account"
-            placeholderTextColor={colors.mutedForeground}
-            style={inputStyle}
-          />
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Price
-          </Text>
-          <TextInput
-            value={price}
-            onChangeText={setPrice}
-            placeholder="0.00"
-            placeholderTextColor={colors.mutedForeground}
-            keyboardType="decimal-pad"
-            style={inputStyle}
-          />
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Interval
-          </Text>
-          <SegmentedControl
-            values={INTERVAL_LABELS}
-            selectedIndex={INTERVALS.indexOf(interval)}
-            onChange={({ nativeEvent }) =>
-              setInterval(INTERVALS[nativeEvent.selectedSegmentIndex])
-            }
-          />
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Category
-          </Text>
-          <Picker
-            selectedValue={categoryId}
-            onValueChange={setCategoryId}
-            style={{ color: colors.foreground }}
-            itemStyle={{ fontFamily: fonts.regular, fontSize: 16 }}
-          >
-            <Picker.Item label="None" value="" />
-            {categories.map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name ?? ""} value={cat.id} />
-            ))}
-          </Picker>
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: colors.mutedForeground,
-            }}
-          >
-            Billing Date
-          </Text>
-          <DateTimePicker
-            value={billedAt}
-            mode="date"
-            minimumDate={new Date()}
-            onChange={(_event, date) => {
-              if (date) setBilledAt(date);
-            }}
-            accentColor={colors.primary}
-          />
-        </View>
-
-        {isEdit && (
-          <Pressable
-            onPress={handleDelete}
-            disabled={saving}
-            style={({ pressed }) => ({
-              backgroundColor: colors.destructive,
-              borderRadius: radius.md,
-              padding: spacing.md,
-              alignItems: "center",
-              opacity: pressed || saving ? 0.7 : 1,
-              borderCurve: "continuous",
-              marginTop: spacing.lg,
-            })}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.semiBold,
-                fontSize: 15,
-                color: colors.destructiveForeground,
-              }}
+        <Form>
+          <Section title="Details">
+            <TextField
+              defaultValue={existing?.name ?? ""}
+              placeholder="Name"
+              onChangeText={setName}
+            />
+            <TextField
+              defaultValue={existing?.description ?? ""}
+              placeholder="Description"
+              onChangeText={setDescription}
+            />
+          </Section>
+          <Section title="Pricing">
+            <TextField
+              defaultValue={existing ? String(existing.price) : ""}
+              placeholder="0.00 DKK"
+              keyboardType="decimal-pad"
+              onChangeText={setPrice}
+            />
+            <Picker
+              selection={interval}
+              onSelectionChange={(value) =>
+                setInterval(value as "week" | "month" | "year")
+              }
+              modifiers={[pickerStyle("segmented")]}
             >
-              Delete
-            </Text>
-          </Pressable>
-        )}
-      </ScrollView>
+              <SwiftText modifiers={[tag("week")]}>Weekly</SwiftText>
+              <SwiftText modifiers={[tag("month")]}>Monthly</SwiftText>
+              <SwiftText modifiers={[tag("year")]}>Yearly</SwiftText>
+            </Picker>
+          </Section>
+          <Section title="Schedule">
+            <Picker
+              label="Category"
+              selection={categoryId || "__none__"}
+              onSelectionChange={(value) =>
+                setCategoryId(value === "__none__" ? "" : String(value))
+              }
+              modifiers={[pickerStyle("menu")]}
+            >
+              <SwiftText modifiers={[tag("__none__")]}>None</SwiftText>
+              {categories.map((cat) => (
+                <SwiftText key={cat.id} modifiers={[tag(cat.id)]}>
+                  {cat.name ?? ""}
+                </SwiftText>
+              ))}
+            </Picker>
+            <DatePicker
+              title="Billing Date"
+              selection={billedAt}
+              range={{ start: new Date() }}
+              onDateChange={(date) => setBilledAt(date)}
+              modifiers={[datePickerStyle("compact")]}
+            />
+          </Section>
+          {isEdit && (
+            <Section>
+              <Button
+                role="destructive"
+                label="Delete Subscription"
+                onPress={handleDelete}
+                modifiers={[disabled(saving)]}
+              />
+            </Section>
+          )}
+        </Form>
+      </Host>
     </>
   );
 }

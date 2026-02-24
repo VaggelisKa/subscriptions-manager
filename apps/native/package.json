@@ -9,6 +9,7 @@
     "android": "expo run:android"
   },
   "dependencies": {
+    "@expo/ui": "~55.0.0-preview.7",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/datetimepicker": "^8.3.1",
     "@react-native-picker/picker": "^2.11.0",
