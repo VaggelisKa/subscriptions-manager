@@ -1,9 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
 import { supabase } from "@/lib/supabase";
-import type { SubscriptionWithCategory, Category } from "@subscriptions-manager/shared";
+import type {
+  SubscriptionWithCategory,
+  Category,
+} from "@subscriptions-manager/shared";
 
 export function useSubscriptions(userId: string | undefined) {
-  const [subscriptions, setSubscriptions] = useState<SubscriptionWithCategory[]>([]);
+  const channelId = useId();
+  const [subscriptions, setSubscriptions] = useState<
+    SubscriptionWithCategory[]
+  >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,13 +24,18 @@ export function useSubscriptions(userId: string | undefined) {
     const [subsResult, catsResult] = await Promise.all([
       supabase
         .from("subscriptions")
-        .select("id, name, price, billed_at, interval, description, user_id, created_at, categories(*)")
+        .select(
+          "id, name, price, billed_at, interval, description, user_id, created_at, categories(*)",
+        )
         .order("billed_at", { ascending: true }),
+
       supabase.from("categories").select("*"),
     ]);
 
     if (subsResult.data) {
-      setSubscriptions(subsResult.data as unknown as SubscriptionWithCategory[]);
+      setSubscriptions(
+        subsResult.data as unknown as SubscriptionWithCategory[],
+      );
     }
     if (catsResult.data) {
       setCategories(catsResult.data);
@@ -36,6 +47,23 @@ export function useSubscriptions(userId: string | undefined) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`subscriptions-changes-${channelId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "subscriptions" },
+        () => fetchData(),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, channelId, fetchData]);
 
   const addSubscription = useCallback(
     async (data: {
@@ -54,11 +82,9 @@ export function useSubscriptions(userId: string | undefined) {
       });
 
       if (error) return { error: error.message };
-
-      await fetchData();
       return {};
     },
-    [userId, fetchData],
+    [userId],
   );
 
   const updateSubscription = useCallback(
@@ -79,27 +105,20 @@ export function useSubscriptions(userId: string | undefined) {
         .eq("id", id);
 
       if (error) return { error: error.message };
-
-      await fetchData();
       return {};
     },
-    [fetchData],
+    [],
   );
 
-  const deleteSubscription = useCallback(
-    async (id: string) => {
-      const { error } = await supabase
-        .from("subscriptions")
-        .delete()
-        .eq("id", id);
+  const deleteSubscription = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from("subscriptions")
+      .delete()
+      .eq("id", id);
 
-      if (error) return { error: error.message };
-
-      await fetchData();
-      return {};
-    },
-    [fetchData],
-  );
+    if (error) return { error: error.message };
+    return {};
+  }, []);
 
   return {
     subscriptions,
