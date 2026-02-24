@@ -2,13 +2,9 @@
   "name": "subscriptions-manager",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "web": "npm run dev --workspace=@subscriptions-manager/web",
-    "native": "npm run start --workspace=@subscriptions-manager/native",
-    "build:web": "npm run build --workspace=@subscriptions-manager/web"
+    "web": "pnpm --filter @subscriptions-manager/web dev",
+    "native": "pnpm --filter @subscriptions-manager/native start",
+    "build:web": "pnpm --filter @subscriptions-manager/web build"
   }
 }
