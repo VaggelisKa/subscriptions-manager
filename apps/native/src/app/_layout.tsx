@@ -1,22 +1,34 @@
 import { Stack } from "expo-router/stack";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider } from "@/providers/auth-provider";
+import { AuthProvider, useAuth } from "@/providers/auth-provider";
 import {
   ThemeProvider,
   useTheme,
   useThemeColors,
 } from "@/providers/theme-provider";
 import { useFonts } from "expo-font";
-import {
-  ActivityIndicator,
-  Platform,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ActivityIndicator, useColorScheme, View } from "react-native";
 
 function RootLayoutInner() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
+  const { user, loading } = useAuth();
+  const isLoggedIn = !!user;
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -34,20 +46,25 @@ function RootLayoutInner() {
           headerBackButtonDisplayMode: "minimal",
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="subscription-form"
-          options={{
-            presentation: "formSheet",
-            sheetGrabberVisible: true,
-            sheetAllowedDetents: [1],
-            headerTransparent: true,
-            contentStyle: { backgroundColor: "transparent" },
-          }}
-        >
-          <Stack.Header style={{ backgroundColor: "transparent" }} />
-        </Stack.Screen>
+        <Stack.Protected guard={isLoggedIn}>
+          <Stack.Screen name="index" options={{ title: "Subscriptions" }} />
+          <Stack.Screen
+            name="subscription-form"
+            options={{
+              presentation: "formSheet",
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [0.75, 1],
+              headerTransparent: true,
+              contentStyle: { backgroundColor: "transparent" },
+            }}
+          >
+            <Stack.Header style={{ backgroundColor: "transparent" }} />
+          </Stack.Screen>
+        </Stack.Protected>
+
+        <Stack.Protected guard={!isLoggedIn}>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+        </Stack.Protected>
       </Stack>
     </>
   );

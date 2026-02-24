@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { Stack, router, Redirect } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
@@ -190,11 +190,9 @@ export default function HomeScreen() {
     );
   }
 
-  if (!user) return <Redirect href="/login" />;
-
   return (
     <>
-      <Stack.Screen options={{ title: "Subscriptions" }} />
+      <Stack.Screen />
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           icon="plus"
