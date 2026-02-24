@@ -34,7 +34,12 @@ function TotalCostsCard({
   const colors = useThemeColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.cardGap2}>
         <Text style={[styles.titleLarge, { color: colors.foreground }]}>
           Total costs
@@ -43,7 +48,10 @@ function TotalCostsCard({
           Aggregation of all your subscriptions
         </Text>
       </View>
-      <Text selectable style={[styles.totalAmount, { color: colors.foreground }]}>
+      <Text
+        selectable
+        style={[styles.totalAmount, { color: colors.foreground }]}
+      >
         {total.toLocaleString("en-DK", {
           ...numberFormatOptions,
           notation: "standard",
@@ -56,7 +64,12 @@ function TotalCostsCard({
             notation: "standard",
             minimumFractionDigits: 0,
           })}{" "}
-          <Text style={[styles.monthlyLabelMuted, { color: colors.mutedForeground }]}>
+          <Text
+            style={[
+              styles.monthlyLabelMuted,
+              { color: colors.mutedForeground },
+            ]}
+          >
             of which is monthly
           </Text>
         </Text>
@@ -77,16 +90,27 @@ function ChargedSoonCard({
   const colors = useThemeColors();
 
   return (
-    <View style={[styles.chargedSoonCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.chargedSoonCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.cardGap2}>
-        <Text numberOfLines={1} style={[styles.chargedSoonTitle, { color: colors.foreground }]}>
+        <Text
+          numberOfLines={1}
+          style={[styles.chargedSoonTitle, { color: colors.foreground }]}
+        >
           {name}
         </Text>
         <Text style={[styles.bodySm, { color: colors.mutedForeground }]}>
           {getRelativeDateFromTimestamp(billedAt)}
         </Text>
       </View>
-      <Text selectable style={[styles.chargedSoonPrice, { color: colors.foreground }]}>
+      <Text
+        selectable
+        style={[styles.chargedSoonPrice, { color: colors.foreground }]}
+      >
         {price.toLocaleString("en-DK", {
           ...numberFormatOptions,
           maximumFractionDigits: 0,
@@ -155,7 +179,12 @@ export default function HomeScreen() {
 
   if (authLoading || loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -221,7 +250,12 @@ export default function HomeScreen() {
                 pressed && styles.addButtonPressed,
               ]}
             >
-              <Text style={[styles.addButtonText, { color: colors.primaryForeground }]}>
+              <Text
+                style={[
+                  styles.addButtonText,
+                  { color: colors.primaryForeground },
+                ]}
+              >
                 Add your first one
               </Text>
             </Pressable>
@@ -232,7 +266,9 @@ export default function HomeScreen() {
 
             {upcoming.length > 2 && (
               <View style={styles.sectionGapMd}>
-                <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                <Text
+                  style={[styles.sectionTitle, { color: colors.foreground }]}
+                >
                   Charged soon
                 </Text>
                 <ScrollView
@@ -254,11 +290,18 @@ export default function HomeScreen() {
 
             <View style={styles.sectionGapMd}>
               <View style={styles.sectionGapXs}>
-                <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                <Text
+                  style={[styles.sectionTitle, { color: colors.foreground }]}
+                >
                   All subscriptions
                 </Text>
                 <View style={styles.rowCenter}>
-                  <Text style={[styles.groupByLabel, { color: colors.mutedForeground }]}>
+                  <Text
+                    style={[
+                      styles.groupByLabel,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
                     Group by category
                   </Text>
                   <Switch
@@ -277,11 +320,21 @@ export default function HomeScreen() {
                 ? Object.entries(grouped).map(([category, subs]) => (
                     <View key={category} style={styles.cardGapSm}>
                       <View style={styles.rowBetween}>
-                        <Text style={[styles.categoryTitle, { color: colors.foreground }]}>
+                        <Text
+                          style={[
+                            styles.categoryTitle,
+                            { color: colors.foreground },
+                          ]}
+                        >
                           {category}
                         </Text>
                         {groupTotals && (
-                          <Text style={[styles.categoryTotal, { color: colors.foreground }]}>
+                          <Text
+                            style={[
+                              styles.categoryTotal,
+                              { color: colors.foreground },
+                            ]}
+                          >
                             {groupTotals[category].toLocaleString("en-DK", {
                               ...numberFormatOptions,
                               maximumFractionDigits: 0,
