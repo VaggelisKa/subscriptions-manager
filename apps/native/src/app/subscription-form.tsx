@@ -36,7 +36,10 @@ export default function SubscriptionFormScreen() {
 
   const isEdit = !!params.id;
   const existing = useMemo(
-    () => subscriptions.find((s) => s.id === params.id) as SubscriptionWithCategory | undefined,
+    () =>
+      subscriptions.find((s) => s.id === params.id) as
+        | SubscriptionWithCategory
+        | undefined,
     [subscriptions, params.id],
   );
 
@@ -139,21 +142,28 @@ export default function SubscriptionFormScreen() {
         }}
       />
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button onPress={() => router.back()}>
-          Cancel
-        </Stack.Toolbar.Button>
+        <Stack.Toolbar.Button icon="xmark" onPress={() => router.back()} />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
         {saving ? (
           <Stack.Toolbar.View>
-            <View style={{ width: 32, height: 32, justifyContent: "center", alignItems: "center" }}>
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <ActivityIndicator color={colors.primary} />
             </View>
           </Stack.Toolbar.View>
         ) : (
-          <Stack.Toolbar.Button variant="done" onPress={handleSave}>
-            {isEdit ? "Update" : "Add"}
-          </Stack.Toolbar.Button>
+          <Stack.Toolbar.Button
+            variant="prominent"
+            onPress={handleSave}
+            icon="checkmark"
+          />
         )}
       </Stack.Toolbar>
       <ScrollView
@@ -167,7 +177,13 @@ export default function SubscriptionFormScreen() {
         style={{ backgroundColor: colors.background }}
       >
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Name
           </Text>
           <TextInput
@@ -180,7 +196,13 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Description
           </Text>
           <TextInput
@@ -193,7 +215,13 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Price
           </Text>
           <TextInput
@@ -207,7 +235,13 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Interval
           </Text>
           <SegmentedControl
@@ -220,7 +254,13 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Category
           </Text>
           <Picker
@@ -237,7 +277,13 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+          <Text
+            style={{
+              fontFamily: fonts.medium,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             Billing Date
           </Text>
           <DateTimePicker

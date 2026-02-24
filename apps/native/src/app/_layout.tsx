@@ -1,9 +1,18 @@
 import { Stack } from "expo-router/stack";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "@/providers/auth-provider";
-import { ThemeProvider, useTheme, useThemeColors } from "@/providers/theme-provider";
+import {
+  ThemeProvider,
+  useTheme,
+  useThemeColors,
+} from "@/providers/theme-provider";
 import { useFonts } from "expo-font";
-import { ActivityIndicator, useColorScheme, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  useColorScheme,
+  View,
+} from "react-native";
 
 function RootLayoutInner() {
   const colors = useThemeColors();
@@ -32,8 +41,8 @@ function RootLayoutInner() {
           options={{
             presentation: "formSheet",
             sheetGrabberVisible: true,
-            sheetAllowedDetents: [0.85, 1.0],
-            headerTintColor: colors.primary,
+            sheetAllowedDetents: [1],
+            headerTransparent: Platform.OS === "ios",
           }}
         />
       </Stack>
@@ -61,7 +70,10 @@ export default function RootLayout() {
           backgroundColor: colorScheme === "dark" ? "#0f0f0f" : "#ffffff",
         }}
       >
-        <ActivityIndicator size="large" color={colorScheme === "dark" ? "#f97316" : "#ea580c"} />
+        <ActivityIndicator
+          size="large"
+          color={colorScheme === "dark" ? "#f97316" : "#ea580c"}
+        />
       </View>
     );
   }
