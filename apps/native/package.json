@@ -5,8 +5,9 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "ios": "expo run:ios",
-    "android": "expo run:android"
+    "ios": "expo run:ios --device",
+    "android": "expo run:android",
+    "prebuild": "expo prebuild -p ios"
   },
   "dependencies": {
     "@expo/ui": "~55.0.0-preview.7",

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "web": "pnpm --filter @subscriptions-manager/web dev",
-    "native": "pnpm --filter @subscriptions-manager/native start",
+    "web": "pnpm --filter @subscriptions-manager/web",
+    "native": "pnpm --filter @subscriptions-manager/native",
     "build:web": "pnpm --filter @subscriptions-manager/web build"
   }
 }
