@@ -7,10 +7,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { Picker } from "@react-native-picker/picker";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
@@ -19,20 +19,8 @@ import { useSubscriptions } from "@/lib/use-subscriptions";
 import { fonts, radius, spacing } from "@/lib/theme";
 import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 
-function FormLabel({ text, colors }: { text: string; colors: ReturnType<typeof useThemeColors> }) {
-  return (
-    <Text
-      style={{
-        fontFamily: fonts.medium,
-        fontSize: 14,
-        color: colors.foreground,
-        marginBottom: spacing.xs,
-      }}
-    >
-      {text}
-    </Text>
-  );
-}
+const INTERVALS = ["week", "month", "year"] as const;
+const INTERVAL_LABELS = ["Weekly", "Monthly", "Yearly"];
 
 export default function SubscriptionFormScreen() {
   const colors = useThemeColors();
@@ -59,7 +47,6 @@ export default function SubscriptionFormScreen() {
   const [billedAt, setBilledAt] = useState(new Date());
   const [categoryId, setCategoryId] = useState<string>("");
   const [saving, setSaving] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === "ios");
 
   useEffect(() => {
     if (existing) {
@@ -136,11 +123,9 @@ export default function SubscriptionFormScreen() {
 
   const inputStyle = {
     fontFamily: fonts.regular,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.foreground,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.input,
+    backgroundColor: colors.muted,
     borderRadius: radius.md,
     padding: spacing.md,
     borderCurve: "continuous" as const,
@@ -151,25 +136,28 @@ export default function SubscriptionFormScreen() {
       <Stack.Screen
         options={{
           title: isEdit ? "Edit Subscription" : "New Subscription",
-          presentation: "formSheet",
-          sheetGrabberVisible: true,
-          sheetAllowedDetents: [0.85, 1.0],
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()}>
-              <Text
-                style={{
-                  fontFamily: fonts.regular,
-                  fontSize: 16,
-                  color: colors.primary,
-                }}
-              >
-                Cancel
-              </Text>
-            </Pressable>
-          ),
         }}
       />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button onPress={() => router.back()}>
+          Cancel
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        {saving ? (
+          <Stack.Toolbar.View>
+            <View style={{ width: 32, height: 32, justifyContent: "center", alignItems: "center" }}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          </Stack.Toolbar.View>
+        ) : (
+          <Stack.Toolbar.Button variant="done" onPress={handleSave}>
+            {isEdit ? "Update" : "Add"}
+          </Stack.Toolbar.Button>
+        )}
+      </Stack.Toolbar>
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           padding: spacing.xl,
           gap: spacing.lg,
@@ -179,7 +167,9 @@ export default function SubscriptionFormScreen() {
         style={{ backgroundColor: colors.background }}
       >
         <View style={{ gap: spacing.xs }}>
-          <FormLabel text="Name" colors={colors} />
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Name
+          </Text>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -190,7 +180,9 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <FormLabel text="Description" colors={colors} />
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Description
+          </Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
@@ -201,156 +193,89 @@ export default function SubscriptionFormScreen() {
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <FormLabel text="Category" colors={colors} />
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: colors.input,
-              borderRadius: radius.md,
-              overflow: "hidden",
-              borderCurve: "continuous",
-            }}
-          >
-            <Picker
-              selectedValue={categoryId}
-              onValueChange={setCategoryId}
-              style={{
-                color: colors.foreground,
-              }}
-              itemStyle={{
-                fontFamily: fonts.regular,
-                fontSize: 15,
-              }}
-            >
-              <Picker.Item label="Select a category" value="" />
-              {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={cat.name ?? ""} value={cat.id} />
-              ))}
-            </Picker>
-          </View>
-        </View>
-
-        <View style={{ flexDirection: "row", gap: spacing.md }}>
-          <View style={{ flex: 1, gap: spacing.xs }}>
-            <FormLabel text="Price" colors={colors} />
-            <TextInput
-              value={price}
-              onChangeText={setPrice}
-              placeholder="0.00"
-              placeholderTextColor={colors.mutedForeground}
-              keyboardType="decimal-pad"
-              style={inputStyle}
-            />
-          </View>
-          <View style={{ flex: 1, gap: spacing.xs }}>
-            <FormLabel text="Interval" colors={colors} />
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: colors.input,
-                borderRadius: radius.md,
-                overflow: "hidden",
-                borderCurve: "continuous",
-              }}
-            >
-              <Picker
-                selectedValue={interval}
-                onValueChange={(v) => setInterval(v as typeof interval)}
-                style={{ color: colors.foreground }}
-                itemStyle={{ fontFamily: fonts.regular, fontSize: 15 }}
-              >
-                <Picker.Item label="Weekly" value="week" />
-                <Picker.Item label="Monthly" value="month" />
-                <Picker.Item label="Yearly" value="year" />
-              </Picker>
-            </View>
-          </View>
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Price
+          </Text>
+          <TextInput
+            value={price}
+            onChangeText={setPrice}
+            placeholder="0.00"
+            placeholderTextColor={colors.mutedForeground}
+            keyboardType="decimal-pad"
+            style={inputStyle}
+          />
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <FormLabel text="Billing Date" colors={colors} />
-          {Platform.OS === "android" && (
-            <Pressable
-              onPress={() => setShowDatePicker(true)}
-              style={{
-                ...inputStyle,
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ fontFamily: fonts.regular, fontSize: 15, color: colors.foreground }}>
-                {billedAt.toLocaleDateString("en-DK")}
-              </Text>
-            </Pressable>
-          )}
-          {showDatePicker && (
-            <DateTimePicker
-              value={billedAt}
-              mode="date"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              minimumDate={new Date()}
-              onChange={(_event, date) => {
-                if (Platform.OS === "android") setShowDatePicker(false);
-                if (date) setBilledAt(date);
-              }}
-              themeVariant="light"
-              accentColor={colors.primary}
-            />
-          )}
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Interval
+          </Text>
+          <SegmentedControl
+            values={INTERVAL_LABELS}
+            selectedIndex={INTERVALS.indexOf(interval)}
+            onChange={({ nativeEvent }) =>
+              setInterval(INTERVALS[nativeEvent.selectedSegmentIndex])
+            }
+          />
         </View>
 
-        <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+        <View style={{ gap: spacing.xs }}>
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Category
+          </Text>
+          <Picker
+            selectedValue={categoryId}
+            onValueChange={setCategoryId}
+            style={{ color: colors.foreground }}
+            itemStyle={{ fontFamily: fonts.regular, fontSize: 16 }}
+          >
+            <Picker.Item label="None" value="" />
+            {categories.map((cat) => (
+              <Picker.Item key={cat.id} label={cat.name ?? ""} value={cat.id} />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={{ gap: spacing.xs }}>
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.mutedForeground }}>
+            Billing Date
+          </Text>
+          <DateTimePicker
+            value={billedAt}
+            mode="date"
+            minimumDate={new Date()}
+            onChange={(_event, date) => {
+              if (date) setBilledAt(date);
+            }}
+            accentColor={colors.primary}
+          />
+        </View>
+
+        {isEdit && (
           <Pressable
-            onPress={handleSave}
+            onPress={handleDelete}
             disabled={saving}
             style={({ pressed }) => ({
-              backgroundColor: colors.primary,
+              backgroundColor: colors.destructive,
               borderRadius: radius.md,
               padding: spacing.md,
               alignItems: "center",
               opacity: pressed || saving ? 0.7 : 1,
               borderCurve: "continuous",
+              marginTop: spacing.lg,
             })}
           >
-            {saving ? (
-              <ActivityIndicator color={colors.primaryForeground} />
-            ) : (
-              <Text
-                style={{
-                  fontFamily: fonts.semiBold,
-                  fontSize: 15,
-                  color: colors.primaryForeground,
-                }}
-              >
-                {isEdit ? "Update" : "Add"}
-              </Text>
-            )}
-          </Pressable>
-
-          {isEdit && (
-            <Pressable
-              onPress={handleDelete}
-              disabled={saving}
-              style={({ pressed }) => ({
-                backgroundColor: colors.destructive,
-                borderRadius: radius.md,
-                padding: spacing.md,
-                alignItems: "center",
-                opacity: pressed || saving ? 0.7 : 1,
-                borderCurve: "continuous",
-              })}
+            <Text
+              style={{
+                fontFamily: fonts.semiBold,
+                fontSize: 15,
+                color: colors.destructiveForeground,
+              }}
             >
-              <Text
-                style={{
-                  fontFamily: fonts.semiBold,
-                  fontSize: 15,
-                  color: colors.destructiveForeground,
-                }}
-              >
-                Delete
-              </Text>
-            </Pressable>
-          )}
-        </View>
+              Delete
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
     </>
   );

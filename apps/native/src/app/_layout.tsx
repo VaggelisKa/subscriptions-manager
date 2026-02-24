@@ -33,6 +33,7 @@ function RootLayoutInner() {
             presentation: "formSheet",
             sheetGrabberVisible: true,
             sheetAllowedDetents: [0.85, 1.0],
+            headerTintColor: colors.primary,
           }}
         />
       </Stack>
