@@ -22,8 +22,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { DarkModeToggle } from "@/components/features/DarkModeToggle";
 import { SubscriptionGroupSwitchForm } from "@/components/features/SubscriptionGroupSwitch";
-import { getServerComponentClient } from "@/lib/supabase-server";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const metadata: Metadata = {
   title: "Your subscriptions",
@@ -59,9 +58,10 @@ function NoSubscriptions({ categories }: { categories: Category[] }) {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: NextURLSearchParams;
+  searchParams: Promise<NextURLSearchParams>;
 }) {
-  const supabase = getServerComponentClient(cookies());
+  const resolvedSearchParams = await searchParams;
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -99,7 +99,7 @@ export default async function Home({
 
   let groupedCategoryTotal: { [key: string]: number } | null = null;
 
-  if (searchParams.group === "category") {
+  if (resolvedSearchParams.group === "category") {
     groupedSubscriptions = subscriptions.reduce(
       (acc, curr) => {
         const category = curr.categories?.name || "Other";
