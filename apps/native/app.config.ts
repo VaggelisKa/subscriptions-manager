@@ -7,15 +7,17 @@ const config: ExpoConfig = {
   scheme: "subscriptions-manager",
   platforms: ["ios", "android"],
   userInterfaceStyle: "automatic",
+  icon: "./assets/app-icon.jpg",
   splash: {
     backgroundColor: "#ffffff",
   },
   ios: {
     bundleIdentifier: "com.subscriptionsmanager.app",
-    supportsTablet: true,
+    supportsTablet: false,
   },
   android: {
     adaptiveIcon: {
+      foregroundImage: "./assets/app-icon.jpg",
       backgroundColor: "#ffffff",
     },
     package: "com.subscriptionsmanager.app",
