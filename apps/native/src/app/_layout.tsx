@@ -53,7 +53,6 @@ function RootLayoutInner() {
             options={{
               presentation: "formSheet",
               sheetGrabberVisible: true,
-              sheetAllowedDetents: [0.75, 1],
               headerTransparent: true,
               contentStyle: { backgroundColor: "transparent" },
             }}

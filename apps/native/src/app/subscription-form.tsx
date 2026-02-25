@@ -16,6 +16,7 @@ import {
   tag,
   datePickerStyle,
   disabled,
+  foregroundStyle,
 } from "@expo/ui/swift-ui/modifiers";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
@@ -53,6 +54,8 @@ export default function SubscriptionFormScreen() {
   const [categoryId, setCategoryId] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
+  const defaultCategoryId = categories[0]?.id ?? "";
+
   useEffect(() => {
     if (existing) {
       setName(existing.name);
@@ -60,9 +63,15 @@ export default function SubscriptionFormScreen() {
       setPrice(String(existing.price));
       setInterval(existing.interval);
       setBilledAt(new Date(existing.billed_at));
-      setCategoryId(existing.categories?.id ?? "");
+      setCategoryId(existing.categories?.id ?? defaultCategoryId);
     }
-  }, [existing]);
+  }, [existing, defaultCategoryId]);
+
+  useEffect(() => {
+    if (!existing && categories.length > 0 && !categoryId) {
+      setCategoryId(defaultCategoryId);
+    }
+  }, [existing, categories, defaultCategoryId, categoryId]);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -198,13 +207,10 @@ export default function SubscriptionFormScreen() {
           <Section title="Schedule">
             <Picker
               label="Category"
-              selection={categoryId || "__none__"}
-              onSelectionChange={(value) =>
-                setCategoryId(value === "__none__" ? "" : String(value))
-              }
+              selection={categoryId || defaultCategoryId}
+              onSelectionChange={(value) => setCategoryId(String(value))}
               modifiers={[pickerStyle("menu")]}
             >
-              <SwiftText modifiers={[tag("__none__")]}>None</SwiftText>
               {categories.map((cat) => (
                 <SwiftText key={cat.id} modifiers={[tag(cat.id)]}>
                   {cat.name ?? ""}
