@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LoginConfirmationPage() {
   return (
-    <section className="absolute bottom-[50%] left-[50%] w-full -translate-x-[50%] px-6">
+    <section className="grid min-h-[calc(100vh-6rem)] w-full place-items-center">
       <div className="flex flex-col items-center">
         <Check aria-hidden="true" size={48} strokeWidth={2.25} />
         <p className="text-center">

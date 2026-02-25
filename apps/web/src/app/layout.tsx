@@ -18,10 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn(font.className)}>
+    <html lang="en" suppressHydrationWarning className="h-full bg-background">
+      <body className={cn("h-full min-h-screen bg-background", font.className)}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <main className="px-6 py-12 md:mx-auto md:max-w-4xl">{children}</main>
+          <main className="min-h-screen px-6 py-12 md:mx-auto md:max-w-4xl">{children}</main>
           <Toaster />
         </ThemeProvider>
       </body>
