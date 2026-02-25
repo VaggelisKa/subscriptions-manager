@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useId } from "react";
+import { useState, useEffect, useId } from "react";
 import { supabase } from "@/lib/supabase";
 import type {
   SubscriptionWithCategory,
@@ -12,8 +12,9 @@ export function useSubscriptions(userId: string | undefined) {
   >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchData = useCallback(async () => {
+  async function fetchData() {
     if (!userId) {
       setLoading(false);
       return;
@@ -40,13 +41,12 @@ export function useSubscriptions(userId: string | undefined) {
     if (catsResult.data) {
       setCategories(catsResult.data);
     }
-
     setLoading(false);
-  }, [userId]);
+  }
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [userId, refreshTrigger]);
 
   useEffect(() => {
     if (!userId) return;
@@ -56,61 +56,55 @@ export function useSubscriptions(userId: string | undefined) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "subscriptions" },
-        () => fetchData(),
+        () => setRefreshTrigger((t) => t + 1),
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, channelId, fetchData]);
+  }, [userId, channelId]);
 
-  const addSubscription = useCallback(
-    async (data: {
+  async function addSubscription(data: {
+    name: string;
+    description?: string;
+    price: number;
+    interval: "week" | "month" | "year";
+    billed_at: string;
+    category_id?: string;
+  }) {
+    if (!userId) return { error: "Not authenticated" };
+
+    const { error } = await supabase.from("subscriptions").insert({
+      ...data,
+      user_id: userId,
+    });
+
+    if (error) return { error: error.message };
+    return {};
+  }
+
+  async function updateSubscription(
+    id: string,
+    data: {
       name: string;
       description?: string;
       price: number;
       interval: "week" | "month" | "year";
       billed_at: string;
       category_id?: string;
-    }) => {
-      if (!userId) return { error: "Not authenticated" };
-
-      const { error } = await supabase.from("subscriptions").insert({
-        ...data,
-        user_id: userId,
-      });
-
-      if (error) return { error: error.message };
-      return {};
     },
-    [userId],
-  );
+  ) {
+    const { error } = await supabase
+      .from("subscriptions")
+      .update(data)
+      .eq("id", id);
 
-  const updateSubscription = useCallback(
-    async (
-      id: string,
-      data: {
-        name: string;
-        description?: string;
-        price: number;
-        interval: "week" | "month" | "year";
-        billed_at: string;
-        category_id?: string;
-      },
-    ) => {
-      const { error } = await supabase
-        .from("subscriptions")
-        .update(data)
-        .eq("id", id);
+    if (error) return { error: error.message };
+    return {};
+  }
 
-      if (error) return { error: error.message };
-      return {};
-    },
-    [],
-  );
-
-  const deleteSubscription = useCallback(async (id: string) => {
+  async function deleteSubscription(id: string) {
     const { error } = await supabase
       .from("subscriptions")
       .delete()
@@ -118,7 +112,7 @@ export function useSubscriptions(userId: string | undefined) {
 
     if (error) return { error: error.message };
     return {};
-  }, []);
+  }
 
   return {
     subscriptions,

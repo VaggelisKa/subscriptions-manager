@@ -1,10 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   RefreshControl,
-  Pressable,
   Switch,
   ActivityIndicator,
   StyleSheet,
@@ -15,111 +14,16 @@ import { useAuth } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { SubscriptionCard } from "@/components/subscription-card";
+import { TotalCostsCard } from "@/components/total-costs-card";
+import { ChargedSoonCard } from "@/components/charged-soon-card";
+import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
 import { fonts, radius, spacing } from "@/lib/theme";
 import {
   numberFormatOptions,
-  getRelativeDateFromTimestamp,
   type SubscriptionWithCategory,
 } from "@subscriptions-manager/shared";
 import { isPast } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
-
-function TotalCostsCard({
-  total,
-  monthlyTotal,
-}: {
-  total: number;
-  monthlyTotal: number;
-}) {
-  const colors = useThemeColors();
-
-  return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
-    >
-      <View style={styles.cardGap2}>
-        <Text style={[styles.titleLarge, { color: colors.foreground }]}>
-          Total costs
-        </Text>
-        <Text style={[styles.bodySm, { color: colors.mutedForeground }]}>
-          Aggregation of all your subscriptions
-        </Text>
-      </View>
-      <Text
-        selectable
-        style={[styles.totalAmount, { color: colors.foreground }]}
-      >
-        {total.toLocaleString("en-DK", {
-          ...numberFormatOptions,
-          notation: "standard",
-        })}
-      </Text>
-      {monthlyTotal > 0 && (
-        <Text style={[styles.monthlyLabel, { color: colors.foreground }]}>
-          {monthlyTotal.toLocaleString("en-DK", {
-            ...numberFormatOptions,
-            notation: "standard",
-            minimumFractionDigits: 0,
-          })}{" "}
-          <Text
-            style={[
-              styles.monthlyLabelMuted,
-              { color: colors.mutedForeground },
-            ]}
-          >
-            of which is monthly
-          </Text>
-        </Text>
-      )}
-    </View>
-  );
-}
-
-function ChargedSoonCard({
-  name,
-  price,
-  billedAt,
-}: {
-  name: string;
-  price: number;
-  billedAt: string;
-}) {
-  const colors = useThemeColors();
-
-  return (
-    <View
-      style={[
-        styles.chargedSoonCard,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
-    >
-      <View style={styles.cardGap2}>
-        <Text
-          numberOfLines={1}
-          style={[styles.chargedSoonTitle, { color: colors.foreground }]}
-        >
-          {name}
-        </Text>
-        <Text style={[styles.bodySm, { color: colors.mutedForeground }]}>
-          {getRelativeDateFromTimestamp(billedAt)}
-        </Text>
-      </View>
-      <Text
-        selectable
-        style={[styles.chargedSoonPrice, { color: colors.foreground }]}
-      >
-        {price.toLocaleString("en-DK", {
-          ...numberFormatOptions,
-          maximumFractionDigits: 0,
-          minimumFractionDigits: 0,
-        })}
-      </Text>
-    </View>
-  );
-}
 
 export default function HomeScreen() {
   const colors = useThemeColors();
@@ -135,47 +39,32 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const total = useMemo(
-    () => subscriptions.reduce((acc, s) => acc + (s.price || 0), 0),
-    [subscriptions],
+  const total = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
+  const monthlyTotal = subscriptions
+    .filter((s) => s.interval === "month")
+    .reduce((acc, s) => acc + (s.price || 0), 0);
+  const upcoming = subscriptions.filter(
+    (s) => !isPast(utcToZonedTime(s.billed_at, "Europe/Copenhagen")),
   );
-
-  const monthlyTotal = useMemo(
-    () =>
-      subscriptions
-        .filter((s) => s.interval === "month")
-        .reduce((acc, s) => acc + (s.price || 0), 0),
-    [subscriptions],
-  );
-
-  const upcoming = useMemo(
-    () =>
-      subscriptions.filter(
-        (s) => !isPast(utcToZonedTime(s.billed_at, "Europe/Copenhagen")),
-      ),
-    [subscriptions],
-  );
-
-  const grouped = useMemo(() => {
-    if (!groupByCategory) return null;
-
-    const groups: Record<string, SubscriptionWithCategory[]> = {};
-    for (const sub of subscriptions) {
-      const key = sub.categories?.name || "Other";
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(sub);
-    }
-    return groups;
-  }, [subscriptions, groupByCategory]);
-
-  const groupTotals = useMemo(() => {
-    if (!grouped) return null;
-    const totals: Record<string, number> = {};
-    for (const [key, subs] of Object.entries(grouped)) {
-      totals[key] = subs.reduce((acc, s) => acc + (s.price || 0), 0);
-    }
-    return totals;
-  }, [grouped]);
+  const grouped = groupByCategory
+    ? (() => {
+        const groups: Record<string, SubscriptionWithCategory[]> = {};
+        for (const sub of subscriptions) {
+          const key = sub.categories?.name || "Other";
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(sub);
+        }
+        return groups;
+      })()
+    : null;
+  const groupTotals = grouped
+    ? Object.fromEntries(
+        Object.entries(grouped).map(([key, subs]) => [
+          key,
+          subs.reduce((acc, s) => acc + (s.price || 0), 0),
+        ]),
+      )
+    : null;
 
   if (authLoading || loading) {
     return (
@@ -200,7 +89,6 @@ export default function HomeScreen() {
             if (process.env.EXPO_OS === "ios") {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             }
-
             router.push("/subscription-form");
           }}
         />
@@ -232,32 +120,7 @@ export default function HomeScreen() {
         }
       >
         {subscriptions.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-              No subscriptions
-            </Text>
-            <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
-              You do not have any subscriptions yet.{"\n"}Add one to get
-              started!
-            </Text>
-            <Pressable
-              onPress={() => router.push("/subscription-form")}
-              style={({ pressed }) => [
-                styles.addButton,
-                { backgroundColor: colors.primary },
-                pressed && styles.addButtonPressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.addButtonText,
-                  { color: colors.primaryForeground },
-                ]}
-              >
-                Add your first one
-              </Text>
-            </Pressable>
-          </View>
+          <EmptySubscriptionsState />
         ) : (
           <>
             <TotalCostsCard total={total} monthlyTotal={monthlyTotal} />
@@ -376,73 +239,18 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Cards
-  card: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.sm,
-    borderCurve: "continuous",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  chargedSoonCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    minWidth: 140,
-    gap: spacing.sm,
-    borderCurve: "continuous",
-  },
-  cardGap2: { gap: 2 },
-  cardGapSm: { gap: spacing.sm },
-  cardGapMd: { gap: spacing.md },
-  cardGapXs: { gap: spacing.xs },
-
-  // Typography
-  titleLarge: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-  },
-  bodySm: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-  },
-  totalAmount: {
-    fontFamily: fonts.semiBold,
-    fontSize: 24,
-    fontVariant: ["tabular-nums"],
-  },
-  monthlyLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-  },
-  monthlyLabelMuted: {
-    fontFamily: fonts.regular,
-  },
-  chargedSoonTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-  },
-  chargedSoonPrice: {
-    fontFamily: fonts.semiBold,
-    fontSize: 22,
-    fontVariant: ["tabular-nums"],
+  scrollContent: {
+    padding: spacing.xl,
+    gap: spacing.xxl,
   },
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 22,
-  },
-  emptyTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-  },
-  emptyBody: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    textAlign: "center",
-  },
-  addButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
   },
   groupByLabel: {
     fontFamily: fonts.regular,
@@ -457,33 +265,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontVariant: ["tabular-nums"],
   },
-
-  // Layout
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scrollContent: {
-    padding: spacing.xl,
-    gap: spacing.xxl,
-  },
-  emptyState: {
-    alignItems: "center",
-    gap: spacing.xl,
-    paddingTop: spacing.xxxl,
-  },
-  addButton: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderCurve: "continuous",
-  },
-  addButtonPressed: {
-    opacity: 0.7,
-  },
   sectionGapMd: { gap: spacing.md },
   sectionGapXs: { gap: spacing.xs },
+  cardGapSm: { gap: spacing.sm },
   rowCenter: {
     flexDirection: "row",
     alignItems: "center",

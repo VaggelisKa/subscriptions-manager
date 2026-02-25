@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 
@@ -39,24 +39,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (error) return { error: error.message };
     return {};
-  }, []);
+  }
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  async function signUp(email: string, password: string) {
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message };
     return {};
-  }, []);
+  }
 
-  const signOut = useCallback(async () => {
+  async function signOut() {
     await supabase.auth.signOut();
-  }, []);
+  }
 
   return (
     <AuthContext.Provider

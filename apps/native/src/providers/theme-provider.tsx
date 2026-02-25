@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback } from "react";
+import React, { createContext, useState } from "react";
 import { type ColorSchemeName } from "react-native";
 import { themes, type ThemeColors } from "@/lib/theme";
 
@@ -25,12 +25,12 @@ export function ThemeProvider({
   const colorScheme = override ?? (systemScheme === "dark" ? "dark" : "light");
   const colors = themes[colorScheme];
 
-  const toggleTheme = useCallback(() => {
+  function toggleTheme() {
     setOverride((prev) => {
       if (prev === null) return systemScheme === "dark" ? "light" : "dark";
       return prev === "dark" ? "light" : "dark";
     });
-  }, [systemScheme]);
+  }
 
   return (
     <ThemeContext.Provider value={{ colorScheme, colors, toggleTheme }}>
