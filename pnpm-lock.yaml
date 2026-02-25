@@ -80,6 +80,9 @@ importers:
         specifier: ~0.7.0
         version: 0.7.4(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
     devDependencies:
+      '@expo/config-types':
+        specifier: ~55.0.5
+        version: 55.0.5
       '@types/react':
         specifier: ~19.2.14
         version: 19.2.14
