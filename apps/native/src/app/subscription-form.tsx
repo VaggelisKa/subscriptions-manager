@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
@@ -38,13 +38,9 @@ export default function SubscriptionFormScreen() {
   } = useSubscriptions(user?.id);
 
   const isEdit = !!params.id;
-  const existing = useMemo(
-    () =>
-      subscriptions.find((s) => s.id === params.id) as
-        | SubscriptionWithCategory
-        | undefined,
-    [subscriptions, params.id],
-  );
+  const existing = subscriptions.find(
+    (s) => s.id === params.id,
+  ) as SubscriptionWithCategory | undefined;
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
