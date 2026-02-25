@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
@@ -22,52 +22,61 @@ import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 
 export default function SubscriptionFormScreen() {
   const { colorScheme } = useTheme();
   const colors = useThemeColors();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string | string[];
+    name?: string | string[];
+    description?: string | string[];
+    price?: string | string[];
+    interval?: string | string[];
+    billed_at?: string | string[];
+    category_id?: string | string[];
+  }>();
+
+  const getParam = (key: keyof typeof params) => {
+    const v = params[key];
+    return Array.isArray(v) ? v[0] : v;
+  };
+
+  const id = getParam("id");
+  const paramName = getParam("name");
+  const paramDescription = getParam("description");
+  const paramPrice = getParam("price");
+  const paramInterval = getParam("interval") as
+    | "week"
+    | "month"
+    | "year"
+    | undefined;
+  const paramBilledAt = getParam("billed_at");
+  const paramCategoryId = getParam("category_id");
+
   const { user } = useAuth();
   const {
-    subscriptions,
     categories,
     addSubscription,
     updateSubscription,
     deleteSubscription,
   } = useSubscriptions(user?.id);
 
-  const isEdit = !!params.id;
-  const existing = subscriptions.find(
-    (s) => s.id === params.id,
-  ) as SubscriptionWithCategory | undefined;
-
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [interval, setInterval] = useState<"week" | "month" | "year">("month");
-  const [billedAt, setBilledAt] = useState(new Date());
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [saving, setSaving] = useState(false);
-
+  const isEdit = !!id;
   const defaultCategoryId = categories[0]?.id ?? "";
 
-  useEffect(() => {
-    if (existing) {
-      setName(existing.name);
-      setDescription(existing.description ?? "");
-      setPrice(String(existing.price));
-      setInterval(existing.interval);
-      setBilledAt(new Date(existing.billed_at));
-      setCategoryId(existing.categories?.id ?? defaultCategoryId);
-    }
-  }, [existing, defaultCategoryId]);
+  const [name, setName] = useState(paramName ?? "");
+  const [description, setDescription] = useState(paramDescription ?? "");
+  const [price, setPrice] = useState(paramPrice ?? "");
+  const [interval, setInterval] = useState<"week" | "month" | "year">(
+    (paramInterval as "week" | "month" | "year") ?? "month",
+  );
+  const [billedAt, setBilledAt] = useState(
+    () => (paramBilledAt ? new Date(paramBilledAt) : new Date()),
+  );
+  const [categoryId, setCategoryId] = useState(paramCategoryId ?? "");
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!existing && categories.length > 0 && !categoryId) {
-      setCategoryId(defaultCategoryId);
-    }
-  }, [existing, categories, defaultCategoryId, categoryId]);
+  const effectiveCategoryId = categoryId || defaultCategoryId;
 
   async function handleSave() {
     if (!name.trim()) {
@@ -87,11 +96,11 @@ export default function SubscriptionFormScreen() {
       price: parseFloat(price),
       interval,
       billed_at: billedAt.toUTCString(),
-      ...(categoryId ? { category_id: categoryId } : {}),
+      ...(effectiveCategoryId ? { category_id: effectiveCategoryId } : {}),
     };
 
     const result = isEdit
-      ? await updateSubscription(params.id!, data)
+      ? await updateSubscription(id!, data)
       : await addSubscription(data);
 
     setSaving(false);
@@ -118,7 +127,7 @@ export default function SubscriptionFormScreen() {
           style: "destructive",
           onPress: async () => {
             setSaving(true);
-            const result = await deleteSubscription(params.id!);
+            const result = await deleteSubscription(id!);
             setSaving(false);
             if (result.error) {
               Alert.alert("Error", result.error);
@@ -166,24 +175,27 @@ export default function SubscriptionFormScreen() {
       <Host
         style={{ flex: 1 }}
         colorScheme={colorScheme}
-        key={existing?.id ?? "new"}
+        key={id ?? "new"}
       >
         <Form>
           <Section title="Details">
             <TextField
-              defaultValue={existing?.name ?? ""}
+              key={`name-${id ?? "new"}`}
+              defaultValue={paramName ?? ""}
               placeholder="Name"
               onChangeText={setName}
             />
             <TextField
-              defaultValue={existing?.description ?? ""}
+              key={`description-${id ?? "new"}`}
+              defaultValue={paramDescription ?? ""}
               placeholder="Description"
               onChangeText={setDescription}
             />
           </Section>
           <Section title="Pricing">
             <TextField
-              defaultValue={existing ? String(existing.price) : ""}
+              key={`price-${id ?? "new"}`}
+              defaultValue={paramPrice ?? ""}
               placeholder="0.00 DKK"
               keyboardType="decimal-pad"
               onChangeText={setPrice}
@@ -203,7 +215,7 @@ export default function SubscriptionFormScreen() {
           <Section title="Schedule">
             <Picker
               label="Category"
-              selection={categoryId || defaultCategoryId}
+              selection={effectiveCategoryId}
               onSelectionChange={(value) => setCategoryId(String(value))}
               modifiers={[pickerStyle("menu")]}
             >
@@ -216,7 +228,6 @@ export default function SubscriptionFormScreen() {
             <DatePicker
               title="Billing Date"
               selection={billedAt}
-              range={{ start: new Date() }}
               onDateChange={(date) => setBilledAt(date)}
               modifiers={[datePickerStyle("compact")]}
             />
