@@ -3,8 +3,7 @@
 import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
-import { getSupabaseServerClient } from "./supabase-server";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "./supabase-server";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
@@ -13,7 +12,7 @@ export async function loginWithMagicLinkAction(formData: FormData) {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) throw new Error("Invalid email address");
 
-    const supabase = getSupabaseServerClient(cookies());
+    const supabase = await createSupabaseServerClient();
     await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -37,7 +36,7 @@ export async function addNewSubscription(data: FormData) {
     category?: string;
   };
 
-  const supabase = getSupabaseServerClient(cookies());
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -88,7 +87,7 @@ export async function updateSubscription(data: FormData) {
     category?: string;
   };
 
-  const supabase = getSupabaseServerClient(cookies());
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -134,7 +133,7 @@ export async function updateSubscription(data: FormData) {
 export async function deleteSubscription(formData: FormData) {
   const subscriptionId = formData.get("id") as string;
 
-  const supabase = getSupabaseServerClient(cookies());
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
