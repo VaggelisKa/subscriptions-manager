@@ -8,12 +8,14 @@ export const metadata: Metadata = {
 
 export default function LoginConfirmationPage() {
   return (
-    <section className="grid min-h-[calc(100vh-6rem)] w-full place-items-center">
-      <div className="flex flex-col items-center">
-        <Check aria-hidden="true" size={48} strokeWidth={2.25} />
-        <p className="text-center">
-          One time password was generated. Please check your email!
-        </p>
+    <section className="fixed inset-0 bg-background">
+      <div className="grid min-h-full w-full place-items-center px-6">
+        <div className="flex flex-col items-center">
+          <Check aria-hidden="true" size={48} strokeWidth={2.25} />
+          <p className="text-center">
+            One time password was generated. Please check your email!
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -19,8 +19,10 @@ export default async function LoginPage() {
   }
 
   return (
-    <section className="grid min-h-[calc(100vh-6rem)] w-full place-items-center">
-      <LoginForm />
+    <section className="fixed inset-0 bg-background">
+      <div className="grid min-h-full w-full place-items-center px-6">
+        <LoginForm />
+      </div>
     </section>
   );
 }
