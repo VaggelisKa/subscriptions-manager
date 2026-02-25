@@ -19,7 +19,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <section className="absolute bottom-[50%] left-[50%] w-full -translate-x-[50%] px-6">
+    <section className="grid min-h-[calc(100dvh-6rem)] w-full place-items-center">
       <LoginForm />
     </section>
   );
