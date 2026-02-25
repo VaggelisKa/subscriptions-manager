@@ -1,4 +1,4 @@
-import type { ExpoConfig } from '@expo/config-types';
+import type { ExpoConfig } from "@expo/config-types";
 
 const config: ExpoConfig = {
   name: "Subscriptions Manager",
@@ -7,7 +7,6 @@ const config: ExpoConfig = {
   scheme: "subscriptions-manager",
   platforms: ["ios", "android"],
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   splash: {
     backgroundColor: "#ffffff",
   },
@@ -25,6 +24,11 @@ const config: ExpoConfig = {
     typedRoutes: true,
   },
   plugins: ["expo-router"],
+  extra: {
+    eas: {
+      projectId: "2ceff1cf-2cbe-4f0e-90c6-1e9f7bebb19e",
+    },
+  },
 };
 
 export default { expo: config };
