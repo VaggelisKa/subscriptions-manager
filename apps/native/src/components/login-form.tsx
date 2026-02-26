@@ -154,22 +154,26 @@ export function LoginForm({
           )}
         </Pressable>
 
-        <Pressable
-          onPress={onToggleSignUp}
-          style={{ alignItems: "center", padding: spacing.sm }}
+        <Text
+          style={{
+            fontFamily: fonts.regular,
+            fontSize: 14,
+            color: colors.mutedForeground,
+            textAlign: "center",
+          }}
         >
+          {isSignUp ? "Already have an account? " : "Don't have an account? "}
           <Text
+            onPress={onToggleSignUp}
             style={{
-              fontFamily: fonts.regular,
+              fontFamily: fonts.semiBold,
               fontSize: 14,
-              color: colors.mutedForeground,
+              color: colors.primary,
             }}
           >
-            {isSignUp
-              ? "Already have an account? Sign In"
-              : "Don't have an account? Sign Up"}
+            {isSignUp ? "Sign In" : "Sign Up"}
           </Text>
-        </Pressable>
+        </Text>
       </View>
     </View>
   );
