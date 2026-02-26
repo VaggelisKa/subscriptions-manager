@@ -14,6 +14,9 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "com.subscriptionsmanager.app",
     supportsTablet: false,
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {
