@@ -49,6 +49,10 @@ function RootLayoutInner() {
         <Stack.Protected guard={isLoggedIn}>
           <Stack.Screen name="index" options={{ title: "Subscriptions" }} />
           <Stack.Screen
+            name="reset-password"
+            options={{ title: "Create New Password" }}
+          />
+          <Stack.Screen
             name="subscription-form"
             options={{
               presentation: "formSheet",
@@ -63,6 +67,14 @@ function RootLayoutInner() {
 
         <Stack.Protected guard={!isLoggedIn}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="forgot-password"
+            options={{ title: "Reset Password" }}
+          />
+          <Stack.Screen
+            name="reset-password"
+            options={{ title: "Create New Password" }}
+          />
         </Stack.Protected>
       </Stack>
     </>
