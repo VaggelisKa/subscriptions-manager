@@ -12,13 +12,14 @@ const styles = {
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.sm,
+    padding: spacing.xl,
+    gap: spacing.md,
     borderCurve: "continuous" as const,
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
   },
   cardGap2: { gap: 2 },
   titleLarge: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
     fontSize: 16,
   },
   bodySm: {
@@ -26,8 +27,8 @@ const styles = {
     fontSize: 13,
   },
   totalAmount: {
-    fontFamily: fonts.semiBold,
-    fontSize: 24,
+    fontFamily: fonts.bold,
+    fontSize: 28,
     fontVariant: ["tabular-nums"] as const,
   },
   monthlyLabel: {
@@ -59,7 +60,7 @@ export function TotalCostsCard({ total, monthlyTotal }: Props) {
       </View>
       <Text
         selectable
-        style={[styles.totalAmount, { color: colors.foreground }]}
+        style={[styles.totalAmount, { color: colors.primary }]}
       >
         {total.toLocaleString("en-DK", {
           ...numberFormatOptions,

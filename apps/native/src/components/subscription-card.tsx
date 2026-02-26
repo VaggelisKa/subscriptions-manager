@@ -1,5 +1,9 @@
 import { View, Text, Pressable } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+} from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius, spacing } from "@/lib/theme";
@@ -25,7 +29,11 @@ export function SubscriptionCard({ subscription, onPress }: Props) {
   };
 
   return (
-    <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+    <Animated.View
+      entering={FadeIn.duration(250)}
+      exiting={FadeOut.duration(150)}
+      layout={LinearTransition}
+    >
       <Pressable
         onPress={handlePress}
         style={({ pressed }) => ({
@@ -46,12 +54,12 @@ export function SubscriptionCard({ subscription, onPress }: Props) {
             justifyContent: "space-between",
           }}
         >
-          <View style={{ gap: 2, flexShrink: 1 }}>
+          <View style={{ gap: spacing.xs, flexShrink: 1 }}>
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: fonts.medium,
-                fontSize: 14,
+                fontFamily: fonts.semiBold,
+                fontSize: 15,
                 color: colors.foreground,
               }}
             >
@@ -70,7 +78,7 @@ export function SubscriptionCard({ subscription, onPress }: Props) {
             )}
           </View>
 
-          <View style={{ alignItems: "flex-end", gap: 2 }}>
+          <View style={{ alignItems: "flex-end", gap: spacing.xs }}>
             <Text
               selectable
               style={{

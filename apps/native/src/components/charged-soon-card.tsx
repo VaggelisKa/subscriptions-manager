@@ -1,4 +1,5 @@
 import { View, Text } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 import { useThemeColors } from "@/providers/theme-provider";
 import {
   numberFormatOptions,
@@ -10,6 +11,7 @@ type Props = {
   name: string;
   price: number;
   billedAt: string;
+  index?: number;
 };
 
 const styles = {
@@ -31,17 +33,18 @@ const styles = {
     fontSize: 13,
   },
   chargedSoonPrice: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
     fontSize: 22,
     fontVariant: ["tabular-nums"] as const,
   },
 };
 
-export function ChargedSoonCard({ name, price, billedAt }: Props) {
+export function ChargedSoonCard({ name, price, billedAt, index = 0 }: Props) {
   const colors = useThemeColors();
 
   return (
-    <View
+    <Animated.View
+      entering={FadeInRight.delay(index * 80).duration(350)}
       style={[
         styles.chargedSoonCard,
         { backgroundColor: colors.card, borderColor: colors.border },
@@ -68,6 +71,6 @@ export function ChargedSoonCard({ name, price, billedAt }: Props) {
           minimumFractionDigits: 0,
         })}
       </Text>
-    </View>
+    </Animated.View>
   );
 }

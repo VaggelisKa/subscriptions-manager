@@ -8,6 +8,12 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import Animated, {
+  FadeIn,
+  FadeInUp,
+  FadeOut,
+  LinearTransition,
+} from "react-native-reanimated";
 import { Stack, router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/providers/auth-provider";
@@ -123,10 +129,15 @@ export default function HomeScreen() {
           <EmptySubscriptionsState />
         ) : (
           <>
-            <TotalCostsCard total={total} monthlyTotal={monthlyTotal} />
+            <Animated.View entering={FadeInUp.duration(400)}>
+              <TotalCostsCard total={total} monthlyTotal={monthlyTotal} />
+            </Animated.View>
 
             {upcoming.length > 2 && (
-              <View style={styles.sectionGapMd}>
+              <Animated.View
+                entering={FadeInUp.duration(400).delay(100)}
+                style={styles.sectionGapMd}
+              >
                 <Text
                   style={[styles.sectionTitle, { color: colors.foreground }]}
                 >
@@ -137,19 +148,24 @@ export default function HomeScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.cardGapSm}
                 >
-                  {upcoming.slice(0, 3).map((sub) => (
+                  {upcoming.slice(0, 3).map((sub, i) => (
                     <ChargedSoonCard
                       key={sub.id}
                       name={sub.name}
                       price={sub.price}
                       billedAt={sub.billed_at}
+                      index={i}
                     />
                   ))}
                 </ScrollView>
-              </View>
+              </Animated.View>
             )}
 
-            <View style={styles.sectionGapMd}>
+            <Animated.View
+              entering={FadeInUp.duration(400).delay(150)}
+              layout={LinearTransition}
+              style={styles.sectionGapMd}
+            >
               <View style={styles.sectionGapXs}>
                 <Text
                   style={[styles.sectionTitle, { color: colors.foreground }]}
@@ -180,7 +196,11 @@ export default function HomeScreen() {
               {grouped
                 ? Object.entries(grouped).map(([category, subs]) => (
                     <View key={category} style={styles.cardGapSm}>
-                      <View style={styles.rowBetween}>
+                      <Animated.View
+                        entering={FadeIn.duration(250)}
+                        exiting={FadeOut.duration(150)}
+                        style={styles.rowBetween}
+                      >
                         <Text
                           style={[
                             styles.categoryTitle,
@@ -203,7 +223,7 @@ export default function HomeScreen() {
                             })}
                           </Text>
                         )}
-                      </View>
+                      </Animated.View>
                       {subs.map((sub) => (
                         <SubscriptionCard
                           key={sub.id}
@@ -246,7 +266,7 @@ export default function HomeScreen() {
                       }
                     />
                   ))}
-            </View>
+            </Animated.View>
           </>
         )}
       </ScrollView>
@@ -273,12 +293,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   categoryTitle: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
+    fontFamily: fonts.semiBold,
+    fontSize: 15,
   },
   categoryTotal: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
+    fontFamily: fonts.medium,
+    fontSize: 13,
     fontVariant: ["tabular-nums"],
   },
   sectionGapMd: { gap: spacing.md },
@@ -287,6 +307,7 @@ const styles = StyleSheet.create({
   rowCenter: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   rowBetween: {
     flexDirection: "row",
