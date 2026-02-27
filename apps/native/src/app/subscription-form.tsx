@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
@@ -10,13 +10,15 @@ import {
   TextField,
   DatePicker,
   Button,
+  type TextFieldRef,
 } from "@expo/ui/swift-ui";
 import {
   pickerStyle,
   tag,
   datePickerStyle,
   disabled,
-  foregroundStyle,
+  onTapGesture,
+  scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
 import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
@@ -67,13 +69,20 @@ export default function SubscriptionFormScreen() {
   const [interval, setInterval] = useState<"week" | "month" | "year">(
     (paramInterval as "week" | "month" | "year") ?? "month",
   );
-  const [billedAt, setBilledAt] = useState(
-    () => (paramBilledAt ? new Date(paramBilledAt) : new Date()),
+  const [billedAt, setBilledAt] = useState(() =>
+    paramBilledAt ? new Date(paramBilledAt) : new Date(),
   );
   const [categoryId, setCategoryId] = useState(paramCategoryId ?? "");
   const [saving, setSaving] = useState(false);
+  const nameInputRef = useRef<TextFieldRef>(null);
+  const priceInputRef = useRef<TextFieldRef>(null);
 
   const effectiveCategoryId = categoryId || defaultCategoryId;
+
+  function dismissFormKeyboard() {
+    void nameInputRef.current?.blur();
+    void priceInputRef.current?.blur();
+  }
 
   async function handleSave() {
     if (!name.trim()) {
@@ -172,10 +181,17 @@ export default function SubscriptionFormScreen() {
         style={{ flex: 1 }}
         colorScheme={colorScheme}
         key={id ?? "new"}
+        modifiers={[onTapGesture(dismissFormKeyboard)]}
       >
-        <Form>
+        <Form
+          modifiers={[
+            scrollDismissesKeyboard("immediately"),
+            onTapGesture(dismissFormKeyboard),
+          ]}
+        >
           <Section title="Details">
             <TextField
+              ref={nameInputRef}
               key={`name-${id ?? "new"}`}
               defaultValue={paramName ?? ""}
               placeholder="Name"
@@ -184,7 +200,10 @@ export default function SubscriptionFormScreen() {
             <Picker
               label="Category"
               selection={effectiveCategoryId}
-              onSelectionChange={(value) => setCategoryId(String(value))}
+              onSelectionChange={(value) => {
+                dismissFormKeyboard();
+                setCategoryId(String(value));
+              }}
               modifiers={[pickerStyle("menu")]}
             >
               {categories.map((cat) => (
@@ -196,6 +215,7 @@ export default function SubscriptionFormScreen() {
           </Section>
           <Section title="Pricing">
             <TextField
+              ref={priceInputRef}
               key={`price-${id ?? "new"}`}
               defaultValue={paramPrice ?? ""}
               placeholder="0.00 DKK"
@@ -218,7 +238,10 @@ export default function SubscriptionFormScreen() {
             <DatePicker
               title="Billing Date"
               selection={billedAt}
-              onDateChange={(date) => setBilledAt(date)}
+              onDateChange={(date) => {
+                dismissFormKeyboard();
+                setBilledAt(date);
+              }}
               modifiers={[datePickerStyle("compact")]}
             />
           </Section>
