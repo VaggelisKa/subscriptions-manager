@@ -1,0 +1,34 @@
+---
+description: React Compiler - avoid manual memoization
+globs: **/*.{ts,tsx}
+alwaysApply: true
+---
+
+# React Compiler
+
+This project uses React Compiler, which automatically memoizes components and hooks.
+
+## Do NOT use
+
+- `useCallback` — the compiler handles function identity
+- `useMemo` — the compiler handles computed values
+- `React.memo` — the compiler handles component memoization
+
+## Use instead
+
+- Plain functions and inline values
+- Let the compiler optimize re-renders
+
+```tsx
+// ❌ Avoid
+const handleClick = useCallback(() => doSomething(), []);
+const value = useMemo(() => computeExpensive(a, b), [a, b]);
+export default React.memo(MyComponent);
+
+// ✅ Prefer
+function handleClick() {
+  doSomething();
+}
+const value = computeExpensive(a, b);
+export default function MyComponent() { ... }
+```

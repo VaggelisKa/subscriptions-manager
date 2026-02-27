@@ -14,7 +14,8 @@ import { ActivityIndicator, useColorScheme, View } from "react-native";
 function RootLayoutInner() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
-  const { user, loading, isPasswordRecovery } = use(AuthContext);
+  const { user, loading, isPasswordRecovery, isProcessingResetLink } =
+    use(AuthContext);
   const isLoggedIn = !!user;
 
   useEffect(() => {
@@ -23,7 +24,7 @@ function RootLayoutInner() {
     }
   }, [isPasswordRecovery, loading]);
 
-  if (loading) {
+  if (loading || isProcessingResetLink) {
     return (
       <View
         style={{
