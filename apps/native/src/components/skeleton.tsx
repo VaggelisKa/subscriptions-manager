@@ -14,7 +14,7 @@ type Props = {
   style?: object;
 };
 
-export function SkeletonView({ width, height = 16, style }: Props) {
+export function Skeleton({ width, height = 16, style }: Props) {
   const colors = useThemeColors();
   const opacity = useSharedValue(0.5);
 

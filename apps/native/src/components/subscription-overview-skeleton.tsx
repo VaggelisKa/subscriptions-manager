@@ -1,13 +1,13 @@
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
-import { SkeletonView } from "@/components/skeleton-view";
+import { Skeleton } from "@/components/skeleton";
 import { radius, spacing } from "@/lib/theme";
 
 /**
- * Skeleton content for the subscription index - renders only the ScrollView
+ * Skeleton content for the subscription overview - renders only the ScrollView
  * children. Use inside the main index ScrollView when loading.
  */
-export function SubscriptionIndexSkeletonContent() {
+export function SubscriptionOverviewSkeleton() {
   const colors = useThemeColors();
 
   return (
@@ -20,16 +20,16 @@ export function SubscriptionIndexSkeletonContent() {
         ]}
       >
         <View style={styles.cardGap2}>
-          <SkeletonView width={100} height={18} />
-          <SkeletonView width={220} height={14} />
+          <Skeleton width={100} height={18} />
+          <Skeleton width={220} height={14} />
         </View>
-        <SkeletonView width={120} height={32} />
-        <SkeletonView width={160} height={14} />
+        <Skeleton width={120} height={32} />
+        <Skeleton width={160} height={14} />
       </View>
 
       {/* Charged soon section skeleton */}
       <View style={styles.sectionGapMd}>
-        <SkeletonView width={140} height={22} />
+        <Skeleton width={140} height={22} />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -44,10 +44,10 @@ export function SubscriptionIndexSkeletonContent() {
               ]}
             >
               <View style={styles.cardGap2}>
-                <SkeletonView width={80} height={14} />
-                <SkeletonView width={60} height={13} />
+                <Skeleton width={80} height={14} />
+                <Skeleton width={60} height={13} />
               </View>
-              <SkeletonView width={50} height={22} />
+              <Skeleton width={50} height={22} />
             </View>
           ))}
         </ScrollView>
@@ -56,10 +56,10 @@ export function SubscriptionIndexSkeletonContent() {
       {/* All subscriptions section skeleton */}
       <View style={styles.sectionGapMd}>
         <View style={styles.sectionGapXs}>
-          <SkeletonView width={180} height={22} />
+          <Skeleton width={180} height={22} />
           <View style={styles.rowCenter}>
-            <SkeletonView width={120} height={14} />
-            <SkeletonView width={44} height={24} />
+            <Skeleton width={120} height={14} />
+            <Skeleton width={44} height={24} />
           </View>
         </View>
         <View style={styles.cardGapSm}>
@@ -73,12 +73,12 @@ export function SubscriptionIndexSkeletonContent() {
             >
               <View style={styles.cardRow}>
                 <View style={styles.cardGap2}>
-                  <SkeletonView width={140} height={15} />
-                  <SkeletonView width={60} height={13} />
+                  <Skeleton width={140} height={15} />
+                  <Skeleton width={60} height={13} />
                 </View>
                 <View style={styles.cardGap2}>
-                  <SkeletonView width={50} height={14} />
-                  <SkeletonView width={40} height={13} />
+                  <Skeleton width={50} height={14} />
+                  <Skeleton width={40} height={13} />
                 </View>
               </View>
             </View>
