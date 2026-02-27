@@ -7,7 +7,7 @@ import { radius, spacing } from "@/lib/theme";
  * Skeleton content for the subscription overview - renders only the ScrollView
  * children. Use inside the main index ScrollView when loading.
  */
-export function SubscriptionOverviewSkeleton() {
+export function SubscriptionOverviewSkeletons() {
   const colors = useThemeColors();
 
   return (

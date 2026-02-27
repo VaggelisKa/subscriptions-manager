@@ -22,7 +22,7 @@ import { SubscriptionCard } from "@/components/subscription-card";
 import { TotalCostsCard } from "@/components/total-costs-card";
 import { ChargedSoonCard } from "@/components/charged-soon-card";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
-import { SubscriptionOverviewSkeleton } from "@/components/subscription-overview-skeleton";
+import { SubscriptionOverviewSkeletons } from "@/components/subscription-overview-skeletons";
 import { fonts, radius, spacing } from "@/lib/theme";
 import {
   numberFormatOptions,
@@ -115,7 +115,7 @@ export default function HomeScreen() {
         }
       >
         {isLoading ? (
-          <SubscriptionOverviewSkeleton />
+          <SubscriptionOverviewSkeletons />
         ) : subscriptions.length === 0 ? (
           <EmptySubscriptionsState />
         ) : (
