@@ -234,7 +234,6 @@ export default function HomeScreen() {
                               params: {
                                 id: sub.id,
                                 name: sub.name,
-                                description: sub.description ?? "",
                                 price: String(sub.price),
                                 interval: sub.interval,
                                 billed_at: sub.billed_at,
@@ -256,7 +255,6 @@ export default function HomeScreen() {
                           params: {
                             id: sub.id,
                             name: sub.name,
-                            description: sub.description ?? "",
                             price: String(sub.price),
                             interval: sub.interval,
                             billed_at: sub.billed_at,

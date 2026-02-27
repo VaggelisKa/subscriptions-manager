@@ -26,7 +26,7 @@ export function useSubscriptions(userId: string | undefined) {
       supabase
         .from("subscriptions")
         .select(
-          "id, name, price, billed_at, interval, description, user_id, created_at, categories(*)",
+          "id, name, price, billed_at, interval, user_id, created_at, categories(*)",
         )
         .order("billed_at", { ascending: true }),
 
@@ -67,7 +67,6 @@ export function useSubscriptions(userId: string | undefined) {
 
   async function addSubscription(data: {
     name: string;
-    description?: string;
     price: number;
     interval: "week" | "month" | "year";
     billed_at: string;
@@ -88,7 +87,6 @@ export function useSubscriptions(userId: string | undefined) {
     id: string,
     data: {
       name: string;
-      description?: string;
       price: number;
       interval: "week" | "month" | "year";
       billed_at: string;

@@ -29,7 +29,6 @@ export async function loginWithMagicLinkAction(formData: FormData) {
 export async function addNewSubscription(data: FormData) {
   const inputs = Object.fromEntries(data) as {
     name: string;
-    description: string;
     price: string;
     interval: "week" | "month" | "year";
     billed_at: string;
@@ -59,7 +58,6 @@ export async function addNewSubscription(data: FormData) {
 
   const { error } = await supabase.from("subscriptions").insert({
     name: inputs.name,
-    description: inputs.description,
     price: parseFloat(inputs.price),
     interval: inputs.interval,
     billed_at: new Date(inputs.billed_at).toUTCString(),
@@ -79,7 +77,6 @@ export async function addNewSubscription(data: FormData) {
 export async function updateSubscription(data: FormData) {
   const inputs = Object.fromEntries(data) as {
     name: string;
-    description: string;
     price: string;
     interval: "week" | "month" | "year";
     billed_at: string;
@@ -112,7 +109,6 @@ export async function updateSubscription(data: FormData) {
     .from("subscriptions")
     .update({
       name: inputs.name,
-      description: inputs.description,
       price: parseFloat(inputs.price),
       interval: inputs.interval,
       billed_at: new Date(inputs.billed_at).toUTCString(),
