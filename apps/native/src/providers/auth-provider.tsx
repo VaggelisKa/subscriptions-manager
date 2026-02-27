@@ -14,7 +14,7 @@ type AuthContextType = {
   updatePassword: (password: string) => Promise<{ error?: string }>;
 };
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
@@ -64,8 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function resetPassword(email: string) {
-    // redirectTo must be added to Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
-    // e.g. subscriptions-manager://reset-password (or exp://... for dev)
     const redirectTo = Linking.createURL("reset-password");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo,
@@ -96,8 +94,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return React.use(AuthContext);
 }

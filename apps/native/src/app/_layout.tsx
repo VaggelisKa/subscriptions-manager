@@ -1,6 +1,7 @@
+import { use } from "react";
 import { Stack } from "expo-router/stack";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, useAuth } from "@/providers/auth-provider";
+import { AuthContext, AuthProvider } from "@/providers/auth-provider";
 import {
   ThemeProvider,
   useTheme,
@@ -12,7 +13,7 @@ import { ActivityIndicator, useColorScheme, View } from "react-native";
 function RootLayoutInner() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
-  const { user, loading } = useAuth();
+  const { user, loading } = use(AuthContext);
   const isLoggedIn = !!user;
 
   if (loading) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import {
   View,
   Text,
@@ -11,15 +11,13 @@ import {
 import { Stack } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
-import { useAuth } from "@/providers/auth-provider";
+import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius, spacing } from "@/lib/theme";
 
 export default function ForgotPasswordScreen() {
   const colors = useThemeColors();
-  const { resetPassword } = useAuth();
-  const router = useRouter();
-
+  const { resetPassword } = use(AuthContext);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -229,22 +227,6 @@ export default function ForgotPasswordScreen() {
                       </Text>
                     )}
                   </Pressable>
-
-                  <Link href="/login" asChild>
-                    <Pressable
-                      style={{ alignItems: "center", padding: spacing.sm }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: fonts.regular,
-                          fontSize: 14,
-                          color: colors.mutedForeground,
-                        }}
-                      >
-                        Back to Sign In
-                      </Text>
-                    </Pressable>
-                  </Link>
                 </View>
               </>
             )}

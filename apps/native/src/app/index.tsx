@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { useAuth } from "@/providers/auth-provider";
+import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { SubscriptionCard } from "@/components/subscription-card";
@@ -34,7 +34,7 @@ import { utcToZonedTime } from "date-fns-tz";
 export default function HomeScreen() {
   const colors = useThemeColors();
   const { colorScheme, toggleTheme } = useTheme();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = use(AuthContext);
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [groupByCategory, setGroupByCategory] = useState(false);

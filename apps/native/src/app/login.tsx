@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { Stack } from "expo-router/stack";
 import * as Haptics from "expo-haptics";
-import { useAuth } from "@/providers/auth-provider";
+import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { LoginForm } from "@/components/login-form";
 import { spacing } from "@/lib/theme";
 
 export default function LoginScreen() {
   const colors = useThemeColors();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = use(AuthContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

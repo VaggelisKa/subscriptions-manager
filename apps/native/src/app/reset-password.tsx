@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { Stack, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/providers/auth-provider";
+import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius, spacing } from "@/lib/theme";
 
@@ -33,7 +33,7 @@ function parseHashParams(url: string): Record<string, string> {
 
 export default function ResetPasswordScreen() {
   const colors = useThemeColors();
-  const { updatePassword } = useAuth();
+  const { updatePassword } = use(AuthContext);
   const router = useRouter();
 
   const [password, setPassword] = useState("");

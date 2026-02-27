@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
@@ -19,7 +19,7 @@ import {
   foregroundStyle,
 } from "@expo/ui/swift-ui/modifiers";
 import * as Haptics from "expo-haptics";
-import { useAuth } from "@/providers/auth-provider";
+import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 
@@ -53,7 +53,7 @@ export default function SubscriptionFormScreen() {
   const paramBilledAt = getParam("billed_at");
   const paramCategoryId = getParam("category_id");
 
-  const { user } = useAuth();
+  const { user } = use(AuthContext);
   const {
     categories,
     addSubscription,
