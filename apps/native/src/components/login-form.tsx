@@ -1,4 +1,5 @@
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { Link } from "expo-router";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius, spacing } from "@/lib/theme";
 
@@ -91,15 +92,36 @@ export function LoginForm({
         </View>
 
         <View style={{ gap: spacing.xs }}>
-          <Text
+          <View
             style={{
-              fontFamily: fonts.medium,
-              fontSize: 14,
-              color: error ? colors.destructive : colors.foreground,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            Password
-          </Text>
+            <Text
+              style={{
+                fontFamily: fonts.medium,
+                fontSize: 14,
+                color: error ? colors.destructive : colors.foreground,
+              }}
+            >
+              Password
+            </Text>
+            <Link href="/forgot-password" asChild>
+              <Pressable style={{ paddingVertical: spacing.xs }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.regular,
+                    fontSize: 13,
+                    color: colors.mutedForeground,
+                  }}
+                >
+                  Forgot your password?
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
           <TextInput
             value={password}
             onChangeText={setPassword}
