@@ -5,7 +5,6 @@ import {
   ScrollView,
   RefreshControl,
   Switch,
-  ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import Animated, {
@@ -23,6 +22,7 @@ import { SubscriptionCard } from "@/components/subscription-card";
 import { TotalCostsCard } from "@/components/total-costs-card";
 import { ChargedSoonCard } from "@/components/charged-soon-card";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
+import { SubscriptionIndexSkeleton } from "@/components/subscription-index-skeleton";
 import { fonts, radius, spacing } from "@/lib/theme";
 import {
   numberFormatOptions,
@@ -73,16 +73,7 @@ export default function HomeScreen() {
     : null;
 
   if (authLoading || loading) {
-    return (
-      <View
-        style={[
-          styles.loadingContainer,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <SubscriptionIndexSkeleton />;
   }
 
   return (
@@ -273,11 +264,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   scrollContent: {
     padding: spacing.xl,
     gap: spacing.xxl,
