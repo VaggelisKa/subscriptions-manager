@@ -1,5 +1,6 @@
-import { use } from "react";
+import { use, useEffect } from "react";
 import { Stack } from "expo-router/stack";
+import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthContext, AuthProvider } from "@/providers/auth-provider";
 import {
@@ -13,8 +14,14 @@ import { ActivityIndicator, useColorScheme, View } from "react-native";
 function RootLayoutInner() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
-  const { user, loading } = use(AuthContext);
+  const { user, loading, isPasswordRecovery } = use(AuthContext);
   const isLoggedIn = !!user;
+
+  useEffect(() => {
+    if (isPasswordRecovery && !loading) {
+      router.replace("/reset-password");
+    }
+  }, [isPasswordRecovery, loading]);
 
   if (loading) {
     return (
@@ -71,10 +78,6 @@ function RootLayoutInner() {
           <Stack.Screen
             name="forgot-password"
             options={{ title: "Reset Password" }}
-          />
-          <Stack.Screen
-            name="reset-password"
-            options={{ title: "Create New Password" }}
           />
         </Stack.Protected>
       </Stack>

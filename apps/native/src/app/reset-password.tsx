@@ -1,4 +1,4 @@
-import { use, useState, useEffect } from "react";
+import { use, useState } from "react";
 import {
   View,
   Text,
@@ -9,90 +9,21 @@ import {
   ScrollView,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import * as Linking from "expo-linking";
 import * as Haptics from "expo-haptics";
-import { supabase } from "@/lib/supabase";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius, spacing } from "@/lib/theme";
 
-function parseHashParams(url: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  const hashIndex = url.indexOf("#");
-  if (hashIndex === -1) return params;
-
-  const hash = url.substring(hashIndex + 1);
-  hash.split("&").forEach((pair) => {
-    const [key, value] = pair.split("=");
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
-  });
-  return params;
-}
-
 export default function ResetPasswordScreen() {
   const colors = useThemeColors();
-  const { updatePassword } = use(AuthContext);
+  const { updatePassword, isPasswordRecovery, clearPasswordRecovery } =
+    use(AuthContext);
   const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sessionReady, setSessionReady] = useState(false);
-  const [initializing, setInitializing] = useState(true);
-
-  useEffect(() => {
-    async function handleDeepLink() {
-      const url = await Linking.getInitialURL();
-      if (!url || !url.includes("reset-password")) {
-        setInitializing(false);
-        return;
-      }
-
-      const params = parseHashParams(url);
-      const accessToken = params.access_token;
-      const refreshToken = params.refresh_token;
-
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        if (error) {
-          setError(error.message);
-        } else {
-          setSessionReady(true);
-        }
-      }
-
-      setInitializing(false);
-    }
-
-    handleDeepLink();
-  }, []);
-
-  useEffect(() => {
-    const subscription = Linking.addEventListener("url", ({ url }) => {
-      if (!url.includes("reset-password")) return;
-
-      const params = parseHashParams(url);
-      const accessToken = params.access_token;
-      const refreshToken = params.refresh_token;
-
-      if (accessToken && refreshToken) {
-        supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        }).then(({ error }) => {
-          if (!error) setSessionReady(true);
-        });
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
 
   async function handleSubmit() {
     if (!password.trim()) {
@@ -124,6 +55,7 @@ export default function ResetPasswordScreen() {
       if (process.env.EXPO_OS === "ios") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      clearPasswordRecovery();
       router.replace("/");
     }
 
@@ -141,60 +73,6 @@ export default function ResetPasswordScreen() {
     padding: spacing.md,
     borderCurve: "continuous" as const,
   };
-
-  if (initializing) {
-    return (
-      <>
-        <Stack.Screen options={{ title: "Create New Password" }} />
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: colors.background,
-          }}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </>
-    );
-  }
-
-  if (!sessionReady && !error) {
-    return (
-      <>
-        <Stack.Screen options={{ title: "Create New Password" }} />
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            padding: spacing.xl,
-          }}
-        >
-          <View
-            style={{
-              gap: spacing.xl,
-              maxWidth: 340,
-              alignSelf: "center",
-              width: "100%",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.regular,
-                fontSize: 15,
-                color: colors.mutedForeground,
-                textAlign: "center",
-              }}
-            >
-              Open the password reset link from your email to create a new
-              password.
-            </Text>
-          </View>
-        </ScrollView>
-      </>
-    );
-  }
 
   return (
     <>
