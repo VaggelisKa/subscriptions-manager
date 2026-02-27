@@ -191,28 +191,6 @@ export default function SubscriptionFormScreen() {
               placeholder="Description"
               onChangeText={setDescription}
             />
-          </Section>
-          <Section title="Pricing">
-            <TextField
-              key={`price-${id ?? "new"}`}
-              defaultValue={paramPrice ?? ""}
-              placeholder="0.00 DKK"
-              keyboardType="decimal-pad"
-              onChangeText={setPrice}
-            />
-            <Picker
-              selection={interval}
-              onSelectionChange={(value) =>
-                setInterval(value as "week" | "month" | "year")
-              }
-              modifiers={[pickerStyle("segmented")]}
-            >
-              <SwiftText modifiers={[tag("week")]}>Weekly</SwiftText>
-              <SwiftText modifiers={[tag("month")]}>Monthly</SwiftText>
-              <SwiftText modifiers={[tag("year")]}>Yearly</SwiftText>
-            </Picker>
-          </Section>
-          <Section title="Schedule">
             <Picker
               label="Category"
               selection={effectiveCategoryId}
@@ -224,6 +202,28 @@ export default function SubscriptionFormScreen() {
                   {cat.name ?? ""}
                 </SwiftText>
               ))}
+            </Picker>
+          </Section>
+          <Section title="Pricing">
+            <TextField
+              key={`price-${id ?? "new"}`}
+              defaultValue={paramPrice ?? ""}
+              placeholder="0.00 DKK"
+              keyboardType="decimal-pad"
+              onChangeText={setPrice}
+            />
+          </Section>
+          <Section title="Schedule">
+            <Picker
+              selection={interval}
+              onSelectionChange={(value) =>
+                setInterval(value as "week" | "month" | "year")
+              }
+              modifiers={[pickerStyle("segmented")]}
+            >
+              <SwiftText modifiers={[tag("week")]}>Weekly</SwiftText>
+              <SwiftText modifiers={[tag("month")]}>Monthly</SwiftText>
+              <SwiftText modifiers={[tag("year")]}>Yearly</SwiftText>
             </Picker>
             <DatePicker
               title="Billing Date"
