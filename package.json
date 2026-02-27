@@ -6,5 +6,10 @@
     "web": "pnpm --filter @subscriptions-manager/web",
     "native": "pnpm --filter @subscriptions-manager/native",
     "build:web": "pnpm --filter @subscriptions-manager/web build"
+  },
+  "pnpm": {
+    "overrides": {
+      "hermes-compiler": "250829098.0.4"
+    }
   }
 }

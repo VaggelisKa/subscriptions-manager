@@ -20,6 +20,7 @@
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
     "expo": "55.0.2",
+    "expo-build-properties": "~55.0.9",
     "expo-font": "~55.0.4",
     "expo-haptics": "~55.0.7",
     "expo-image": "~55.0.4",
