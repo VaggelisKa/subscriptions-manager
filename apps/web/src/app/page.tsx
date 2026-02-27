@@ -72,7 +72,7 @@ export default async function Home({
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("id, name, price, billed_at, interval, description, categories(*)")
+    .select("id, name, price, billed_at, interval, categories(*)")
     .order("billed_at", { ascending: true });
 
   const { data: categories } = await supabase.from("categories").select("*");

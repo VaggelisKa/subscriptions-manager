@@ -83,15 +83,6 @@ export function SubscriptionForm({
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
-          <Input
-            defaultValue={subscription?.description ?? ""}
-            name="description"
-            placeholder="Shared netflix account"
-          ></Input>
-        </div>
-
-        <div>
           <Label htmlFor="interval">Category</Label>
           <Select
             defaultValue={subscription?.categories?.id ?? undefined}

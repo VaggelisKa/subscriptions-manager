@@ -29,7 +29,6 @@ export default function SubscriptionFormScreen() {
   const params = useLocalSearchParams<{
     id?: string | string[];
     name?: string | string[];
-    description?: string | string[];
     price?: string | string[];
     interval?: string | string[];
     billed_at?: string | string[];
@@ -43,7 +42,6 @@ export default function SubscriptionFormScreen() {
 
   const id = getParam("id");
   const paramName = getParam("name");
-  const paramDescription = getParam("description");
   const paramPrice = getParam("price");
   const paramInterval = getParam("interval") as
     | "week"
@@ -65,7 +63,6 @@ export default function SubscriptionFormScreen() {
   const defaultCategoryId = categories[0]?.id ?? "";
 
   const [name, setName] = useState(paramName ?? "");
-  const [description, setDescription] = useState(paramDescription ?? "");
   const [price, setPrice] = useState(paramPrice ?? "");
   const [interval, setInterval] = useState<"week" | "month" | "year">(
     (paramInterval as "week" | "month" | "year") ?? "month",
@@ -92,7 +89,6 @@ export default function SubscriptionFormScreen() {
 
     const data = {
       name: name.trim(),
-      description: description.trim() || undefined,
       price: parseFloat(price),
       interval,
       billed_at: billedAt.toUTCString(),
@@ -184,12 +180,6 @@ export default function SubscriptionFormScreen() {
               defaultValue={paramName ?? ""}
               placeholder="Name"
               onChangeText={setName}
-            />
-            <TextField
-              key={`description-${id ?? "new"}`}
-              defaultValue={paramDescription ?? ""}
-              placeholder="Description"
-              onChangeText={setDescription}
             />
             <Picker
               label="Category"
