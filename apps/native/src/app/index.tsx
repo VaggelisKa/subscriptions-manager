@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   RefreshControl,
-  Switch,
   StyleSheet,
 } from "react-native";
 import Animated, {
@@ -201,61 +200,68 @@ export default function HomeScreen() {
           }}
         />
         <Stack.Toolbar.Menu icon="ellipsis">
-          <Stack.Toolbar.Menu icon="arrow.up.arrow.down">
-            <Stack.Toolbar.Label>Sort by</Stack.Toolbar.Label>
-            <Stack.Toolbar.Menu inline elementSize="small">
-              <Stack.Toolbar.MenuAction
-                icon="textformat"
-                isOn={sortBy === "nameAsc" || sortBy === "nameDesc"}
-                onPress={() => setSortField("name")}
-              >
-                Name
-              </Stack.Toolbar.MenuAction>
-              <Stack.Toolbar.MenuAction
-                icon="banknote"
-                isOn={sortBy === "priceAsc" || sortBy === "priceDesc"}
-                onPress={() => setSortField("price")}
-              >
-                Price
-              </Stack.Toolbar.MenuAction>
-              <Stack.Toolbar.MenuAction
-                icon="calendar"
-                isOn={sortBy === "billedAtAsc" || sortBy === "billedAtDesc"}
-                onPress={() => setSortField("billedAt")}
-              >
-                Next charge
-              </Stack.Toolbar.MenuAction>
-            </Stack.Toolbar.Menu>
-            <Stack.Toolbar.Menu inline elementSize="small">
-              <Stack.Toolbar.MenuAction
-                icon="arrow.up"
-                isOn={sortBy.endsWith("Asc")}
-                onPress={() => setSortDirection("Asc")}
-              >
-                Ascending
-              </Stack.Toolbar.MenuAction>
-              <Stack.Toolbar.MenuAction
-                icon="arrow.down"
-                isOn={sortBy.endsWith("Desc")}
-                onPress={() => setSortDirection("Desc")}
-              >
-                Descending
-              </Stack.Toolbar.MenuAction>
-            </Stack.Toolbar.Menu>
+          {/* Inline submenu - options appear directly in the menu */}
+          <Stack.Toolbar.Menu inline title="Sort by">
+            <Stack.Toolbar.MenuAction
+              icon="textformat"
+              isOn={sortBy === "nameAsc" || sortBy === "nameDesc"}
+              onPress={() => setSortField("name")}
+            >
+              Name
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="banknote"
+              isOn={sortBy === "priceAsc" || sortBy === "priceDesc"}
+              onPress={() => setSortField("price")}
+            >
+              Price
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="calendar"
+              isOn={sortBy === "billedAtAsc" || sortBy === "billedAtDesc"}
+              onPress={() => setSortField("billedAt")}
+            >
+              Next charge
+            </Stack.Toolbar.MenuAction>
           </Stack.Toolbar.Menu>
-          <Stack.Toolbar.MenuAction
-            icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
-            onPress={toggleTheme}
-          >
-            {colorScheme === "dark" ? "Light Mode" : "Dark Mode"}
-          </Stack.Toolbar.MenuAction>
-          <Stack.Toolbar.MenuAction
-            icon="rectangle.portrait.and.arrow.right"
-            destructive
-            onPress={signOut}
-          >
-            Sign Out
-          </Stack.Toolbar.MenuAction>
+          <Stack.Toolbar.Menu inline title="Order">
+            <Stack.Toolbar.MenuAction
+              icon="arrow.up"
+              isOn={sortBy.endsWith("Asc")}
+              onPress={() => setSortDirection("Asc")}
+            >
+              Ascending
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="arrow.down"
+              isOn={sortBy.endsWith("Desc")}
+              onPress={() => setSortDirection("Desc")}
+            >
+              Descending
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+
+          <Stack.Toolbar.Menu inline>
+            <Stack.Toolbar.MenuAction
+              icon="rectangle.3.group"
+              onPress={() => setGroupByCategory((prev) => !prev)}
+            >
+              {groupByCategory ? "Show as flat list" : "Group by category"}
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
+              onPress={toggleTheme}
+            >
+              {colorScheme === "dark" ? "Light mode" : "Dark mode"}
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="rectangle.portrait.and.arrow.right"
+              destructive
+              onPress={signOut}
+            >
+              Sign out
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
         </Stack.Toolbar.Menu>
       </Stack.Toolbar>
       <ScrollView
@@ -312,32 +318,9 @@ export default function HomeScreen() {
               layout={LinearTransition}
               style={styles.sectionGapMd}
             >
-              <View style={styles.sectionGapXs}>
-                <Text
-                  style={[styles.sectionTitle, { color: colors.foreground }]}
-                >
-                  All subscriptions
-                </Text>
-                <View style={styles.rowCenter}>
-                  <Text
-                    style={[
-                      styles.groupByLabel,
-                      { color: colors.mutedForeground },
-                    ]}
-                  >
-                    Group by category
-                  </Text>
-                  <Switch
-                    value={groupByCategory}
-                    onValueChange={setGroupByCategory}
-                    trackColor={{
-                      false: colors.input,
-                      true: colors.primary,
-                    }}
-                    style={styles.switchScale}
-                  />
-                </View>
-              </View>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                All subscriptions
+              </Text>
 
               {grouped
                 ? Object.entries(grouped)
@@ -429,10 +412,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 22,
   },
-  groupByLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-  },
   categoryTitle: {
     fontFamily: fonts.semiBold,
     fontSize: 15,
@@ -445,17 +424,9 @@ const styles = StyleSheet.create({
   sectionGapMd: { gap: spacing.md },
   sectionGapXs: { gap: spacing.xs },
   cardGapSm: { gap: spacing.sm },
-  rowCenter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  switchScale: {
-    transform: [{ scale: 0.8 }],
   },
 });
