@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
+import { loadGroupByCategory, saveGroupByCategory } from "@/lib/user-options";
 import { SubscriptionCard } from "@/components/subscription-card";
 import { TotalCostsCard } from "@/components/total-costs-card";
 import { ChargedSoonCard } from "@/components/charged-soon-card";
@@ -38,6 +39,30 @@ export default function HomeScreen() {
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [groupByCategory, setGroupByCategory] = useState(false);
+  const [isGroupPreferenceHydrated, setIsGroupPreferenceHydrated] =
+    useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function hydrateGroupPreference() {
+      const storedGroupPreference = await loadGroupByCategory();
+      if (!isMounted) return;
+      setGroupByCategory(storedGroupPreference);
+      setIsGroupPreferenceHydrated(true);
+    }
+
+    void hydrateGroupPreference();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGroupPreferenceHydrated) return;
+    void saveGroupByCategory(groupByCategory);
+  }, [groupByCategory, isGroupPreferenceHydrated]);
 
   const onRefresh = async () => {
     setRefreshing(true);
