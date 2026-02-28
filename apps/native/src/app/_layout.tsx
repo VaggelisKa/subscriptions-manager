@@ -72,6 +72,7 @@ function RootLayoutInner() {
               sheetGrabberVisible: true,
               headerTransparent: true,
               contentStyle: { backgroundColor: "transparent" },
+              sheetAllowedDetents: [0.65, 1],
             }}
           >
             <Stack.Header style={{ backgroundColor: "transparent" }} />
@@ -92,8 +93,9 @@ function RootLayoutInner() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [initialThemeOverride, setInitialThemeOverride] =
-    useState<ThemeOverride | undefined>(undefined);
+  const [initialThemeOverride, setInitialThemeOverride] = useState<
+    ThemeOverride | undefined
+  >(undefined);
 
   const [fontsLoaded, fontsError] = useFonts({
     "Nunito-Regular": require("../../assets/fonts/Nunito-Regular.ttf"),

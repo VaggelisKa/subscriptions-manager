@@ -9,14 +9,12 @@ import {
   Section,
   TextField,
   DatePicker,
-  Button,
   type TextFieldRef,
 } from "@expo/ui/swift-ui";
 import {
   pickerStyle,
   tag,
   datePickerStyle,
-  disabled,
   onTapGesture,
   scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
@@ -156,6 +154,13 @@ export default function SubscriptionFormScreen() {
         <Stack.Toolbar.Button icon="xmark" onPress={() => router.back()} />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
+        {isEdit && !saving && (
+          <Stack.Toolbar.Button
+            icon="trash"
+            tintColor={colors.destructive}
+            onPress={handleDelete}
+          />
+        )}
         {saving ? (
           <Stack.Toolbar.View>
             <View
@@ -223,20 +228,22 @@ export default function SubscriptionFormScreen() {
               onChangeText={setPrice}
             />
           </Section>
-          <Section title="Schedule">
+          <Section title="Billing Schedule">
             <Picker
+              label="Interval"
               selection={interval}
-              onSelectionChange={(value) =>
-                setInterval(value as "week" | "month" | "year")
-              }
-              modifiers={[pickerStyle("segmented")]}
+              onSelectionChange={(value) => {
+                dismissFormKeyboard();
+                setInterval(value as "week" | "month" | "year");
+              }}
+              modifiers={[pickerStyle("menu")]}
             >
               <SwiftText modifiers={[tag("week")]}>Weekly</SwiftText>
               <SwiftText modifiers={[tag("month")]}>Monthly</SwiftText>
               <SwiftText modifiers={[tag("year")]}>Yearly</SwiftText>
             </Picker>
             <DatePicker
-              title="Billing Date"
+              title="Date"
               selection={billedAt}
               onDateChange={(date) => {
                 dismissFormKeyboard();
@@ -245,16 +252,6 @@ export default function SubscriptionFormScreen() {
               modifiers={[datePickerStyle("compact")]}
             />
           </Section>
-          {isEdit && (
-            <Section>
-              <Button
-                role="destructive"
-                label="Delete Subscription"
-                onPress={handleDelete}
-                modifiers={[disabled(saving)]}
-              />
-            </Section>
-          )}
         </Form>
       </Host>
     </>

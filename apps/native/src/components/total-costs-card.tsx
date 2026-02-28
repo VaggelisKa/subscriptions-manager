@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
 import { numberFormatOptions } from "@subscriptions-manager/shared";
 import { fonts, radius, spacing } from "@/lib/theme";
@@ -8,7 +8,7 @@ type Props = {
   monthlyTotal: number;
 };
 
-const styles = {
+const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -28,6 +28,7 @@ const styles = {
   },
   totalAmount: {
     fontFamily: fonts.bold,
+    fontWeight: "600",
     fontSize: 28,
     fontVariant: ["tabular-nums"] as const,
   },
@@ -38,7 +39,7 @@ const styles = {
   monthlyLabelMuted: {
     fontFamily: fonts.regular,
   },
-};
+});
 
 export function TotalCostsCard({ total, monthlyTotal }: Props) {
   const colors = useThemeColors();
@@ -58,10 +59,7 @@ export function TotalCostsCard({ total, monthlyTotal }: Props) {
           Aggregation of all your subscriptions
         </Text>
       </View>
-      <Text
-        selectable
-        style={[styles.totalAmount, { color: colors.primary }]}
-      >
+      <Text selectable style={[styles.totalAmount, { color: colors.primary }]}>
         {total.toLocaleString("en-DK", {
           ...numberFormatOptions,
           notation: "standard",
