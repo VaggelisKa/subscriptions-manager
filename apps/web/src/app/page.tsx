@@ -150,7 +150,7 @@ export default async function Home({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-semibold">
+            <span className="text-2xl font-bold">
               {subscriptionsSum?.toLocaleString("en-DK", {
                 ...numberFormatOptions,
                 notation: "standard",
