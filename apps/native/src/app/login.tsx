@@ -1,14 +1,11 @@
 import { use, useState } from "react";
-import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { Stack } from "expo-router/stack";
+import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
-import { useThemeColors } from "@/providers/theme-provider";
 import { LoginForm } from "@/components/login-form";
-import { spacing } from "@/lib/theme";
 
 export default function LoginScreen() {
-  const colors = useThemeColors();
   const { signIn, signUp } = use(AuthContext);
 
   const [email, setEmail] = useState("");
@@ -45,34 +42,25 @@ export default function LoginScreen() {
     setError(null);
   }
 
+  function handleForgotPassword() {
+    router.push("/forgot-password");
+  }
+
   return (
     <>
       <Stack.Screen options={{ title: "Sign In", headerShown: false }} />
-      <KeyboardAvoidingView
-        behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, backgroundColor: colors.background }}
-      >
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            padding: spacing.xl,
-          }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <LoginForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            isSignUp={isSignUp}
-            onToggleSignUp={handleToggleSignUp}
-            loading={loading}
-            error={error}
-            onSubmit={handleSubmit}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
+      <LoginForm
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        isSignUp={isSignUp}
+        onToggleSignUp={handleToggleSignUp}
+        loading={loading}
+        error={error}
+        onSubmit={handleSubmit}
+        onForgotPassword={handleForgotPassword}
+      />
     </>
   );
 }
