@@ -1,6 +1,10 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { type ColorSchemeName } from "react-native";
 import { themes, type ThemeColors } from "@/lib/theme";
+import {
+  type ThemeOverride,
+  saveThemeOverride,
+} from "@/lib/user-options";
 
 type ThemeContextType = {
   colorScheme: "light" | "dark";
@@ -17,13 +21,19 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({
   children,
   colorScheme: systemScheme,
+  initialOverride,
 }: {
   children: React.ReactNode;
   colorScheme: ColorSchemeName;
+  initialOverride: ThemeOverride;
 }) {
-  const [override, setOverride] = useState<"light" | "dark" | null>(null);
+  const [override, setOverride] = useState<ThemeOverride>(initialOverride);
   const colorScheme = override ?? (systemScheme === "dark" ? "dark" : "light");
   const colors = themes[colorScheme];
+
+  useEffect(() => {
+    void saveThemeOverride(override);
+  }, [override]);
 
   function toggleTheme() {
     setOverride((prev) => {

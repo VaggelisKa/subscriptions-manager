@@ -1,6 +1,7 @@
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { Stack } from "expo-router/stack";
 import { router } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { AuthContext, AuthProvider } from "@/providers/auth-provider";
 import {
@@ -8,8 +9,11 @@ import {
   useTheme,
   useThemeColors,
 } from "@/providers/theme-provider";
+import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
 import { useFonts } from "expo-font";
 import { ActivityIndicator, useColorScheme, View } from "react-native";
+
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {
   const colors = useThemeColors();
@@ -88,6 +92,8 @@ function RootLayoutInner() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [initialThemeOverride, setInitialThemeOverride] =
+    useState<ThemeOverride | undefined>(undefined);
 
   const [fontsLoaded, fontsError] = useFonts({
     "Nunito-Regular": require("../../assets/fonts/Nunito-Regular.ttf"),
@@ -96,29 +102,44 @@ export default function RootLayout() {
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
   });
 
-  if (!fontsLoaded && !fontsError) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colorScheme === "dark" ? "#0f0f0f" : "#ffffff",
-        }}
-      >
-        <ActivityIndicator
-          size="large"
-          color={colorScheme === "dark" ? "#f97316" : "#ea580c"}
-        />
-      </View>
-    );
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTheme() {
+      const stored = await loadThemeOverride();
+      if (isMounted) setInitialThemeOverride(stored);
+    }
+
+    void loadTheme();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const appIsReady =
+    (fontsLoaded || !!fontsError) && initialThemeOverride !== undefined;
+
+  function onLayoutRootView() {
+    if (appIsReady) {
+      void SplashScreen.hideAsync();
+    }
+  }
+
+  if (!appIsReady) {
+    return null;
   }
 
   return (
-    <ThemeProvider colorScheme={colorScheme}>
-      <AuthProvider>
-        <RootLayoutInner />
-      </AuthProvider>
-    </ThemeProvider>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <ThemeProvider
+        colorScheme={colorScheme}
+        initialOverride={initialThemeOverride}
+      >
+        <AuthProvider>
+          <RootLayoutInner />
+        </AuthProvider>
+      </ThemeProvider>
+    </View>
   );
 }
