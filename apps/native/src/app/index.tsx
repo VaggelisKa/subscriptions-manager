@@ -18,7 +18,13 @@ import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
-import { loadGroupByCategory, saveGroupByCategory } from "@/lib/user-options";
+import {
+  loadGroupByCategory,
+  saveGroupByCategory,
+  loadSortBy,
+  saveSortBy,
+  type SortBy,
+} from "@/lib/user-options";
 import { SubscriptionCard } from "@/components/subscription-card";
 import { TotalCostsCard } from "@/components/total-costs-card";
 import { ChargedSoonCard } from "@/components/charged-soon-card";
@@ -41,6 +47,9 @@ export default function HomeScreen() {
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [isGroupPreferenceHydrated, setIsGroupPreferenceHydrated] =
     useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("priceAsc");
+  const [isSortPreferenceHydrated, setIsSortPreferenceHydrated] =
+    useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,15 +69,72 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function hydrateSortPreference() {
+      const storedSortPreference = await loadSortBy();
+      if (!isMounted) return;
+      setSortBy(storedSortPreference);
+      setIsSortPreferenceHydrated(true);
+    }
+
+    void hydrateSortPreference();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isGroupPreferenceHydrated) return;
     void saveGroupByCategory(groupByCategory);
   }, [groupByCategory, isGroupPreferenceHydrated]);
+
+  useEffect(() => {
+    if (!isSortPreferenceHydrated) return;
+    void saveSortBy(sortBy);
+  }, [sortBy, isSortPreferenceHydrated]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refresh();
     setRefreshing(false);
   };
+
+  function sortSubscriptions<T extends SubscriptionWithCategory>(
+    list: T[],
+  ): T[] {
+    const sorted = [...list];
+    switch (sortBy) {
+      case "nameAsc":
+        sorted.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+        break;
+      case "nameDesc":
+        sorted.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
+        break;
+      case "priceAsc":
+        sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        break;
+      case "priceDesc":
+        sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+        break;
+      case "billedAtAsc":
+        sorted.sort(
+          (a, b) =>
+            new Date(a.billed_at ?? 0).getTime() -
+            new Date(b.billed_at ?? 0).getTime(),
+        );
+        break;
+      case "billedAtDesc":
+        sorted.sort(
+          (a, b) =>
+            new Date(b.billed_at ?? 0).getTime() -
+            new Date(a.billed_at ?? 0).getTime(),
+        );
+        break;
+    }
+    return sorted;
+  }
 
   const total = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
   const monthlyTotal = subscriptions
@@ -85,6 +151,9 @@ export default function HomeScreen() {
           if (!groups[key]) groups[key] = [];
           groups[key].push(sub);
         }
+        for (const key of Object.keys(groups)) {
+          groups[key] = sortSubscriptions(groups[key]);
+        }
         return groups;
       })()
     : null;
@@ -98,6 +167,25 @@ export default function HomeScreen() {
     : null;
 
   const isLoading = authLoading || loading;
+
+  function setSortField(field: "name" | "price" | "billedAt") {
+    setSortBy((prev) => {
+      const dir = prev.endsWith("Asc") ? "Asc" : "Desc";
+      const current = prev.startsWith("name")
+        ? "name"
+        : prev.startsWith("price")
+          ? "price"
+          : "billedAt";
+      return current === field ? prev : `${field}${dir}`;
+    });
+  }
+
+  function setSortDirection(dir: "Asc" | "Desc") {
+    setSortBy((prev) => {
+      const base = prev.replace(/(Asc|Desc)$/, "");
+      return `${base}${dir}` as SortBy;
+    });
+  }
 
   return (
     <>
@@ -113,6 +201,48 @@ export default function HomeScreen() {
           }}
         />
         <Stack.Toolbar.Menu icon="ellipsis">
+          <Stack.Toolbar.Menu icon="arrow.up.arrow.down">
+            <Stack.Toolbar.Label>Sort by</Stack.Toolbar.Label>
+            <Stack.Toolbar.Menu inline elementSize="small">
+              <Stack.Toolbar.MenuAction
+                icon="textformat"
+                isOn={sortBy === "nameAsc" || sortBy === "nameDesc"}
+                onPress={() => setSortField("name")}
+              >
+                Name
+              </Stack.Toolbar.MenuAction>
+              <Stack.Toolbar.MenuAction
+                icon="banknote"
+                isOn={sortBy === "priceAsc" || sortBy === "priceDesc"}
+                onPress={() => setSortField("price")}
+              >
+                Price
+              </Stack.Toolbar.MenuAction>
+              <Stack.Toolbar.MenuAction
+                icon="calendar"
+                isOn={sortBy === "billedAtAsc" || sortBy === "billedAtDesc"}
+                onPress={() => setSortField("billedAt")}
+              >
+                Next charge
+              </Stack.Toolbar.MenuAction>
+            </Stack.Toolbar.Menu>
+            <Stack.Toolbar.Menu inline elementSize="small">
+              <Stack.Toolbar.MenuAction
+                icon="arrow.up"
+                isOn={sortBy.endsWith("Asc")}
+                onPress={() => setSortDirection("Asc")}
+              >
+                Ascending
+              </Stack.Toolbar.MenuAction>
+              <Stack.Toolbar.MenuAction
+                icon="arrow.down"
+                isOn={sortBy.endsWith("Desc")}
+                onPress={() => setSortDirection("Desc")}
+              >
+                Descending
+              </Stack.Toolbar.MenuAction>
+            </Stack.Toolbar.Menu>
+          </Stack.Toolbar.Menu>
           <Stack.Toolbar.MenuAction
             icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
             onPress={toggleTheme}
@@ -210,58 +340,60 @@ export default function HomeScreen() {
               </View>
 
               {grouped
-                ? Object.entries(grouped).map(([category, subs]) => (
-                    <View key={category} style={styles.cardGapSm}>
-                      <Animated.View
-                        entering={FadeIn.duration(250)}
-                        exiting={FadeOut.duration(150)}
-                        style={styles.rowBetween}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryTitle,
-                            { color: colors.foreground },
-                          ]}
+                ? Object.entries(grouped)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([category, subs]) => (
+                      <View key={category} style={styles.cardGapSm}>
+                        <Animated.View
+                          entering={FadeIn.duration(250)}
+                          exiting={FadeOut.duration(150)}
+                          style={styles.rowBetween}
                         >
-                          {category}
-                        </Text>
-                        {groupTotals && (
                           <Text
                             style={[
-                              styles.categoryTotal,
+                              styles.categoryTitle,
                               { color: colors.foreground },
                             ]}
                           >
-                            {groupTotals[category].toLocaleString("en-DK", {
-                              ...numberFormatOptions,
-                              maximumFractionDigits: 0,
-                              minimumFractionDigits: 0,
-                            })}
+                            {category}
                           </Text>
-                        )}
-                      </Animated.View>
-                      {subs.map((sub) => (
-                        <SubscriptionCard
-                          key={sub.id}
-                          subscription={sub}
-                          onPress={() =>
-                            router.push({
-                              pathname: "/subscription-form",
-                              params: {
-                                id: sub.id,
-                                name: sub.name,
-                                price: String(sub.price),
-                                interval: sub.interval,
-                                billed_at: sub.billed_at,
-                                category_id: sub.categories?.id ?? "",
-                              },
-                            })
-                          }
-                        />
-                      ))}
-                    </View>
-                  ))
-                : subscriptions.map((sub) => (
+                          {groupTotals && (
+                            <Text
+                              style={[
+                                styles.categoryTotal,
+                                { color: colors.foreground },
+                              ]}
+                            >
+                              {groupTotals[category].toLocaleString("en-DK", {
+                                ...numberFormatOptions,
+                                maximumFractionDigits: 0,
+                                minimumFractionDigits: 0,
+                              })}
+                            </Text>
+                          )}
+                        </Animated.View>
+                        {subs.map((sub) => (
+                          <SubscriptionCard
+                            key={sub.id}
+                            subscription={sub}
+                            onPress={() =>
+                              router.push({
+                                pathname: "/subscription-form",
+                                params: {
+                                  id: sub.id,
+                                  name: sub.name,
+                                  price: String(sub.price),
+                                  interval: sub.interval,
+                                  billed_at: sub.billed_at,
+                                  category_id: sub.categories?.id ?? "",
+                                },
+                              })
+                            }
+                          />
+                        ))}
+                      </View>
+                    ))
+                : sortSubscriptions(subscriptions).map((sub) => (
                     <SubscriptionCard
                       key={sub.id}
                       subscription={sub}
