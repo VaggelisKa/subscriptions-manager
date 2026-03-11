@@ -61,7 +61,6 @@ function RootLayoutInner() {
       >
         <Stack.Protected guard={isLoggedIn}>
           <Stack.Screen name="index" options={{ title: "Subscriptions" }} />
-          <Stack.Screen name="settings" options={{ title: "Settings" }} />
           <Stack.Screen
             name="reset-password"
             options={{ title: "Create New Password" }}

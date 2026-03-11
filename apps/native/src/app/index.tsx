@@ -5,6 +5,7 @@ import {
   ScrollView,
   RefreshControl,
   StyleSheet,
+  Alert,
 } from "react-native";
 import Animated, {
   FadeIn,
@@ -40,9 +41,10 @@ import { utcToZonedTime } from "date-fns-tz";
 export default function HomeScreen() {
   const colors = useThemeColors();
   const { colorScheme, toggleTheme } = useTheme();
-  const { user, loading: authLoading, signOut } = use(AuthContext);
+  const { user, loading: authLoading, signOut, deleteAccount } = use(AuthContext);
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [isGroupPreferenceHydrated, setIsGroupPreferenceHydrated] =
     useState(false);
@@ -255,22 +257,47 @@ export default function HomeScreen() {
               {colorScheme === "dark" ? "Light mode" : "Dark mode"}
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
-              icon="gearshape"
-              onPress={() => {
-                if (process.env.EXPO_OS === "ios") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-                router.push("/settings");
-              }}
-            >
-              Settings
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
               icon="rectangle.portrait.and.arrow.right"
               destructive
               onPress={signOut}
             >
               Sign out
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="trash"
+              destructive
+              disabled={deleting}
+              onPress={() => {
+                if (process.env.EXPO_OS === "ios") {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                }
+                Alert.alert(
+                  "Delete account",
+                  "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: async () => {
+                        setDeleting(true);
+                        const result = await deleteAccount();
+                        if (result.error) {
+                          if (process.env.EXPO_OS === "ios") {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                          }
+                          Alert.alert("Error", result.error);
+                        } else if (process.env.EXPO_OS === "ios") {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        }
+                        setDeleting(false);
+                      },
+                    },
+                  ],
+                );
+              }}
+            >
+              Delete account
             </Stack.Toolbar.MenuAction>
           </Stack.Toolbar.Menu>
         </Stack.Toolbar.Menu>
