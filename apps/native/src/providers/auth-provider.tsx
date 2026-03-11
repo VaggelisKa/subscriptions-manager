@@ -15,6 +15,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updatePassword: (password: string) => Promise<{ error?: string }>;
+  deleteAccount: () => Promise<{ error?: string }>;
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -29,6 +30,7 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   resetPassword: async () => ({}),
   updatePassword: async () => ({}),
+  deleteAccount: async () => ({}),
 });
 
 function parseHashParams(url: string): Record<string, string> {
@@ -144,6 +146,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {};
   }
 
+  async function deleteAccount() {
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+    if (!currentSession?.access_token) {
+      return { error: "Not signed in" };
+    }
+
+    try {
+      const { getApiUrl } = await import("@/lib/api-config");
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/account/delete`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
+      });
+
+      const data = (await response.json().catch(() => ({}))) as
+        | { success?: boolean }
+        | { error?: string };
+
+      if (!response.ok) {
+        return {
+          error:
+            (data && "error" in data && data.error) ||
+            `Request failed (${response.status})`,
+        };
+      }
+
+      await supabase.auth.signOut();
+      return {};
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete account";
+      return { error: message };
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -158,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         resetPassword,
         updatePassword,
+        deleteAccount,
       }}
     >
       {children}
