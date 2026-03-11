@@ -255,6 +255,17 @@ export default function HomeScreen() {
               {colorScheme === "dark" ? "Light mode" : "Dark mode"}
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
+              icon="gearshape"
+              onPress={() => {
+                if (process.env.EXPO_OS === "ios") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                router.push("/settings");
+              }}
+            >
+              Settings
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
               icon="rectangle.portrait.and.arrow.right"
               destructive
               onPress={signOut}
