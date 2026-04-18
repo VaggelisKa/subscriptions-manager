@@ -7,9 +7,12 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  bootstrapError: string | null;
   isPasswordRecovery: boolean;
   isProcessingResetLink: boolean;
+  clearBootstrapError: () => void;
   clearPasswordRecovery: () => void;
+  retryBootstrap: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -22,9 +25,12 @@ export const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
+  bootstrapError: null,
   isPasswordRecovery: false,
   isProcessingResetLink: false,
+  clearBootstrapError: () => {},
   clearPasswordRecovery: () => {},
+  retryBootstrap: async () => {},
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => {},
@@ -51,10 +57,22 @@ function parseHashParams(url: string): Record<string, string> {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [isProcessingResetLink, setIsProcessingResetLink] = useState(false);
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
+
+    function getBootstrapErrorMessage(error: unknown) {
+      if (error instanceof Error && error.message.trim()) {
+        return error.message;
+      }
+
+      return "Could not reconnect to Supabase. Check your connection or backend status and try again.";
+    }
+
     async function processResetUrl(url: string) {
       if (!url.includes("reset-password")) return;
 
@@ -64,53 +82,109 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!accessToken || !refreshToken) return;
 
-      setIsProcessingResetLink(true);
-
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (!error) {
-        setIsPasswordRecovery(true);
+      if (isMounted) {
+        setIsProcessingResetLink(true);
       }
 
-      setIsProcessingResetLink(false);
+      try {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          console.warn(
+            "Failed to restore password recovery session:",
+            error.message,
+          );
+          return;
+        }
+
+        if (isMounted) {
+          setIsPasswordRecovery(true);
+        }
+      } catch (error) {
+        console.warn("Failed to process password recovery link:", error);
+      } finally {
+        if (isMounted) {
+          setIsProcessingResetLink(false);
+        }
+      }
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    async function hydrateSession() {
+      if (isMounted) {
+        setLoading(true);
+        setBootstrapError(null);
+      }
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (isMounted) {
+          setSession(session);
+          setBootstrapError(null);
+        }
+      } catch (error) {
+        console.warn("Failed to restore Supabase session:", error);
+
+        if (isMounted) {
+          setSession(null);
+          setBootstrapError(getBootstrapErrorMessage(error));
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void hydrateSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
       setSession(session);
+      setLoading(false);
+      setBootstrapError(null);
       if (event === "PASSWORD_RECOVERY") {
         setIsPasswordRecovery(true);
       }
     });
 
-    Linking.getInitialURL().then((url) => {
+    void Linking.getInitialURL().then((url) => {
       if (url) processResetUrl(url);
     });
 
     const linkingSub = Linking.addEventListener("url", ({ url }) => {
-      processResetUrl(url);
+      void processResetUrl(url);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       linkingSub.remove();
     };
-  }, []);
+  }, [bootstrapAttempt]);
+
+  function clearBootstrapError() {
+    setBootstrapError(null);
+  }
 
   function clearPasswordRecovery() {
     setIsPasswordRecovery(false);
   }
 
+  async function retryBootstrap() {
+    setBootstrapAttempt((attempt) => attempt + 1);
+  }
+
   async function signIn(email: string, password: string) {
+    setBootstrapError(null);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -191,9 +265,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user: session?.user ?? null,
         loading,
+        bootstrapError,
         isPasswordRecovery,
         isProcessingResetLink,
+        clearBootstrapError,
         clearPasswordRecovery,
+        retryBootstrap,
         signIn,
         signUp,
         signOut,
