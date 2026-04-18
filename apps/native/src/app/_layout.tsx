@@ -11,15 +11,29 @@ import {
 } from "@/providers/theme-provider";
 import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
 import { useFonts } from "expo-font";
-import { ActivityIndicator, useColorScheme, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  useColorScheme,
+  View,
+} from "react-native";
+import { fonts, radius, spacing } from "@/lib/theme";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
-  const { user, loading, isPasswordRecovery, isProcessingResetLink } =
-    use(AuthContext);
+  const {
+    user,
+    loading,
+    bootstrapError,
+    isPasswordRecovery,
+    isProcessingResetLink,
+    clearBootstrapError,
+    retryBootstrap,
+  } = use(AuthContext);
   const isLoggedIn = !!user;
 
   useEffect(() => {
@@ -39,6 +53,100 @@ function RootLayoutInner() {
         }}
       >
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (bootstrapError && !isLoggedIn) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          padding: spacing.xl,
+          backgroundColor: colors.background,
+        }}
+      >
+        <View
+          style={{
+            gap: spacing.lg,
+            padding: spacing.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: radius.lg,
+            backgroundColor: colors.card,
+          }}
+        >
+          <View style={{ gap: spacing.sm }}>
+            <Text
+              style={{
+                fontFamily: fonts.bold,
+                fontSize: 24,
+                color: colors.foreground,
+              }}
+            >
+              Couldn&apos;t restore your session
+            </Text>
+            <Text
+              style={{
+                fontFamily: fonts.regular,
+                fontSize: 15,
+                lineHeight: 22,
+                color: colors.mutedForeground,
+              }}
+            >
+              {bootstrapError}
+            </Text>
+          </View>
+
+          <View style={{ gap: spacing.md }}>
+            <Pressable
+              onPress={() => {
+                void retryBootstrap();
+              }}
+              style={({ pressed }) => ({
+                alignItems: "center",
+                padding: spacing.md,
+                borderRadius: radius.md,
+                backgroundColor: colors.primary,
+                opacity: pressed ? 0.75 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.semiBold,
+                  fontSize: 15,
+                  color: colors.primaryForeground,
+                }}
+              >
+                Try Again
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={clearBootstrapError}
+              style={({ pressed }) => ({
+                alignItems: "center",
+                padding: spacing.md,
+                borderRadius: radius.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+                opacity: pressed ? 0.75 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.medium,
+                  fontSize: 15,
+                  color: colors.foreground,
+                }}
+              >
+                Continue to Sign In
+              </Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
     );
   }
