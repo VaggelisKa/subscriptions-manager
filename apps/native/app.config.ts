@@ -8,9 +8,6 @@ const config: ExpoConfig = {
   platforms: ["ios", "android"],
   userInterfaceStyle: "automatic",
   icon: "./assets/app-icon.jpg",
-  splash: {
-    backgroundColor: "#ffffff",
-  },
   ios: {
     bundleIdentifier: "com.subscriptionsmanager.app",
     supportsTablet: false,
@@ -27,18 +24,11 @@ const config: ExpoConfig = {
   },
   experiments: {
     typedRoutes: true,
+    reactCompiler: true,
   },
   plugins: [
     "expo-router",
-    [
-      "expo-build-properties",
-      {
-        ios: {
-          buildReactNativeFromSource: true,
-          useHermesV1: true,
-        },
-      },
-    ],
+    ["expo-splash-screen", { backgroundColor: "#ffffff" }],
   ],
   extra: {
     eas: {

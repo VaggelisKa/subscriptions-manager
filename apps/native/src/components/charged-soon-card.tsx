@@ -35,7 +35,7 @@ const styles = {
   chargedSoonPrice: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    fontVariant: ["tabular-nums"] as const,
+    fontVariant: ["tabular-nums" as const],
   },
 };
 
