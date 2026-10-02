@@ -9,12 +9,14 @@ import {
   Section,
   TextField,
   DatePicker,
+  useNativeState,
   type TextFieldRef,
 } from "@expo/ui/swift-ui";
 import {
   pickerStyle,
   tag,
   datePickerStyle,
+  keyboardType,
   onTapGesture,
   scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
@@ -64,6 +66,8 @@ export default function SubscriptionFormScreen() {
 
   const [name, setName] = useState(paramName ?? "");
   const [price, setPrice] = useState(paramPrice ?? "");
+  const nameText = useNativeState(paramName ?? "");
+  const priceText = useNativeState(paramPrice ?? "");
   const [interval, setInterval] = useState<"week" | "month" | "year">(
     (paramInterval as "week" | "month" | "year") ?? "month",
   );
@@ -198,9 +202,9 @@ export default function SubscriptionFormScreen() {
             <TextField
               ref={nameInputRef}
               key={`name-${id ?? "new"}`}
-              defaultValue={paramName ?? ""}
+              text={nameText}
               placeholder="Name"
-              onChangeText={setName}
+              onTextChange={setName}
             />
             <Picker
               label="Category"
@@ -222,10 +226,10 @@ export default function SubscriptionFormScreen() {
             <TextField
               ref={priceInputRef}
               key={`price-${id ?? "new"}`}
-              defaultValue={paramPrice ?? ""}
+              text={priceText}
               placeholder="0.00 DKK"
-              keyboardType="decimal-pad"
-              onChangeText={setPrice}
+              modifiers={[keyboardType("decimal-pad")]}
+              onTextChange={setPrice}
             />
           </Section>
           <Section title="Billing Schedule">
