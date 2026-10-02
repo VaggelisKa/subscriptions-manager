@@ -1,3 +1,11 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+nodeLinker: hoisted
+
+# Both come from the web app and ship prebuilt binaries, so their install
+# scripts aren't needed. pnpm 11 (used by EAS) fails on unreviewed builds.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
