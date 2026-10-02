@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
-import { type ColorSchemeName } from "react-native";
+import { Appearance, type ColorSchemeName } from "react-native";
 import { themes, type ThemeColors } from "@/lib/theme";
 import {
   type ThemeOverride,
@@ -33,6 +33,9 @@ export function ThemeProvider({
 
   useEffect(() => {
     void saveThemeOverride(override);
+    // Native presentations outside our views (the date picker popup, alerts)
+    // take their appearance from the window, so push the override down to it.
+    Appearance.setColorScheme(override ?? "unspecified");
   }, [override]);
 
   function toggleTheme() {
