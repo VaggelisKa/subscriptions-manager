@@ -24,7 +24,7 @@ export function ThemeProvider({
   initialOverride,
 }: {
   children: React.ReactNode;
-  colorScheme: ColorSchemeName;
+  colorScheme: ColorSchemeName | null;
   initialOverride: ThemeOverride;
 }) {
   const [override, setOverride] = useState<ThemeOverride>(initialOverride);
@@ -35,7 +35,7 @@ export function ThemeProvider({
     void saveThemeOverride(override);
     // Native presentations outside our views (the date picker popup, alerts)
     // take their appearance from the window, so push the override down to it.
-    Appearance.setColorScheme(override ?? "unspecified");
+    Appearance.setColorScheme(override ?? "auto");
   }, [override]);
 
   function toggleTheme() {
