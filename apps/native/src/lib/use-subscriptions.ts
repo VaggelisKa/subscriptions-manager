@@ -51,6 +51,8 @@ export function useSubscriptions(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
 
+    let missedChanges = false;
+
     const channel = supabase
       .channel(`subscriptions-changes-${channelId}`)
       .on(
@@ -58,7 +60,16 @@ export function useSubscriptions(userId: string | undefined) {
         { event: "*", schema: "public", table: "subscriptions" },
         () => setRefreshTrigger((t) => t + 1),
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Changes made while the channel was timed out or errored are never
+        // delivered, so refetch once it rejoins.
+        if (status === "SUBSCRIBED") {
+          if (missedChanges) setRefreshTrigger((t) => t + 1);
+          missedChanges = false;
+        } else {
+          missedChanges = true;
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

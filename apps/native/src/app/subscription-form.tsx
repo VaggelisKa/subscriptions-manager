@@ -91,7 +91,9 @@ export default function SubscriptionFormScreen() {
       Alert.alert("Error", "Name of subscription is required");
       return;
     }
-    if (!price.trim() || isNaN(parseFloat(price))) {
+    // The decimal pad shows the locale's separator, which is "," in Danish.
+    const parsedPrice = Number(price.trim().replace(",", "."));
+    if (!price.trim() || isNaN(parsedPrice)) {
       Alert.alert("Error", "Price of subscription should be given");
       return;
     }
@@ -100,7 +102,7 @@ export default function SubscriptionFormScreen() {
 
     const data = {
       name: name.trim(),
-      price: parseFloat(price),
+      price: parsedPrice,
       interval,
       billed_at: billedAt.toUTCString(),
       ...(effectiveCategoryId ? { category_id: effectiveCategoryId } : {}),
