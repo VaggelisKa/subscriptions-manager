@@ -44,7 +44,6 @@
   --fill: light-dark(hsla(25, 5.3%, 44.7%, 0.12), hsla(24, 5.4%, 63.9%, 0.16));
   --separator: light-dark(hsl(20, 5.9%, 90%), hsl(12, 6.5%, 15.1%));
   --destructive: light-dark(hsl(0, 72.2%, 47%), hsl(0, 72.2%, 50.6%));
-  --success: light-dark(hsl(121, 35%, 51%), hsl(116, 46%, 49%));
 }
 
 text,
@@ -110,11 +109,6 @@ text-input {
   line-height: 41px;
   letter-spacing: -0.6px;
 }
-.headline {
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 21px;
-}
 .body {
   font-size: 16px;
   line-height: 22px;
@@ -123,11 +117,6 @@ text-input {
   font-weight: 600;
   font-size: 15px;
   line-height: 20px;
-}
-.footnote {
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 18px;
 }
 .muted {
   color: var(--muted);
@@ -178,6 +167,12 @@ text-input {
 .field[data-invalid][data-touched] {
   border-width: 1px;
   border-color: var(--destructive);
+}
+/* "Try again" under a load error. */
+.retry {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary-text);
 }
 .error {
   color: var(--destructive);

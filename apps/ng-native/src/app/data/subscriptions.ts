@@ -83,6 +83,16 @@ export class Subscriptions {
   /** True once a fetch for the current user has succeeded. */
   readonly loaded = computed(() => this.current() !== null);
   readonly error = computed(() => this.rows.error()?.message ?? null);
+  /** What a list screen shows: the rows, why there are none, or that they are on their way. */
+  readonly status = computed(() =>
+    this.subscriptions().length > 0
+      ? "ready"
+      : this.error()
+        ? "error"
+        : this.loaded()
+          ? "empty"
+          : "loading",
+  );
 
   constructor() {
     // Run a queued refetch as soon as the one in flight has finished.

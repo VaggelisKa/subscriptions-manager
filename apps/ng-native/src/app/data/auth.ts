@@ -15,7 +15,6 @@ export class Auth {
   readonly user = computed(() => this.session()?.user ?? null);
   /** True once the stored session has been read back, successfully or not. */
   readonly ready = this.settled.asReadonly();
-  readonly bootstrapError = signal<string | null>(null);
   readonly configured = supabaseConfigured;
 
   constructor() {
@@ -78,13 +77,9 @@ export class Auth {
     try {
       const { data } = await supabase.auth.getSession();
       this.current.set(data.session);
-    } catch (error) {
+    } catch {
+      // Unreadable storage: start signed out. (apps/native also offers a retry; see README.)
       this.current.set(null);
-      this.bootstrapError.set(
-        error instanceof Error && error.message.trim()
-          ? error.message
-          : "Could not reconnect to Supabase. Check your connection and try again.",
-      );
     } finally {
       this.settled.set(true);
     }

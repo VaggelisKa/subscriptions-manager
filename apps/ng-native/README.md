@@ -2,8 +2,8 @@
 
 An experiment: the native app rebuilt with [Angular Native](https://ng-native.com), so Angular
 components render straight onto React Native's Fabric renderer with no React in the render path.
-It talks to the same Supabase project as `apps/native` and `apps/web`, and reuses
-`@subscriptions-manager/shared` plus the billing and formatting logic from `apps/native`.
+It talks to the same Supabase project as `apps/native` and `apps/web`, reuses
+`@subscriptions-manager/shared`, and ports the billing and formatting logic from `apps/native`.
 
 ```sh
 cp ../native/.env .env          # EXPO_PUBLIC_SUPABASE_URL and the anon key

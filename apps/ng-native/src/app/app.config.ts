@@ -12,20 +12,19 @@ export const appConfig = {
       // they inherit it only with the "always" strategy.
       withComponentInputBinding(),
       withRouterConfig({ paramsInheritanceStrategy: "always" }),
-      // Every header matches the page under it and uses the Nunito faces registered from theme.css.
+      // As apps/native: no bar background (the glass buttons float over the page) and the Nunito
+      // faces registered from theme.css.
       withHeaderDefaults((scheme) => {
         const palette = paletteFor(scheme);
         return {
-          backgroundColor: palette.background,
+          translucent: true,
+          backgroundColor: "transparent",
           titleColor: palette.foreground,
-          largeTitleColor: palette.foreground,
           titleFontFamily: "Nunito-800",
-          largeTitleFontFamily: "Nunito-900",
           // Bar buttons and the back chevron, as apps/native's `headerTintColor`.
           color: palette.foreground,
           userInterfaceStyle: scheme,
           hideShadow: true,
-          largeTitleHideShadow: true,
           backButtonDisplayMode: "minimal",
         };
       }),

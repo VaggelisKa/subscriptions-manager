@@ -4,21 +4,24 @@ import { today } from "./billing.ts";
 
 const LOCALE = "en-DK";
 
+// Built once: `toLocaleString` with options constructs a new formatter on every call.
+const wholeFormat = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+const centsFormat = new Intl.NumberFormat(LOCALE, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 /** "149", "2.250", "79,50" — decimals only when they aren't zero. */
 export function formatNumber(value: number) {
   // Round to øre first so float noise (1.005 → 100.4999…) can't disagree with
   // the decimals check.
   const cents = Math.round(value * 100);
-  const hasDecimals = cents % 100 !== 0;
-  return (cents / 100).toLocaleString(LOCALE, {
-    minimumFractionDigits: hasDecimals ? 2 : 0,
-    maximumFractionDigits: hasDecimals ? 2 : 0,
-  });
+  return cents % 100 !== 0 ? centsFormat.format(cents / 100) : wholeFormat.format(cents / 100);
 }
 
 /** Rounded to whole kroner, for totals and normalised amounts. */
 export function formatWholeNumber(value: number) {
-  return Math.round(value).toLocaleString(LOCALE, { maximumFractionDigits: 0 });
+  return wholeFormat.format(Math.round(value));
 }
 
 export function formatKr(value: number) {
@@ -58,7 +61,7 @@ export function formatDueLabel(date: Date, from = today()) {
 }
 
 /** "14 Oct", or "14 Oct 2027" outside the current year. */
-export function formatShortDate(date: Date, from = today()) {
+function formatShortDate(date: Date, from = today()) {
   if (isNaN(date.getTime())) return "";
   return format(date, isSameYear(date, from) ? "d MMM" : "d MMM yyyy");
 }

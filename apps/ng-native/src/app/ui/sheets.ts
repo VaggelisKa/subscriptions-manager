@@ -1,5 +1,5 @@
 import { Service, inject } from "@angular/core";
-import { NativeNavigation } from "@ng-native/router";
+import { NativeNavigation, type NavigationCommands } from "@ng-native/router";
 
 /**
  * The app's sheets, presented the way apps/native's `_layout.tsx` declares them. A sheet opened
@@ -10,32 +10,31 @@ export class Sheets {
   private readonly navigation = inject(NativeNavigation);
 
   detail(id: string): void {
-    void this.navigation.present(["/subscription", id], {
-      as: "formSheet",
-      presentation: { sheetAllowedDetents: [0.8, 1], sheetGrabberVisible: true },
-    });
+    this.present(["/subscription", id], [0.8, 1]);
   }
 
   /** The add form, optionally with the name filled in (the empty state's quick add). */
   add(name?: string): void {
-    void this.navigation.present("/subscription/new", {
-      as: "formSheet",
-      queryParams: name ? { name } : undefined,
-      presentation: { sheetAllowedDetents: [0.75, 1], sheetGrabberVisible: true },
-    });
+    this.present("/subscription/new", [0.75, 1], name ? { name } : undefined);
   }
 
   edit(id: string): void {
-    void this.navigation.present(["/subscription", id, "edit"], {
-      as: "formSheet",
-      presentation: { sheetAllowedDetents: [0.75, 1], sheetGrabberVisible: true },
-    });
+    this.present(["/subscription", id, "edit"], [0.75, 1]);
   }
 
   insights(): void {
-    void this.navigation.present("/insights", {
+    this.present("/insights", [0.8, 1]);
+  }
+
+  private present(
+    commands: NavigationCommands,
+    detents: number[],
+    queryParams?: Record<string, string>,
+  ): void {
+    void this.navigation.present(commands, {
       as: "formSheet",
-      presentation: { sheetAllowedDetents: [0.8, 1], sheetGrabberVisible: true },
+      queryParams,
+      presentation: { sheetAllowedDetents: detents, sheetGrabberVisible: true },
     });
   }
 }

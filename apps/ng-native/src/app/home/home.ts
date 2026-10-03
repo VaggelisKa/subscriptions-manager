@@ -7,7 +7,7 @@ import { Auth } from "../data/auth.ts";
 import { Subscriptions } from "../data/subscriptions.ts";
 import { Theme } from "../data/theme.ts";
 import { Today } from "../data/today.ts";
-import { bucketByTime, scheduleSubscriptions, type TimeBucket } from "../lib/billing.ts";
+import { bucketByTime, scheduleSubscriptions } from "../lib/billing.ts";
 import { formatWholeKr } from "../lib/format.ts";
 import { BarItems, type BarItem } from "../ui/bar-items.ts";
 import { SectionHeader } from "../ui/section-header.ts";
@@ -45,18 +45,22 @@ import { SubscriptionRow } from "./subscription-row.ts";
       <refresh-control [(refreshing)]="refreshing" (refresh)="refresh()" />
       <view class="content">
         <text class="title page-title" accessibilityRole="header">Subscriptions</text>
-        @if (showSkeleton()) {
-          <app-skeleton />
-        } @else if (subscriptions().length === 0 && error(); as error) {
-          <view class="failed">
-            <text class="body muted">Couldn't load your subscriptions. {{ error }}</text>
-            <pressable accessibilityRole="button" (press)="retry()">
-              <text class="retry">Try again</text>
-            </pressable>
-          </view>
-        } @else if (subscriptions().length === 0) {
-          <app-empty-state />
-        } @else {
+        @switch (status()) {
+          @case ("loading") {
+            <app-skeleton />
+          }
+          @case ("error") {
+            <view class="failed">
+              <text class="body muted">Couldn't load your subscriptions. {{ error() }}</text>
+              <pressable accessibilityRole="button" (press)="retry()">
+                <text class="retry">Try again</text>
+              </pressable>
+            </view>
+          }
+          @case ("empty") {
+            <app-empty-state />
+          }
+          @case ("ready") {
           <app-monthly-summary [subscriptions]="subscriptions()" />
           <app-day-strip [subscriptions]="subscriptions()" />
 
@@ -65,7 +69,7 @@ import { SubscriptionRow } from "./subscription-row.ts";
           }
 
           @for (bucket of buckets(); track bucket.key) {
-            <app-section-header [title]="bucket.title" [trailing]="bucketTotal(bucket)" />
+            <app-section-header [title]="bucket.title" [trailing]="bucket.total" />
             <view class="rows">
               @for (item of bucket.items; track item.subscription.id) {
                 @if (!$first) {
@@ -79,13 +83,12 @@ import { SubscriptionRow } from "./subscription-row.ts";
               }
             </view>
           }
+          }
         }
       </view>
     </scroll-view>
 
     <native-header
-      [translucent]="true"
-      backgroundColor="transparent"
       [leftItems]="leftItems"
       [rightItems]="rightItems()"
     />
@@ -105,11 +108,6 @@ import { SubscriptionRow } from "./subscription-row.ts";
       gap: 12px;
       padding: 32px 4px 0;
     }
-    .retry {
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--primary-text);
-    }
   `,
 })
 export class Home {
@@ -126,13 +124,13 @@ export class Home {
   protected readonly refreshing = signal(false);
   private readonly deleting = signal(false);
 
-  // Refetches also flip `loading`; keep showing the list instead of the skeleton.
-  protected readonly showSkeleton = computed(
-    () => !this.store.loaded() && !this.error() && this.subscriptions().length === 0,
-  );
+  protected readonly status = this.store.status;
   protected readonly buckets = computed(() => {
     const today = this.today.date();
-    return bucketByTime(scheduleSubscriptions(this.subscriptions(), today), today);
+    return bucketByTime(scheduleSubscriptions(this.subscriptions(), today), today).map((bucket) => ({
+      ...bucket,
+      total: formatWholeKr(bucket.items.reduce((acc, i) => acc + (i.subscription.price ?? 0), 0)),
+    }));
   });
 
   protected readonly leftItems: BarItem[] = [
@@ -161,7 +159,8 @@ export class Home {
                 title: "Sign out",
                 icon: "rectangle.portrait.and.arrow.right",
                 destructive: true,
-                press: () => void this.signOut(),
+                // The shell (`app.ts`) takes every screen down once the session is gone.
+                press: () => void this.auth.signOut(),
               },
               {
                 type: "action",
@@ -184,10 +183,6 @@ export class Home {
     inject(Renderer2).setProperty(inject(ElementRef).nativeElement, "topScrollEdgeEffect", "hidden");
   }
 
-  protected bucketTotal(bucket: TimeBucket): string {
-    return formatWholeKr(bucket.items.reduce((acc, i) => acc + (i.subscription.price ?? 0), 0));
-  }
-
   protected async refresh(): Promise<void> {
     this.refreshing.set(true);
     try {
@@ -204,11 +199,6 @@ export class Home {
   private add(): void {
     this.haptics.impact("medium");
     this.sheets.add();
-  }
-
-  // The shell (`app.ts`) takes every screen down once the session is gone.
-  private async signOut(): Promise<void> {
-    await this.auth.signOut();
   }
 
   private async deleteAccount(): Promise<void> {

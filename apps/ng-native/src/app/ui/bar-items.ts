@@ -1,5 +1,6 @@
 import { Directive, ElementRef, Renderer2, effect, inject, input } from "@angular/core";
 import { processColor } from "react-native";
+import type { NativeNavigation } from "@ng-native/router";
 
 /** A bar button: an SF Symbol or a title, drawn by UIKit (Liquid Glass on iOS 26). */
 export type BarButton = {
@@ -36,6 +37,11 @@ export type BarMenu = {
 };
 
 export type BarItem = BarButton | BarMenu;
+
+/** A sheet's way out: the glass X on the left of its bar. */
+export function closeItem(navigation: NativeNavigation): BarButton {
+  return { type: "button", icon: "xmark", label: "Close", press: () => navigation.back() };
+}
 
 type Side = "left" | "right";
 type Handlers = Map<string, () => void>;
@@ -106,27 +112,36 @@ export class BarItems {
   readonly leftItems = input<readonly BarItem[]>([]);
   readonly rightItems = input<readonly BarItem[]>([]);
 
-  private buttons: Handlers = new Map();
-  private actions: Handlers = new Map();
+  // Per side, so a change on one side doesn't resend (and redraw) the other.
+  private readonly handlers = {
+    left: { buttons: new Map() as Handlers, actions: new Map() as Handlers },
+    right: { buttons: new Map() as Handlers, actions: new Map() as Handlers },
+  };
 
   constructor() {
     const header = inject(ElementRef).nativeElement;
     const renderer = inject(Renderer2);
 
-    effect(() => {
-      const buttons: Handlers = new Map();
-      const actions: Handlers = new Map();
-      renderer.setProperty(header, "headerLeftBarButtonItems", prepare(this.leftItems(), "left", buttons, actions));
-      renderer.setProperty(header, "headerRightBarButtonItems", prepare(this.rightItems(), "right", buttons, actions));
-      this.buttons = buttons;
-      this.actions = actions;
-    });
+    const side = (name: Side, prop: string, items: () => readonly BarItem[]) =>
+      effect(() => {
+        const buttons: Handlers = new Map();
+        const actions: Handlers = new Map();
+        renderer.setProperty(header, prop, prepare(items(), name, buttons, actions));
+        this.handlers[name] = { buttons, actions };
+      });
+    side("left", "headerLeftBarButtonItems", this.leftItems);
+    side("right", "headerRightBarButtonItems", this.rightItems);
 
+    // Ids end in their side ("0-left", "1.0-0-right"), so either side's map can answer.
+    const find = (kind: "buttons" | "actions", id: string | undefined) =>
+      id === undefined
+        ? undefined
+        : (this.handlers.left[kind].get(id) ?? this.handlers.right[kind].get(id));
     renderer.listen(header, "pressHeaderBarButtonItem", (event) => {
-      this.buttons.get(event?.nativeEvent?.buttonId)?.();
+      find("buttons", event?.nativeEvent?.buttonId)?.();
     });
     renderer.listen(header, "pressHeaderBarButtonMenuItem", (event) => {
-      this.actions.get(event?.nativeEvent?.menuId)?.();
+      find("actions", event?.nativeEvent?.menuId)?.();
     });
   }
 }

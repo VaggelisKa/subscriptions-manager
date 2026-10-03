@@ -40,20 +40,17 @@ import { utcToZonedTime } from "date-fns-tz";
 import { Subscriptions } from "../data/subscriptions.ts";
 import { monthlyEquivalent, nextChargeDate, yearlyEquivalent } from "../lib/billing.ts";
 import { findBrand } from "../lib/brands.ts";
-import { isHexColor, withAlpha } from "../lib/colors.ts";
-import { formatNumber, formatWholeKr, intervalName, intervalSuffix } from "../lib/format.ts";
+import { categoryTint, isHexColor } from "../lib/colors.ts";
+import { formatKr, formatWholeKr, intervalName, intervalSuffix } from "../lib/format.ts";
 import { palette } from "../lib/palette.ts";
 import { parsePrice, priceToInput, toBilledAt } from "../lib/price.ts";
-import { BarItems, type BarItem } from "../ui/bar-items.ts";
+import { BarItems, closeItem, type BarItem } from "../ui/bar-items.ts";
 import { RnHost } from "../ui/rn-host.ts";
 import { Tile } from "../ui/tile.ts";
 
 const INTERVALS: readonly IntervalEnum[] = ["week", "month", "year"];
 const TILE = 44;
 
-// Below full height iOS gives form rows a translucent fill meant for the sheet's glass; pin them
-// to the solid colour they have at full height.
-const ROW_MODIFIERS = [listRowBackground(PlatformColor("secondarySystemGroupedBackground"))];
 
 /**
  * Adding or editing a subscription, presented as a sheet: SwiftUI's `Form` through `@expo/ui`, as
@@ -157,8 +154,6 @@ const ROW_MODIFIERS = [listRowBackground(PlatformColor("secondarySystemGroupedBa
 
     <native-header
       [title]="title()"
-      [translucent]="true"
-      backgroundColor="transparent"
       [leftItems]="leftItems"
       [rightItems]="rightItems()"
     />
@@ -229,7 +224,7 @@ export class SubscriptionForm {
   );
   protected readonly brand = computed(() => findBrand(this.trimmedName()));
   protected readonly monogram = computed(() => this.trimmedName().charAt(0).toUpperCase() || "?");
-  protected readonly previewPrice = computed(() => `${formatNumber(this.parsedPrice() ?? 0)} kr`);
+  protected readonly previewPrice = computed(() => formatKr(this.parsedPrice() ?? 0));
   protected readonly suffix = computed(() => intervalSuffix[this.interval()]);
   protected readonly previewMeta = computed(() => {
     const price = this.parsedPrice();
@@ -244,21 +239,23 @@ export class SubscriptionForm {
   // SwiftUI looks fonts up by PostScript name, not by the `Nunito-700` alias CSS registers.
   protected readonly monogramModifiers = computed(() => {
     const color = this.selectedColor();
-    const dark = this.scheme.current() === "dark";
     return [
       font({ family: "Nunito-Black", size: Math.round(TILE * 0.44) }),
       foregroundStyle(isHexColor(color) ? color : this.colors().muted),
       frame({ width: TILE, height: TILE }),
       background(
-        withAlpha(color, dark ? 0.24 : 0.14, this.colors().fill),
+        categoryTint(color, this.scheme.current() === "dark", this.colors().fill),
         shapes.roundedRectangle({ cornerRadius: TILE * 0.3 }),
       ),
     ];
   });
+  // On booleans, so typing doesn't resend the modifiers to SwiftUI on every keystroke.
+  private readonly hasName = computed(() => this.trimmedName() !== "");
+  private readonly hasPrice = computed(() => this.parsedPrice() !== null);
   protected readonly nameModifiers = computed(() => [
     font({ family: "Nunito-Bold", size: 17 }),
     lineLimit(1),
-    foregroundStyle(this.trimmedName() ? this.colors().foreground : this.colors().faint),
+    foregroundStyle(this.hasName() ? this.colors().foreground : this.colors().faint),
   ]);
   protected readonly metaModifiers = computed(() => [
     font({ family: "Nunito-SemiBold", size: 13 }),
@@ -268,7 +265,7 @@ export class SubscriptionForm {
   protected readonly priceModifiers = computed(() => [
     font({ family: "Nunito-ExtraBold", size: 18 }),
     lineLimit(1),
-    foregroundStyle(this.parsedPrice() === null ? this.colors().faint : this.colors().foreground),
+    foregroundStyle(this.hasPrice() ? this.colors().foreground : this.colors().faint),
   ]);
   protected readonly dotModifiers = computed(() => {
     const color = this.selectedColor();
@@ -277,7 +274,11 @@ export class SubscriptionForm {
 
   // --- static modifiers and options ---------------------------------------------------------
   protected readonly formModifiers = [scrollDismissesKeyboard("immediately")];
-  protected readonly rowModifiers = ROW_MODIFIERS;
+  // Below full height iOS gives form rows a translucent fill meant for the sheet's glass; pin them
+  // to the solid colour they have at full height.
+  protected readonly rowModifiers = [
+    listRowBackground(PlatformColor("secondarySystemGroupedBackground")),
+  ];
   protected readonly priceStackModifiers = [layoutPriority(1)];
   protected readonly priceFieldModifiers = [keyboardType("decimal-pad")];
   protected readonly secondary = [foregroundStyle({ type: "hierarchical", style: "secondary" })];
@@ -286,15 +287,18 @@ export class SubscriptionForm {
   // Without a tint the value is black at first and turns blue once picked.
   protected readonly categoryModifiers = [tint(PlatformColor("secondaryLabel"))];
   protected readonly intervalOptions = INTERVALS.map((value) => ({ value, label: intervalName[value] }));
+  private readonly uncategorised = computed(
+    () => !this.categories().some((c) => c.id === this.categoryId()),
+  );
   protected readonly categoryOptions = computed(() => [
     // Only edits can be uncategorised; offer "None" just to show that.
-    ...(this.categories().some((c) => c.id === this.categoryId()) ? [] : [{ value: "", label: "None" }]),
+    ...(this.uncategorised() ? [{ value: "", label: "None" }] : []),
     ...this.categories().map((c) => ({ value: c.id, label: c.name ?? "" })),
   ]);
 
   // --- the bar ------------------------------------------------------------------------------
   protected readonly leftItems: BarItem[] = [
-    { type: "button", icon: "xmark", label: "Close", press: () => this.navigation.back() },
+    closeItem(this.navigation),
   ];
   protected readonly rightItems = computed<BarItem[]>(() => {
     const colors = this.colors();

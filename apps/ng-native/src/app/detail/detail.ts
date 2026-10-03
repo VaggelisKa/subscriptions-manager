@@ -16,7 +16,7 @@ import {
 import { withAlpha } from "../lib/colors.ts";
 import { formatWholeKr, intervalLabel } from "../lib/format.ts";
 import { Amount } from "../ui/amount.ts";
-import { BarItems, type BarItem } from "../ui/bar-items.ts";
+import { BarItems, closeItem, type BarItem } from "../ui/bar-items.ts";
 import { SectionHeader } from "../ui/section-header.ts";
 import { Sheets } from "../ui/sheets.ts";
 import { Tile } from "../ui/tile.ts";
@@ -60,7 +60,7 @@ import { ChargeTimeline } from "./charge-timeline.ts";
 
           <view class="price">
             <app-amount [value]="sub.price" [size]="44" />
-            <text class="price-meta">{{ intervalText() }} · {{ equivalent() }}</text>
+            <text class="price-meta">{{ intervalLabel[sub.interval] }} · {{ equivalent() }}</text>
           </view>
 
           <app-section-header title="Upcoming charges" />
@@ -109,8 +109,6 @@ import { ChargeTimeline } from "./charge-timeline.ts";
 
     <native-header
       title=""
-      [translucent]="true"
-      backgroundColor="transparent"
       [leftItems]="leftItems"
       [rightItems]="rightItems()"
     />
@@ -214,11 +212,6 @@ import { ChargeTimeline } from "./charge-timeline.ts";
       text-align: center;
       color: var(--muted);
     }
-    .retry {
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--primary-text);
-    }
   `,
 })
 export class SubscriptionDetail {
@@ -237,13 +230,13 @@ export class SubscriptionDetail {
   /** Set once we navigate away, so the gone-check below does not pop twice. */
   private leaving = false;
 
-  protected readonly loaded = this.store.loaded;
+  private readonly loaded = this.store.loaded;
   private readonly loading = this.store.loading;
   protected readonly error = this.store.error;
   protected readonly subscription = computed(() => this.store.find(this.id()));
 
   protected readonly leftItems: BarItem[] = [
-    { type: "button", icon: "xmark", label: "Close", press: () => this.navigation.back() },
+    closeItem(this.navigation),
   ];
   protected readonly rightItems = computed<BarItem[]>(() =>
     this.subscription()
@@ -264,10 +257,7 @@ export class SubscriptionDetail {
     });
   }
 
-  protected readonly intervalText = computed(() => {
-    const sub = this.subscription();
-    return sub ? intervalLabel[sub.interval] : "";
-  });
+  protected readonly intervalLabel = intervalLabel;
   protected readonly equivalent = computed(() => {
     const sub = this.subscription();
     if (!sub) return "";

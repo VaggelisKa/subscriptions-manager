@@ -63,7 +63,6 @@ export class DemoAuth {
   readonly session = this.current.asReadonly();
   readonly user = computed(() => this.session()?.user ?? null);
   readonly ready = signal(true).asReadonly();
-  readonly bootstrapError = signal<string | null>(null);
   readonly configured = true;
 
   whenReady(): Promise<void> {
@@ -94,6 +93,7 @@ export class DemoSubscriptions {
   readonly loading = signal(false);
   readonly loaded = signal(true);
   readonly error = signal<string | null>(null);
+  readonly status = computed(() => (this.all().length > 0 ? "ready" : "empty"));
 
   find(id: string): SubscriptionWithCategory | undefined {
     return this.all().find((s) => s.id === id);

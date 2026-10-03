@@ -78,15 +78,13 @@ export class SubscriptionRow {
 
   readonly subscription = input.required<SubscriptionWithCategory>();
   readonly nextCharge = input.required<Date>();
-  /** Replaces the due label under the name (e.g. a category name). */
-  readonly metaText = input<string>();
   readonly open = output<void>();
 
   protected readonly soon = computed(
-    () => !this.metaText() && isDueSoon(this.nextCharge(), this.today.date()),
+    () => isDueSoon(this.nextCharge(), this.today.date()),
   );
   protected readonly meta = computed(
-    () => this.metaText() ?? formatDueLabel(this.nextCharge(), this.today.date()),
+    () => formatDueLabel(this.nextCharge(), this.today.date()),
   );
   protected readonly price = computed(() => formatNumber(this.subscription().price ?? 0));
   protected readonly suffix = computed(() => intervalSuffix[this.subscription().interval]);

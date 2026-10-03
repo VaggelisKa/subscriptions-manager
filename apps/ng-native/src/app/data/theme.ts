@@ -2,7 +2,7 @@ import { Service, effect, inject } from "@angular/core";
 import { ColorScheme } from "@ng-native/device";
 import { Storage } from "@ng-native/expo/async-storage";
 
-export type ThemeOverride = "light" | "dark" | null;
+type ThemeOverride = "light" | "dark" | null;
 
 /**
  * The in-app light/dark override, persisted in AsyncStorage. Setting the scheme on the window
@@ -15,7 +15,7 @@ export class Theme {
   private readonly store = inject(Storage);
 
   /** Bound both ways: reading it is the preference, setting it persists. */
-  readonly override = this.store.signal<ThemeOverride>("theme-override", null);
+  private readonly override = this.store.signal<ThemeOverride>("theme-override", null);
   /** The scheme in effect, override or system. */
   readonly current = this.scheme.current;
 

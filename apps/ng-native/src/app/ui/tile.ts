@@ -4,7 +4,7 @@ import { Text, View } from "@ng-native/components";
 import { ColorScheme } from "@ng-native/device";
 import { ExpoImage } from "@ng-native/expo";
 import { findBrand } from "../lib/brands.ts";
-import { isHexColor, withAlpha } from "../lib/colors.ts";
+import { categoryTint, isHexColor } from "../lib/colors.ts";
 
 /**
  * The logo for well-known subscriptions (see `findBrand`), otherwise a monogram tile: the first
@@ -72,7 +72,7 @@ export class Tile {
   protected readonly background = computed(
     () =>
       this.brand()?.color ??
-      withAlpha(this.color(), this.dark() ? 0.24 : 0.14, "var(--fill)"),
+      categoryTint(this.color(), this.dark(), "var(--fill)"),
   );
   protected readonly letterColor = computed(() =>
     isHexColor(this.color()) ? this.color()! : "var(--muted)",

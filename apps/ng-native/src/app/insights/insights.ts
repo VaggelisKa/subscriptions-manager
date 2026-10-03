@@ -1,22 +1,21 @@
 import { Component, computed, inject, signal } from "@angular/core";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "@ng-native/components";
 import { ColorScheme } from "@ng-native/device";
-import { UiHost, UiPicker } from "@ng-native/expo/expo-ui-components";
+import { UiHost, UiImage, UiPicker } from "@ng-native/expo/expo-ui-components";
 import { Haptics } from "@ng-native/expo/haptics";
 import { labelsHidden } from "@expo/ui/swift-ui/modifiers";
 import { NativeHeader, NativeNavigation } from "@ng-native/router";
 import { Subscriptions } from "../data/subscriptions.ts";
 import { Today } from "../data/today.ts";
 import { nextChargeDate, totalPerMonth } from "../lib/billing.ts";
-import { withAlpha } from "../lib/colors.ts";
+import { categoryTint } from "../lib/colors.ts";
 import { formatWholeKr, formatWholeNumber, intervalSuffix } from "../lib/format.ts";
 import { palette } from "../lib/palette.ts";
-import { periodFactor, spendByCategory, type CategorySpend, type Period } from "../lib/spend-by-category.ts";
+import { periodFactor, spendByCategory, type Period } from "../lib/spend-by-category.ts";
 import { SubscriptionRow } from "../home/subscription-row.ts";
 import { Amount } from "../ui/amount.ts";
-import { BarItems, type BarItem } from "../ui/bar-items.ts";
+import { BarItems, closeItem, type BarItem } from "../ui/bar-items.ts";
 import { Sheets } from "../ui/sheets.ts";
-import { Symbol } from "../ui/symbol.ts";
 
 const PERIODS = [
   { value: "week", label: "Week" },
@@ -35,22 +34,26 @@ const PERIODS = [
     Pressable,
     ScrollView,
     SubscriptionRow,
-    Symbol,
     Text,
     UiHost,
+    UiImage,
     UiPicker,
     View,
   ],
   template: `
     <scroll-view class="screen" contentInsetAdjustmentBehavior="automatic">
       <view class="content">
-        @if (subscriptions().length === 0 && error(); as error) {
-          <text class="muted-line centered">Couldn't load your subscriptions. {{ error }}</text>
-        } @else if (!loaded() && subscriptions().length === 0) {
-          <activity-indicator class="loading" />
-        } @else if (subscriptions().length === 0) {
-          <text class="muted-line centered">Add a subscription to see where your money goes.</text>
-        } @else {
+        @switch (status()) {
+          @case ("error") {
+            <text class="muted-line centered">Couldn't load your subscriptions. {{ error() }}</text>
+          }
+          @case ("loading") {
+            <activity-indicator class="loading" />
+          }
+          @case ("empty") {
+            <text class="muted-line centered">Add a subscription to see where your money goes.</text>
+          }
+          @case ("ready") {
           <ui-host class="periods">
             <ui-picker
               label="Period"
@@ -77,7 +80,7 @@ const PERIODS = [
           </view>
 
           <view class="list">
-            @for (c of categories(); track c.key; let first = $first) {
+            @for (c of rows(); track c.key; let first = $first) {
               <view>
                 @if (!first) {
                   <view class="separator category-inset"></view>
@@ -85,47 +88,40 @@ const PERIODS = [
                 <pressable
                   class="category"
                   accessibilityRole="button"
-                  [accessibilityState]="{ expanded: isExpanded(c.key) }"
-                  [accessibilityLabel]="categoryLabel(c)"
+                  [accessibilityState]="{ expanded: c.expanded }"
+                  [accessibilityLabel]="c.label"
                   (press)="toggle(c.key)"
                 >
-                  <view class="swatch-tile" [style.background-color]="swatchTile(c)">
+                  <view class="swatch-tile" [style.background-color]="c.tint">
                     <view class="swatch" [style.background-color]="c.color ?? 'var(--faint)'"></view>
                   </view>
                   <view class="main">
                     <text class="name" [numberOfLines]="1">{{ c.name }}</text>
-                    <text class="meta">{{ share(c) }}% of spend</text>
+                    <text class="meta">{{ c.share }}% of spend</text>
                   </view>
-                  <text class="amount">{{ amount(c) }} kr<text class="suffix">{{ suffix() }}</text></text>
-                  <app-symbol
-                    class="chevron"
-                    [class.open]="isExpanded(c.key)"
-                    name="chevron.down"
-                    [size]="11"
-                    [color]="faint()"
-                  />
+                  <text class="amount">{{ c.amount }} kr<text class="suffix">{{ suffix() }}</text></text>
+                  <ui-host class="chevron" [class.open]="c.expanded" [matchContents]="true">
+                    <ui-image systemName="chevron.down" [size]="11" [color]="faint()" />
+                  </ui-host>
                 </pressable>
-                @if (isExpanded(c.key)) {
-                  @for (s of c.subscriptions; track s.id) {
-                    <view class="separator row-inset"></view>
-                    <app-subscription-row
-                      [subscription]="s"
-                      [nextCharge]="next(s)"
-                      (open)="sheets.detail(s.id)"
-                    />
-                  }
+                @for (item of c.items; track item.subscription.id) {
+                  <view class="separator row-inset"></view>
+                  <app-subscription-row
+                    [subscription]="item.subscription"
+                    [nextCharge]="item.nextCharge"
+                    (open)="sheets.detail(item.subscription.id)"
+                  />
                 }
               </view>
             }
           </view>
+          }
         }
       </view>
     </scroll-view>
 
     <native-header
       title="Insights"
-      [translucent]="true"
-      backgroundColor="transparent"
       [leftItems]="leftItems"
     />
   `,
@@ -254,23 +250,51 @@ export class Insights {
   protected readonly periods = PERIODS;
   protected readonly hiddenLabel = [labelsHidden()];
   protected readonly period = signal<Period>("month");
-  protected readonly expanded = signal<readonly string[]>([]);
+  protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 
-  protected readonly loaded = this.store.loaded;
+  protected readonly status = this.store.status;
   protected readonly error = this.store.error;
-  protected readonly subscriptions = this.store.subscriptions;
+  private readonly subscriptions = this.store.subscriptions;
   protected readonly monthly = computed(() => totalPerMonth(this.subscriptions()));
   protected readonly total = computed(() => this.monthly() * periodFactor[this.period()]);
   protected readonly yearly = computed(() => formatWholeKr(this.monthly() * 12));
-  protected readonly categories = computed(() => spendByCategory(this.subscriptions()));
+  private readonly categories = computed(() => spendByCategory(this.subscriptions()));
   // Shares don't depend on the period, so the bar is static when the period changes.
   protected readonly visible = computed(() => this.categories().filter((c) => c.share > 0));
   protected readonly suffix = computed(() => intervalSuffix[this.period()]);
   protected readonly faint = computed(() => palette(this.scheme.current()).faint);
 
-  protected readonly leftItems: BarItem[] = [
-    { type: "button", icon: "xmark", label: "Close", press: () => this.navigation.back() },
-  ];
+  /** Each category row as the template shows it, with an open row's subscriptions and their next charge. */
+  protected readonly rows = computed(() => {
+    const period = this.period();
+    const expanded = this.expanded();
+    const dark = this.scheme.current() === "dark";
+    const today = this.today.date();
+    return this.categories().map((c) => {
+      const amount = formatWholeNumber(c.monthly * periodFactor[period]);
+      const share = Math.round(c.share * 100);
+      const open = expanded.has(c.key);
+      return {
+        key: c.key,
+        name: c.name,
+        color: c.color,
+        tint: categoryTint(c.color, dark, "var(--fill)"),
+        amount,
+        share,
+        label: `${c.name}, ${share}% of spend, ${amount} kr per ${period}`,
+        expanded: open,
+        // Most expensive first, as `spendByCategory` sorted them, not by date.
+        items: open
+          ? c.subscriptions.map((s) => ({
+              subscription: s,
+              nextCharge: nextChargeDate(s.billed_at, s.interval, today),
+            }))
+          : [],
+      };
+    });
+  });
+
+  protected readonly leftItems: BarItem[] = [closeItem(this.navigation)];
 
   protected choose(value: string | number | null): void {
     if (value === this.period()) return;
@@ -278,34 +302,12 @@ export class Insights {
     this.period.set(value as Period);
   }
 
-  protected isExpanded(key: string): boolean {
-    return this.expanded().includes(key);
-  }
-
   protected toggle(key: string): void {
     this.haptics.impact("light");
-    this.expanded.update((keys) =>
-      keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key],
-    );
-  }
-
-  protected amount(c: CategorySpend): string {
-    return formatWholeNumber(c.monthly * periodFactor[this.period()]);
-  }
-
-  protected share(c: CategorySpend): number {
-    return Math.round(c.share * 100);
-  }
-
-  protected categoryLabel(c: CategorySpend): string {
-    return `${c.name}, ${this.share(c)}% of spend, ${this.amount(c)} kr per ${this.period()}`;
-  }
-
-  protected swatchTile(c: CategorySpend): string {
-    return withAlpha(c.color, this.scheme.current() === "dark" ? 0.24 : 0.14, "var(--fill)");
-  }
-
-  protected next(s: CategorySpend["subscriptions"][number]): Date {
-    return nextChargeDate(s.billed_at, s.interval, this.today.date());
+    this.expanded.update((keys) => {
+      const next = new Set(keys);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
   }
 }
