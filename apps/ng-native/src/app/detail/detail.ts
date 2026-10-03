@@ -5,11 +5,11 @@ import { Haptics } from "@ng-native/expo/haptics";
 import { NativeHeader, NativeNavigation } from "@ng-native/router";
 import { format, subDays } from "date-fns";
 import { Subscriptions } from "../data/subscriptions.ts";
+import { Today } from "../data/today.ts";
 import {
   countChargesBetween,
   monthlyEquivalent,
   toLocalDay,
-  today,
   upcomingChargeDates,
   yearlyEquivalent,
 } from "../lib/billing.ts";
@@ -95,7 +95,7 @@ import { ChargeTimeline } from "./charge-timeline.ts";
         </view>
       } @else {
         <view class="missing">
-          @if (error() && loaded()) {
+          @if (error()) {
             <text class="error-text">Couldn't load this subscription. {{ error() }}</text>
             <pressable accessibilityRole="button" (press)="retry()">
               <text class="retry">Try again</text>
@@ -229,6 +229,7 @@ export class SubscriptionDetail {
   private readonly scheme = inject(ColorScheme);
   private readonly sheets = inject(Sheets);
   private readonly store = inject(Subscriptions);
+  private readonly today = inject(Today);
 
   readonly id = input.required<string>();
 
@@ -237,6 +238,7 @@ export class SubscriptionDetail {
   private leaving = false;
 
   protected readonly loaded = this.store.loaded;
+  private readonly loading = this.store.loading;
   protected readonly error = this.store.error;
   protected readonly subscription = computed(() => this.store.find(this.id()));
 
@@ -250,10 +252,12 @@ export class SubscriptionDetail {
   );
 
   constructor() {
-    // Only a successful fetch without this id means it is gone (deleted elsewhere): close the
-    // sheet. Not while the edit sheet is in front, or the pop would close that instead.
+    // Only a finished, successful fetch without this id means it is gone (deleted elsewhere):
+    // close the sheet. Not while a fetch that may bring the row is still running, and not while
+    // the edit sheet is in front, or the pop would close that instead.
     effect(() => {
-      if (this.inFront() && this.loaded() && !this.error() && !this.subscription() && !this.leaving) {
+      const settled = this.loaded() && !this.loading() && !this.error();
+      if (this.inFront() && settled && !this.subscription() && !this.leaving) {
         this.leaving = true;
         this.navigation.back();
       }
@@ -274,7 +278,7 @@ export class SubscriptionDetail {
   });
   protected readonly upcoming = computed(() => {
     const sub = this.subscription();
-    return sub ? upcomingChargeDates(sub.billed_at, sub.interval, 3) : [];
+    return sub ? upcomingChargeDates(sub.billed_at, sub.interval, 3, this.today.date()) : [];
   });
   protected readonly since = computed(() => {
     const sub = this.subscription();
@@ -288,7 +292,7 @@ export class SubscriptionDetail {
       sub.billed_at,
       sub.interval,
       toLocalDay(sub.created_at),
-      subDays(today(), 1),
+      subDays(this.today.date(), 1),
     );
     return count > 0 ? formatWholeKr(count * (sub.price ?? 0)) : null;
   });

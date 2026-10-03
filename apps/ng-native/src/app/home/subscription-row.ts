@@ -2,6 +2,7 @@ import { Component, computed, inject, input, output } from "@angular/core";
 import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 import { Pressable, Text, View } from "@ng-native/components";
 import { Haptics } from "@ng-native/expo/haptics";
+import { Today } from "../data/today.ts";
 import { formatDueLabel, formatNumber, intervalLabel, intervalSuffix, isDueSoon } from "../lib/format.ts";
 import { Tile } from "../ui/tile.ts";
 
@@ -73,6 +74,7 @@ import { Tile } from "../ui/tile.ts";
 })
 export class SubscriptionRow {
   private readonly haptics = inject(Haptics);
+  private readonly today = inject(Today);
 
   readonly subscription = input.required<SubscriptionWithCategory>();
   readonly nextCharge = input.required<Date>();
@@ -80,8 +82,12 @@ export class SubscriptionRow {
   readonly metaText = input<string>();
   readonly open = output<void>();
 
-  protected readonly soon = computed(() => !this.metaText() && isDueSoon(this.nextCharge()));
-  protected readonly meta = computed(() => this.metaText() ?? formatDueLabel(this.nextCharge()));
+  protected readonly soon = computed(
+    () => !this.metaText() && isDueSoon(this.nextCharge(), this.today.date()),
+  );
+  protected readonly meta = computed(
+    () => this.metaText() ?? formatDueLabel(this.nextCharge(), this.today.date()),
+  );
   protected readonly price = computed(() => formatNumber(this.subscription().price ?? 0));
   protected readonly suffix = computed(() => intervalSuffix[this.subscription().interval]);
   protected readonly label = computed(

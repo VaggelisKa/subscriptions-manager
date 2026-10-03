@@ -1,7 +1,7 @@
-import { Component, computed, input } from "@angular/core";
+import { Component, computed, inject, input } from "@angular/core";
 import { Text, View } from "@ng-native/components";
 import { differenceInCalendarDays } from "date-fns";
-import { today } from "../lib/billing.ts";
+import { Today } from "../data/today.ts";
 import { formatDayDate, formatDueLabel, formatKr, isDueSoon } from "../lib/format.ts";
 
 /** Next charges as a vertical timeline: a dot and a connecting line per row. */
@@ -71,21 +71,24 @@ import { formatDayDate, formatDueLabel, formatKr, isDueSoon } from "../lib/forma
   `,
 })
 export class ChargeTimeline {
+  private readonly today = inject(Today);
+
   readonly dates = input.required<Date[]>();
   readonly price = input.required<number>();
 
-  protected readonly rows = computed(() =>
-    this.dates().map((date, i) => {
+  protected readonly rows = computed(() => {
+    const today = this.today.date();
+    return this.dates().map((date, i) => {
       const first = i === 0;
       // "in 3 days" only while it's close; a far-off date would just repeat the left column.
-      const showDue = first && differenceInCalendarDays(date, today()) <= 7;
+      const showDue = first && differenceInCalendarDays(date, today) <= 7;
       return {
         key: date.getTime(),
         first,
-        date: formatDayDate(date),
-        soon: first && isDueSoon(date),
-        trailing: showDue ? formatDueLabel(date) : formatKr(this.price()),
+        date: formatDayDate(date, today),
+        soon: first && isDueSoon(date, today),
+        trailing: showDue ? formatDueLabel(date, today) : formatKr(this.price()),
       };
-    }),
-  );
+    });
+  });
 }

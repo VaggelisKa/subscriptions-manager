@@ -42,8 +42,14 @@ export class Auth {
     return error ? { error: error.message } : {};
   }
 
+  /**
+   * Signs out everywhere if the server can be reached, and always on this device: a global sign-out
+   * that fails (offline, say) returns before clearing the stored session, which would leave the
+   * app signed in after the user asked to leave.
+   */
   async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) await supabase.auth.signOut({ scope: "local" });
   }
 
   /** Deletes the account through the web app's API, which holds the service role, then signs out. */

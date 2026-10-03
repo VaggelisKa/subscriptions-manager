@@ -1,11 +1,12 @@
 import { Component, ElementRef, Renderer2, computed, inject, signal } from "@angular/core";
-import { RefreshControl, ScrollView, Text, View } from "@ng-native/components";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "@ng-native/components";
 import { Dialogs } from "@ng-native/device";
 import { Haptics } from "@ng-native/expo/haptics";
-import { NativeHeader, NativeNavigation } from "@ng-native/router";
+import { NativeHeader } from "@ng-native/router";
 import { Auth } from "../data/auth.ts";
 import { Subscriptions } from "../data/subscriptions.ts";
 import { Theme } from "../data/theme.ts";
+import { Today } from "../data/today.ts";
 import { bucketByTime, scheduleSubscriptions, type TimeBucket } from "../lib/billing.ts";
 import { formatWholeKr } from "../lib/format.ts";
 import { BarItems, type BarItem } from "../ui/bar-items.ts";
@@ -30,6 +31,7 @@ import { SubscriptionRow } from "./subscription-row.ts";
     EmptyState,
     MonthlySummary,
     NativeHeader,
+    Pressable,
     RefreshControl,
     ScrollView,
     SectionHeader,
@@ -45,6 +47,13 @@ import { SubscriptionRow } from "./subscription-row.ts";
         <text class="title page-title" accessibilityRole="header">Subscriptions</text>
         @if (showSkeleton()) {
           <app-skeleton />
+        } @else if (subscriptions().length === 0 && error(); as error) {
+          <view class="failed">
+            <text class="body muted">Couldn't load your subscriptions. {{ error }}</text>
+            <pressable accessibilityRole="button" (press)="retry()">
+              <text class="retry">Try again</text>
+            </pressable>
+          </view>
         } @else if (subscriptions().length === 0) {
           <app-empty-state />
         } @else {
@@ -92,15 +101,24 @@ import { SubscriptionRow } from "./subscription-row.ts";
     .refresh-error {
       padding: 12px 4px 0;
     }
+    .failed {
+      gap: 12px;
+      padding: 32px 4px 0;
+    }
+    .retry {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--primary-text);
+    }
   `,
 })
 export class Home {
   private readonly auth = inject(Auth);
   private readonly dialogs = inject(Dialogs);
   private readonly haptics = inject(Haptics);
-  private readonly navigation = inject(NativeNavigation);
   private readonly store = inject(Subscriptions);
   private readonly theme = inject(Theme);
+  private readonly today = inject(Today);
   protected readonly sheets = inject(Sheets);
 
   protected readonly subscriptions = this.store.subscriptions;
@@ -110,11 +128,12 @@ export class Home {
 
   // Refetches also flip `loading`; keep showing the list instead of the skeleton.
   protected readonly showSkeleton = computed(
-    () => !this.store.loaded() && this.subscriptions().length === 0,
+    () => !this.store.loaded() && !this.error() && this.subscriptions().length === 0,
   );
-  protected readonly buckets = computed(() =>
-    bucketByTime(scheduleSubscriptions(this.subscriptions())),
-  );
+  protected readonly buckets = computed(() => {
+    const today = this.today.date();
+    return bucketByTime(scheduleSubscriptions(this.subscriptions(), today), today);
+  });
 
   protected readonly leftItems: BarItem[] = [
     { type: "button", icon: "chart.bar.fill", label: "Insights", press: () => this.sheets.insights() },
@@ -170,8 +189,16 @@ export class Home {
   }
 
   protected async refresh(): Promise<void> {
-    await this.store.load();
-    this.refreshing.set(false);
+    this.refreshing.set(true);
+    try {
+      await this.store.load();
+    } finally {
+      this.refreshing.set(false);
+    }
+  }
+
+  protected retry(): void {
+    void this.store.load();
   }
 
   private add(): void {
@@ -179,9 +206,9 @@ export class Home {
     this.sheets.add();
   }
 
+  // The shell (`app.ts`) takes every screen down once the session is gone.
   private async signOut(): Promise<void> {
     await this.auth.signOut();
-    void this.navigation.reset("/login");
   }
 
   private async deleteAccount(): Promise<void> {
@@ -203,6 +230,5 @@ export class Home {
       return;
     }
     this.haptics.notify("success");
-    void this.navigation.reset("/login");
   }
 }

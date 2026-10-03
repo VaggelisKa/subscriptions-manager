@@ -6,6 +6,7 @@ import { Haptics } from "@ng-native/expo/haptics";
 import { labelsHidden } from "@expo/ui/swift-ui/modifiers";
 import { NativeHeader, NativeNavigation } from "@ng-native/router";
 import { Subscriptions } from "../data/subscriptions.ts";
+import { Today } from "../data/today.ts";
 import { nextChargeDate, totalPerMonth } from "../lib/billing.ts";
 import { withAlpha } from "../lib/colors.ts";
 import { formatWholeKr, formatWholeNumber, intervalSuffix } from "../lib/format.ts";
@@ -43,7 +44,9 @@ const PERIODS = [
   template: `
     <scroll-view class="screen" contentInsetAdjustmentBehavior="automatic">
       <view class="content">
-        @if (!loaded() && subscriptions().length === 0) {
+        @if (subscriptions().length === 0 && error(); as error) {
+          <text class="muted-line centered">Couldn't load your subscriptions. {{ error }}</text>
+        } @else if (!loaded() && subscriptions().length === 0) {
           <activity-indicator class="loading" />
         } @else if (subscriptions().length === 0) {
           <text class="muted-line centered">Add a subscription to see where your money goes.</text>
@@ -245,6 +248,7 @@ export class Insights {
   private readonly navigation = inject(NativeNavigation);
   private readonly scheme = inject(ColorScheme);
   private readonly store = inject(Subscriptions);
+  private readonly today = inject(Today);
   protected readonly sheets = inject(Sheets);
 
   protected readonly periods = PERIODS;
@@ -253,6 +257,7 @@ export class Insights {
   protected readonly expanded = signal<readonly string[]>([]);
 
   protected readonly loaded = this.store.loaded;
+  protected readonly error = this.store.error;
   protected readonly subscriptions = this.store.subscriptions;
   protected readonly monthly = computed(() => totalPerMonth(this.subscriptions()));
   protected readonly total = computed(() => this.monthly() * periodFactor[this.period()]);
@@ -301,6 +306,6 @@ export class Insights {
   }
 
   protected next(s: CategorySpend["subscriptions"][number]): Date {
-    return nextChargeDate(s.billed_at, s.interval);
+    return nextChargeDate(s.billed_at, s.interval, this.today.date());
   }
 }

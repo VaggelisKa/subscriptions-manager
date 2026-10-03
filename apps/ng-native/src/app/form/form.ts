@@ -1,6 +1,6 @@
-import { Component, computed, effect, inject, input, linkedSignal, signal, untracked } from "@angular/core";
+import { Component, computed, effect, inject, input, signal, untracked } from "@angular/core";
 import { PlatformColor } from "react-native";
-import type { IntervalEnum } from "@subscriptions-manager/shared";
+import type { IntervalEnum, SubscriptionWithCategory } from "@subscriptions-manager/shared";
 import { ColorScheme, Dialogs } from "@ng-native/device";
 import {
   UiCircle,
@@ -149,6 +149,7 @@ const ROW_MODIFIERS = [listRowBackground(PlatformColor("secondarySystemGroupedBa
             [displayedComponents]="['date']"
             [modifiers]="compactDate"
             [(value)]="billedAt"
+            (touch)="pickedDate()"
           />
         </ui-section>
       </ui-form>
@@ -180,7 +181,7 @@ export class SubscriptionForm {
   private readonly scheme = inject(ColorScheme);
   private readonly store = inject(Subscriptions);
 
-  /** Set only when editing; its absence is what makes this the "new subscription" form. */
+  /** Set only when editing: the route's id, which is what makes this an edit. */
   readonly id = input<string>();
   /** A name to start from, from the empty state's quick add (`?name=`). */
   readonly presetName = input<string>(undefined, { alias: "name" });
@@ -189,8 +190,14 @@ export class SubscriptionForm {
   protected readonly categories = this.store.categories;
   protected readonly saving = signal(false);
 
-  protected readonly editing = computed(() => this.store.find(this.id() ?? ""));
-  protected readonly title = computed(() => (this.editing() ? "Edit subscription" : "New subscription"));
+  protected readonly isEdit = computed(() => !!this.id());
+  protected readonly title = computed(() => (this.isEdit() ? "Edit subscription" : "New subscription"));
+
+  /**
+   * The row as it was when the form opened. The form is a draft of it, as apps/native's is of its
+   * route params: a realtime reload while the sheet is open must not reset what the user picked.
+   */
+  private readonly original = signal<SubscriptionWithCategory | null>(null);
 
   // What the SwiftUI fields hold. They write these on the UI thread; `textChange` mirrors each
   // edit into the signals below, which are what the preview and save read.
@@ -198,26 +205,21 @@ export class SubscriptionForm {
   protected readonly priceText = nativeState("");
   protected readonly name = signal("");
   protected readonly price = signal("");
-
-  protected readonly interval = linkedSignal<IntervalEnum>(() => this.editing()?.interval ?? "month");
+  protected readonly interval = signal<IntervalEnum>("month");
+  /** What the user picked, or null for the default. */
+  private readonly pickedCategory = signal<string | null>(null);
   // New subscriptions default to the first category; edits keep "none" as none.
-  protected readonly categoryId = linkedSignal(() => {
-    const sub = this.editing();
-    if (sub) return sub.categories?.id ?? "";
-    return this.categories()[0]?.id ?? "";
-  });
+  protected readonly categoryId = computed(
+    () =>
+      this.pickedCategory() ??
+      (this.isEdit() ? (this.original()?.categories?.id ?? "") : (this.categories()[0]?.id ?? "")),
+  );
+  protected readonly billedAt = signal<Date | null>(new Date());
   /**
-   * A stale `billed_at` is shown as its next charge (keeping the stored time of day), but only
-   * written back if the user picks a date: the web app's cron advances `billed_at` itself.
+   * Set when the user picks a date. Until then an edit keeps the stored `billed_at`: a stale one
+   * is shown as its next charge, but the web app's cron advances `billed_at` itself.
    */
-  private readonly initialBilledAt = computed(() => {
-    const sub = this.editing();
-    if (!sub) return new Date();
-    const stored = utcToZonedTime(sub.billed_at, "Europe/Copenhagen");
-    const next = nextChargeDate(sub.billed_at, sub.interval);
-    return setMinutes(setHours(next, stored.getHours()), stored.getMinutes());
-  });
-  protected readonly billedAt = linkedSignal<Date | null>(() => this.initialBilledAt());
+  private billedAtChanged = false;
 
   // --- the preview row ---------------------------------------------------------------------
   protected readonly trimmedName = computed(() => this.name().trim());
@@ -297,7 +299,7 @@ export class SubscriptionForm {
   protected readonly rightItems = computed<BarItem[]>(() => {
     const colors = this.colors();
     const items: BarItem[] = [];
-    if (this.editing() && !this.saving()) {
+    if (this.isEdit() && !this.saving()) {
       items.push({
         type: "button",
         icon: "trash",
@@ -319,21 +321,29 @@ export class SubscriptionForm {
   });
 
   constructor() {
-    // Fill the fields once, as soon as there is something to fill them with: the row being
-    // edited (which may still be loading), or the quick-add name.
+    // Take the draft once, as soon as there is something to take it from: the row being edited
+    // (which may still be loading), or the quick-add name.
     let filled = false;
     effect(() => {
       if (filled) return;
-      const sub = this.editing();
-      if (this.id() && !sub) return;
+      const id = this.id();
+      const sub = id ? this.store.find(id) : undefined;
+      if (id && !sub) return;
       filled = true;
       const name = sub?.name ?? this.presetName() ?? "";
       const price = sub ? priceToInput(sub.price) : "";
       untracked(() => {
+        this.original.set(sub ?? null);
         this.name.set(name);
         this.price.set(price);
         this.nameText?.set(name);
         this.priceText?.set(price);
+        if (sub) {
+          this.interval.set(sub.interval);
+          const stored = utcToZonedTime(sub.billed_at, "Europe/Copenhagen");
+          const next = nextChargeDate(sub.billed_at, sub.interval);
+          this.billedAt.set(setMinutes(setHours(next, stored.getHours()), stored.getMinutes()));
+        }
       });
     });
   }
@@ -346,6 +356,10 @@ export class SubscriptionForm {
     this.price.set(event.nativeEvent.value);
   }
 
+  protected pickedDate(): void {
+    this.billedAtChanged = true;
+  }
+
   protected chooseInterval(value: string | number | null): void {
     this.haptics.select();
     this.interval.set(value as IntervalEnum);
@@ -353,10 +367,16 @@ export class SubscriptionForm {
 
   protected chooseCategory(value: string | number | null): void {
     this.haptics.select();
-    this.categoryId.set(String(value ?? ""));
+    this.pickedCategory.set(String(value ?? ""));
   }
 
   private async save(): Promise<void> {
+    // A second tap queued before the button disables itself must not insert a second row.
+    if (this.saving()) return;
+    const id = this.id();
+    const original = this.original();
+    if (id && !original) return; // Still loading the row.
+
     const name = this.trimmedName();
     const price = this.parsedPrice();
     if (!name) {
@@ -367,22 +387,26 @@ export class SubscriptionForm {
       await this.dialogs.tell("Error", "Price of subscription should be given");
       return;
     }
+    if (id && !this.store.find(id)) {
+      // Deleted elsewhere while this sheet was open. Saving must not bring it back as a new row.
+      await this.dialogs.tell("Error", "This subscription no longer exists.");
+      void this.navigation.popTo("/");
+      return;
+    }
 
-    const sub = this.editing();
     const picked = this.billedAt();
-    const dateChanged =
-      picked !== null && picked.toDateString() !== this.initialBilledAt().toDateString();
     const categoryId = this.categoryId();
-
-    this.saving.set(true);
     const payload = {
       name,
       price,
       interval: this.interval(),
-      billed_at: sub && !dateChanged ? sub.billed_at : toBilledAt(picked ?? new Date()),
+      billed_at:
+        original && !this.billedAtChanged ? original.billed_at : toBilledAt(picked ?? new Date()),
       ...(categoryId ? { category_id: categoryId } : {}),
     };
-    const result = sub ? await this.store.update(sub.id, payload) : await this.store.add(payload);
+
+    this.saving.set(true);
+    const result = id ? await this.store.update(id, payload) : await this.store.add(payload);
     this.saving.set(false);
 
     if (result.error) {
@@ -394,16 +418,16 @@ export class SubscriptionForm {
   }
 
   private async remove(): Promise<void> {
-    const sub = this.editing();
-    if (!sub) return;
+    const id = this.id();
+    if (!id || this.saving()) return;
     const sure = await this.dialogs.confirm("Delete subscription", {
-      message: `Are you sure you want to delete "${sub.name}"?`,
+      message: `Are you sure you want to delete "${this.original()?.name ?? this.trimmedName()}"?`,
       confirm: "Delete",
       destructive: true,
     });
-    if (!sure) return;
+    if (!sure || this.saving()) return;
     this.saving.set(true);
-    const result = await this.store.remove(sub.id);
+    const result = await this.store.remove(id);
     this.saving.set(false);
     if (result.error) {
       await this.dialogs.tell("Error", result.error);

@@ -1,8 +1,9 @@
-import { Component, computed, input } from "@angular/core";
+import { Component, computed, inject, input } from "@angular/core";
 import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 import { ScrollView, Text, View } from "@ng-native/components";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
-import { chargesBetween, today } from "../lib/billing.ts";
+import { Today } from "../data/today.ts";
+import { chargesBetween } from "../lib/billing.ts";
 import { isHexColor } from "../lib/colors.ts";
 import { formatDayDate } from "../lib/format.ts";
 
@@ -22,8 +23,8 @@ type Day = {
 };
 
 /** Yesterday plus the next ~5 weeks, each day with the charges that land on it. */
-function buildDays(subscriptions: SubscriptionWithCategory[]): Day[] {
-  const start = addDays(today(), -1);
+function buildDays(subscriptions: SubscriptionWithCategory[], today: Date): Day[] {
+  const start = addDays(today, -1);
   const end = addDays(start, DAYS - 1);
   const charges: (string | null)[][] = Array.from({ length: DAYS }, () => []);
   for (const s of subscriptions) {
@@ -41,7 +42,7 @@ function buildDays(subscriptions: SubscriptionWithCategory[]): Day[] {
       key: date.toISOString(),
       weekday: format(date, monthStart ? "MMM" : "EEEEE"),
       number: format(date, "d"),
-      label: `${isToday ? "Today, " : ""}${formatDayDate(date)}, ${
+      label: `${isToday ? "Today, " : ""}${formatDayDate(date, today)}, ${
         count === 0 ? "no charges" : `${count} ${count === 1 ? "charge" : "charges"}`
       }`,
       past: i === 0,
@@ -141,7 +142,9 @@ function buildDays(subscriptions: SubscriptionWithCategory[]): Day[] {
   `,
 })
 export class DayStrip {
+  private readonly today = inject(Today);
+
   readonly subscriptions = input.required<SubscriptionWithCategory[]>();
 
-  protected readonly days = computed(() => buildDays(this.subscriptions()));
+  protected readonly days = computed(() => buildDays(this.subscriptions(), this.today.date()));
 }

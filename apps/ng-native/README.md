@@ -22,5 +22,15 @@ Note that `apps/native` gained a `@babel/core ^7` devDependency: Angular's compi
 into the workspace, and without the pin pnpm resolves React Native's Babel peer to it and Metro
 fails for the React app.
 
+Known gaps, on purpose for now:
+
+- iOS only. Header buttons and the SwiftUI form have no Android implementation yet.
+- `@ng-native/expo` 0.3.0 declares Expo 57 peers; this app runs on Expo 58 to share one React
+  Native with `apps/native`. It works on the iOS simulators tested, but upgrades need a smoke test.
+- No password recovery or "retry" screen for a failed session restore, both of which apps/native has.
+- Billing, formatting and brand matching are copies of apps/native's `src/lib`; a fix in one needs
+  the other until they move to `packages/shared`.
+- The session lives in AsyncStorage, as in apps/native.
+
 `src/main.ts` mounts `src/app/app.ts`; `src/app/app.routes.ts` lists the screens. See
 `AGENTS.md` for how this framework differs from the web Angular you know.

@@ -105,7 +105,12 @@ export class DemoSubscriptions {
   }
   async update(id: string, data: SubscriptionInput): Promise<{ error?: string }> {
     this.all.update((all) =>
-      all.map((s) => (s.id === id ? this.row(id, data, s.created_at) : s)),
+      all.map((s) =>
+        s.id === id
+          ? // Like the real update, leaving `category_id` out keeps the category the row has.
+            this.row(id, { category_id: s.categories?.id, ...data }, s.created_at)
+          : s,
+      ),
     );
     return {};
   }

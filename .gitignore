@@ -28,9 +28,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# local env files (any variant; commit only a sanitized .env.example)
 .env*.local
 .env
+.env.*
+!.env.example
 
 # vercel
 .vercel

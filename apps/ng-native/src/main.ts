@@ -13,6 +13,7 @@ import { App } from "./app/app.ts";
 import { registerRnHost } from "./app/ui/rn-host.ts";
 import { appConfig } from "./app/app.config.ts";
 import { demoProviders } from "./app/data/demo.ts";
+import { demoMode } from "./app/data/supabase.ts";
 import { GlobalStyles } from "./app/global-styles.ts";
 
 // Held until the fonts are registered, so the first frame is never in the fallback face.
@@ -39,7 +40,7 @@ AppRegistry.registerRunnable("main", ({ rootTag }) => {
     providers: [
       ...appConfig.providers,
       // `EXPO_PUBLIC_DEMO=1` swaps the Supabase services for in-memory ones with seed data.
-      ...(process.env.EXPO_PUBLIC_DEMO === "1" ? demoProviders : []),
+      ...(demoMode ? demoProviders : []),
     ],
   });
 
