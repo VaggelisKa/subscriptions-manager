@@ -98,7 +98,7 @@ export class DemoSubscriptions {
   find(id: string): SubscriptionWithCategory | undefined {
     return this.all().find((s) => s.id === id);
   }
-  async load(): Promise<void> {}
+  async reload(): Promise<void> {}
   async add(data: SubscriptionInput): Promise<{ error?: string }> {
     this.all.update((all) => [...all, this.row(`demo-${Date.now()}`, data, new Date().toISOString())]);
     return {};

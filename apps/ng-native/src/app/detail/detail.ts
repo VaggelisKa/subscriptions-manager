@@ -308,7 +308,7 @@ export class SubscriptionDetail {
   );
 
   protected retry(): void {
-    void this.store.load();
+    void this.store.reload();
   }
 
   private edit(): void {

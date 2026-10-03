@@ -191,14 +191,14 @@ export class Home {
   protected async refresh(): Promise<void> {
     this.refreshing.set(true);
     try {
-      await this.store.load();
+      await this.store.reload();
     } finally {
       this.refreshing.set(false);
     }
   }
 
   protected retry(): void {
-    void this.store.load();
+    void this.store.reload();
   }
 
   private add(): void {

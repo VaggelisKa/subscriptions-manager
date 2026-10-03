@@ -1,4 +1,4 @@
-import { Service, computed, effect, inject, signal } from "@angular/core";
+import { Service, computed, effect, inject, linkedSignal, resource, untracked } from "@angular/core";
 import type { Category, IntervalEnum, SubscriptionWithCategory } from "@subscriptions-manager/shared";
 import { Auth } from "./auth.ts";
 import { supabase } from "./supabase.ts";
@@ -12,6 +12,7 @@ export type SubscriptionInput = {
 };
 
 type Result = { error?: string };
+type Rows = { subscriptions: SubscriptionWithCategory[]; categories: Category[] };
 
 /**
  * Every subscription of the signed-in user, with its category, plus the categories themselves.
@@ -21,48 +22,95 @@ type Result = { error?: string };
 @Service()
 export class Subscriptions {
   private readonly auth = inject(Auth);
-  private readonly all = signal<SubscriptionWithCategory[]>([]);
-  private readonly cats = signal<Category[]>([]);
   // The id, not the user: a token refresh hands back a new user object for the same account.
-  private readonly userId = computed(() => this.auth.user()?.id ?? null);
+  private readonly userId = computed(() => this.auth.user()?.id ?? undefined);
 
-  readonly subscriptions = this.all.asReadonly();
-  readonly categories = this.cats.asReadonly();
-  readonly loading = signal(false);
+  /** Resolvers for `reload()` callers, settled when the next fetch finishes. */
+  private waiting: (() => void)[] = [];
+  /**
+   * A refetch asked for while one was in flight. `resource.reload()` refuses while loading, and a
+   * change that lands mid-fetch may not be in its result, so it runs once the current one is done.
+   */
+  private queued = false;
+
+  /**
+   * The fetch, keyed by user. A new user (or none) starts a new request and aborts the one in
+   * flight, and `resource` applies only the latest request's response, so a slow one cannot show
+   * one account's rows to the next. Refetches for the same user run one at a time (`refetch`).
+   */
+  private readonly rows = resource({
+    params: () => this.userId(),
+    loader: async ({ abortSignal }): Promise<Rows> => {
+      try {
+        const [subs, cats] = await Promise.all([
+          supabase
+            .from("subscriptions")
+            .select("id, name, price, billed_at, interval, user_id, created_at, categories(*)")
+            .order("billed_at", { ascending: true })
+            .abortSignal(abortSignal),
+          supabase.from("categories").select("*").abortSignal(abortSignal),
+        ]);
+        const error = subs.error ?? cats.error;
+        if (error) throw new Error(error.message);
+        return {
+          subscriptions: (subs.data ?? []) as unknown as SubscriptionWithCategory[],
+          categories: cats.data ?? [],
+        };
+      } finally {
+        // A superseded or queued-behind fetch leaves its callers to the one that follows it.
+        if (!abortSignal.aborted && !this.queued) this.settle();
+      }
+    },
+  });
+
+  /**
+   * The last rows fetched for the current user. A failed refresh leaves the resource without a
+   * value; the rows already on screen stay, and `error` says why they may be stale. A different
+   * user starts from nothing.
+   */
+  private readonly current = linkedSignal<{ user: string | undefined; rows?: Rows }, Rows | null>({
+    source: () => ({
+      user: this.userId(),
+      rows: this.rows.hasValue() ? this.rows.value() : undefined,
+    }),
+    computation: (source, previous) =>
+      source.rows ?? (previous && previous.source.user === source.user ? previous.value : null),
+  });
+
+  readonly subscriptions = computed(() => this.current()?.subscriptions ?? []);
+  readonly categories = computed(() => this.current()?.categories ?? []);
+  readonly loading = this.rows.isLoading;
   /** True once a fetch for the current user has succeeded. */
-  readonly loaded = signal(false);
-  readonly error = signal<string | null>(null);
-
-  /** Bumped by every fetch and every change of user; only the latest fetch may write. */
-  private generation = 0;
+  readonly loaded = computed(() => this.current() !== null);
+  readonly error = computed(() => this.rows.error()?.message ?? null);
 
   constructor() {
+    // Run a queued refetch as soon as the one in flight has finished.
+    effect(() => {
+      if (this.rows.isLoading() || !this.queued) return;
+      this.queued = false;
+      untracked(() => this.rows.reload());
+    });
+
     effect((onCleanup) => {
       const userId = this.userId();
-      // A new account (or none) starts from nothing, and whatever is in flight for the previous
-      // one is discarded when it lands.
-      this.generation++;
-      this.all.set([]);
-      this.cats.set([]);
-      this.loaded.set(false);
-      this.loading.set(false);
-      this.error.set(null);
-      if (!userId) return;
-
-      void this.load();
+      this.queued = false;
+      if (!userId) {
+        // No fetch is coming to settle anyone still waiting.
+        this.settle();
+        return;
+      }
 
       // Changes made while the channel was down are never delivered, so refetch once it rejoins.
       let missedChanges = false;
       const channel = supabase
         .channel(`subscriptions-changes-${userId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "subscriptions" },
-          () => void this.load(),
+        .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions" }, () =>
+          this.refetch(),
         )
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            if (missedChanges) void this.load();
+            if (missedChanges) this.refetch();
             missedChanges = false;
           } else {
             missedChanges = true;
@@ -76,68 +124,47 @@ export class Subscriptions {
   }
 
   find(id: string): SubscriptionWithCategory | undefined {
-    return this.all().find((s) => s.id === id);
+    return this.subscriptions().find((s) => s.id === id);
   }
 
-  /**
-   * Fetches the current user's rows. A response is applied only if no newer fetch has started and
-   * the user is still the one it was made for: a slow response must not overwrite a newer one, or
-   * show one account's subscriptions to the next. A failed refresh keeps the rows already shown.
-   */
-  async load(): Promise<void> {
-    const userId = this.userId();
-    if (!userId) return;
-    const generation = ++this.generation;
-    this.loading.set(true);
-
-    let error: string | null = null;
-    let subs: SubscriptionWithCategory[] | null = null;
-    let cats: Category[] | null = null;
-    try {
-      const [subsResult, catsResult] = await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("id, name, price, billed_at, interval, user_id, created_at, categories(*)")
-          .order("billed_at", { ascending: true }),
-        supabase.from("categories").select("*"),
-      ]);
-      error = subsResult.error?.message ?? catsResult.error?.message ?? null;
-      subs = subsResult.data as unknown as SubscriptionWithCategory[] | null;
-      cats = catsResult.data;
-    } catch (e) {
-      error = e instanceof Error ? e.message : "Couldn't load subscriptions";
-    }
-
-    if (generation !== this.generation || this.userId() !== userId) return;
-    this.error.set(error);
-    if (!error) {
-      if (subs) this.all.set(subs);
-      if (cats) this.cats.set(cats);
-      this.loaded.set(true);
-    }
-    this.loading.set(false);
+  /** Refetch, resolving once the fetch has finished (successfully or not). */
+  reload(): Promise<void> {
+    if (!this.userId()) return Promise.resolve();
+    const done = new Promise<void>((resolve) => this.waiting.push(resolve));
+    this.refetch();
+    return done;
   }
 
   async add(data: SubscriptionInput): Promise<Result> {
-    const userId = this.auth.user()?.id;
+    const userId = this.userId();
     if (!userId) return { error: "Not authenticated" };
     const { error } = await supabase.from("subscriptions").insert({ ...data, user_id: userId });
     if (error) return { error: error.message };
-    await this.load();
+    await this.reload();
     return {};
   }
 
   async update(id: string, data: SubscriptionInput): Promise<Result> {
     const { error } = await supabase.from("subscriptions").update(data).eq("id", id);
     if (error) return { error: error.message };
-    await this.load();
+    await this.reload();
     return {};
   }
 
   async remove(id: string): Promise<Result> {
     const { error } = await supabase.from("subscriptions").delete().eq("id", id);
     if (error) return { error: error.message };
-    await this.load();
+    await this.reload();
     return {};
+  }
+
+  private refetch(): void {
+    if (!this.rows.reload() && this.rows.isLoading()) this.queued = true;
+  }
+
+  private settle(): void {
+    const waiting = this.waiting;
+    this.waiting = [];
+    for (const resolve of waiting) resolve();
   }
 }

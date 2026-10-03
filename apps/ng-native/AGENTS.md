@@ -61,8 +61,9 @@ pnpm ng-native typecheck   # ngc, which checks templates too
   `<text-input>`. The subscription form is SwiftUI's, so it keeps plain signals fed by
   `(textChange)`, and validates on save as apps/native does.
 - **Data is services:** `Auth` and `Subscriptions` in `src/app/data` hold the Supabase state as
-  signals; screens inject them rather than fetching. `Subscriptions.load()` applies a response only
-  if it is the latest fetch for the current user; keep that guard when changing it.
+  signals; screens inject them rather than fetching. `Subscriptions` fetches through Angular's
+  `resource()`, keyed by user id, so a new account aborts the old request. `resource.reload()`
+  is refused while a fetch is in flight, so go through `refetch()`/`reload()`, which queue it.
 - **Losing the session is handled once,** in `app.ts`, which resets to `/login`. Screens sign out
   and let it navigate.
 - **Date-relative values read `Today`** (`src/app/data/today.ts`), so they roll over at midnight.
