@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Subscriptions (Angular)",
+    "slug": "subscriptions-manager-ng",
+    "version": "1.0.0",
+    "scheme": "subscriptions-manager-ng",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "icon": "../native/assets/app-icon.jpg",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.subscriptionsmanager.ng",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.subscriptionsmanager.ng",
+      "adaptiveIcon": {
+        "foregroundImage": "../native/assets/app-icon.jpg",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [["expo-splash-screen", { "backgroundColor": "#ffffff" }]],
+    "extra": {
+      "router": {
+        "root": "src/app"
+      }
+    }
+  }
+}

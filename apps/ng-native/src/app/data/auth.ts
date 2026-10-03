@@ -1,0 +1,87 @@
+import { DestroyRef, Service, computed, inject, signal } from "@angular/core";
+import type { Session } from "@supabase/supabase-js";
+import { supabase, supabaseConfigured } from "./supabase.ts";
+
+type Result = { error?: string };
+
+/** The Supabase session as signals. Replaces apps/native's `AuthProvider` context. */
+@Service()
+export class Auth {
+  private readonly current = signal<Session | null>(null);
+  private readonly settled = signal(false);
+  private readonly restoring: Promise<void>;
+
+  readonly session = this.current.asReadonly();
+  readonly user = computed(() => this.session()?.user ?? null);
+  /** True once the stored session has been read back, successfully or not. */
+  readonly ready = this.settled.asReadonly();
+  readonly configured = supabaseConfigured;
+
+  constructor() {
+    this.restoring = this.restore();
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      this.current.set(session);
+      this.settled.set(true);
+    });
+    inject(DestroyRef).onDestroy(() => data.subscription.unsubscribe());
+  }
+
+  /** What the route guards await before deciding where the app starts. */
+  whenReady(): Promise<void> {
+    return this.restoring;
+  }
+
+  async signIn(email: string, password: string): Promise<Result> {
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    return error ? { error: error.message } : {};
+  }
+
+  async signUp(email: string, password: string): Promise<Result> {
+    const { error } = await supabase.auth.signUp({ email: email.trim(), password });
+    return error ? { error: error.message } : {};
+  }
+
+  /**
+   * Signs out everywhere if the server can be reached, and always on this device: a global sign-out
+   * that fails (offline, say) returns before clearing the stored session, which would leave the
+   * app signed in after the user asked to leave.
+   */
+  async signOut(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) await supabase.auth.signOut({ scope: "local" });
+  }
+
+  /** Deletes the account through the web app's API, which holds the service role, then signs out. */
+  async deleteAccount(): Promise<Result> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return { error: "Not signed in" };
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+    if (!apiUrl) return { error: "EXPO_PUBLIC_API_URL is required for account deletion." };
+
+    try {
+      const response = await fetch(`${apiUrl}/api/account/delete`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) return { error: body.error || `Request failed (${response.status})` };
+      await supabase.auth.signOut();
+      return {};
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to delete account" };
+    }
+  }
+
+  private async restore(): Promise<void> {
+    try {
+      const { data } = await supabase.auth.getSession();
+      this.current.set(data.session);
+    } catch {
+      // Unreadable storage: start signed out. (apps/native also offers a retry; see README.)
+      this.current.set(null);
+    } finally {
+      this.settled.set(true);
+    }
+  }
+}

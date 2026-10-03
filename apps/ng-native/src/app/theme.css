@@ -1,0 +1,182 @@
+/* The Nunito faces, shared with apps/native. `url()` becomes a `require` at build time. */
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-Medium.ttf");
+  font-weight: 500;
+}
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-SemiBold.ttf");
+  font-weight: 600;
+}
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-Bold.ttf");
+  font-weight: 700;
+}
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-ExtraBold.ttf");
+  font-weight: 800;
+}
+@font-face {
+  font-family: Nunito;
+  src: url("../../../native/assets/fonts/Nunito-Black.ttf");
+  font-weight: 900;
+}
+
+/* The palette from apps/native/src/lib/theme.ts, one token per role, both schemes at once. */
+:root {
+  --background: light-dark(hsl(60, 4.8%, 95.9%), hsl(20, 14.3%, 4.1%));
+  --surface: light-dark(hsl(0, 0%, 100%), hsl(24, 9.8%, 10%));
+  --foreground: light-dark(hsl(20, 14.3%, 4.1%), hsl(60, 9.1%, 97.8%));
+  --muted: light-dark(hsl(25, 5.3%, 44.7%), hsl(24, 5.4%, 63.9%));
+  --faint: light-dark(hsl(24, 5.4%, 63.9%), hsl(25, 5.3%, 44.7%));
+  --primary: light-dark(hsl(24.6, 95%, 53.1%), hsl(20.5, 90.2%, 48.2%));
+  --primary-foreground: hsl(60, 9.1%, 97.8%);
+  --primary-text: light-dark(hsl(17.5, 88.3%, 40.4%), hsl(27, 96%, 61%));
+  --primary-soft: light-dark(hsla(24.6, 95%, 53.1%, 0.12), hsla(20.5, 90.2%, 48.2%, 0.2));
+  --fill: light-dark(hsla(25, 5.3%, 44.7%, 0.12), hsla(24, 5.4%, 63.9%, 0.16));
+  --separator: light-dark(hsl(20, 5.9%, 90%), hsl(12, 6.5%, 15.1%));
+  --destructive: light-dark(hsl(0, 72.2%, 47%), hsl(0, 72.2%, 50.6%));
+}
+
+text,
+text-input {
+  font-family: Nunito;
+  font-weight: 400;
+  color: var(--foreground);
+}
+
+/* Screens */
+.screen {
+  flex: 1;
+  background-color: var(--background);
+}
+.content {
+  padding: 16px;
+  padding-bottom: 48px;
+}
+
+/* Grouped lists: a raised, rounded container with hairline separators between its rows. */
+.group {
+  background-color: var(--surface);
+  border-radius: 22px;
+  overflow: hidden;
+}
+.group > :not(:first-child) {
+  border-top-width: var(--hairline);
+  border-top-color: var(--separator);
+}
+/* Rows of subscriptions, separated by hairlines inset to line up with the names. */
+.rows {
+  background-color: var(--surface);
+  border-radius: 22px;
+  overflow: hidden;
+}
+.row-separator {
+  height: var(--hairline);
+  margin-left: 68px;
+  background-color: var(--separator);
+}
+.section-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 24px 6px 8px;
+}
+.section-title {
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 23px;
+}
+.section-trailing {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+/* Type */
+.title {
+  font-weight: 900;
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.6px;
+}
+.body {
+  font-size: 16px;
+  line-height: 22px;
+}
+.subhead {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* Controls */
+.button {
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background-color: var(--primary);
+}
+.button:active {
+  opacity: 0.85;
+}
+.button[data-disabled] {
+  opacity: 0.5;
+}
+.button-label {
+  color: var(--primary-foreground);
+  font-weight: 800;
+  font-size: 16px;
+}
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background-color: var(--fill);
+}
+.chip:active {
+  opacity: 0.7;
+}
+.chip-label {
+  font-weight: 700;
+  font-size: 14px;
+}
+.field {
+  min-height: 50px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background-color: var(--surface);
+  font-size: 16px;
+}
+.field::placeholder {
+  color: var(--faint);
+}
+.field[data-invalid][data-touched] {
+  border-width: 1px;
+  border-color: var(--destructive);
+}
+/* "Try again" under a load error. */
+.retry {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary-text);
+}
+.error {
+  color: var(--destructive);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+}

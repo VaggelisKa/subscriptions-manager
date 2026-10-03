@@ -5,6 +5,7 @@
   "scripts": {
     "web": "pnpm --filter @subscriptions-manager/web",
     "native": "pnpm --filter @subscriptions-manager/native",
-    "build:web": "pnpm --filter @subscriptions-manager/web build"
+    "build:web": "pnpm --filter @subscriptions-manager/web build",
+    "ng-native": "pnpm --filter @subscriptions-manager/ng-native"
   }
 }
