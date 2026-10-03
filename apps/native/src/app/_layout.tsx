@@ -89,10 +89,12 @@ function RootLayoutInner() {
           <Stack.Screen
             name="index"
             options={{
-              title: "Subscriptions",
-              headerLargeTitle: true,
-              // A solid header background hides the large title on iOS 26+.
-              headerStyle: undefined,
+              title: "",
+              // Toolbar buttons float over the content with no bar or blur;
+              // the screen renders its own title that scrolls away.
+              headerTransparent: true,
+              headerStyle: { backgroundColor: "transparent" },
+              scrollEdgeEffects: { top: "hidden" },
             }}
           />
           <Stack.Screen

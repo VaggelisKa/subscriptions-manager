@@ -1,5 +1,5 @@
 import { use, useState } from "react";
-import { Alert, RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
 import { AuthContext } from "@/providers/auth-provider";
@@ -7,7 +7,7 @@ import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { haptics } from "@/lib/haptics";
 import { useTodayKey } from "@/lib/use-today";
-import { spacing } from "@/lib/theme";
+import { spacing, type } from "@/lib/theme";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
 import { SubscriptionOverviewSkeletons } from "@/components/subscription-overview-skeletons";
 import { MonthlySummary } from "@/components/home/monthly-summary";
@@ -114,6 +114,12 @@ export default function HomeScreen() {
           />
         }
       >
+        <Text
+          accessibilityRole="header"
+          style={[styles.title, { color: colors.foreground }]}
+        >
+          Subscriptions
+        </Text>
         {showSkeleton ? (
           <SubscriptionOverviewSkeletons />
         ) : subscriptions.length === 0 ? (
@@ -136,5 +142,10 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxxl,
+  },
+  title: {
+    ...type.largeTitle,
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.md,
   },
 });
