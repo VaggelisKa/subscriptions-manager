@@ -1,14 +1,16 @@
 import { use, useState } from "react";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { Stack } from "expo-router/stack";
-import * as Haptics from "expo-haptics";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { LoginForm } from "@/components/login-form";
+import { haptics } from "@/lib/haptics";
 import { spacing } from "@/lib/theme";
 
 export default function LoginScreen() {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { signIn, signUp } = use(AuthContext);
 
   const [email, setEmail] = useState("");
@@ -20,6 +22,7 @@ export default function LoginScreen() {
   async function handleSubmit() {
     if (!email.trim() || !password.trim()) {
       setError("Please fill in all fields");
+      haptics.warning();
       return;
     }
 
@@ -32,22 +35,21 @@ export default function LoginScreen() {
 
     if (result.error) {
       setError(result.error);
-      if (process.env.EXPO_OS === "ios") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
+      haptics.error();
     }
 
     setLoading(false);
   }
 
   function handleToggleSignUp() {
+    haptics.selection();
     setIsSignUp(!isSignUp);
     setError(null);
   }
 
   return (
     <>
-      <Stack.Screen options={{ title: "Sign In", headerShown: false }} />
+      <Stack.Screen options={{ title: "Sign in", headerShown: false }} />
       <KeyboardAvoidingView
         behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: colors.background }}
@@ -55,10 +57,12 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
-            padding: spacing.xl,
+            paddingTop: insets.top + 34,
+            paddingBottom: insets.bottom + spacing.lg,
+            paddingHorizontal: 22,
           }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <LoginForm
             email={email}

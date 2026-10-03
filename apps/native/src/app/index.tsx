@@ -1,42 +1,18 @@
-import { use, useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import Animated, {
-  FadeIn,
-  FadeInUp,
-  FadeOut,
-  LinearTransition,
-} from "react-native-reanimated";
+import { use, useState } from "react";
+import { Alert, RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
-import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
-import {
-  loadGroupByCategory,
-  saveGroupByCategory,
-  loadSortBy,
-  saveSortBy,
-  type SortBy,
-} from "@/lib/user-options";
-import { SubscriptionCard } from "@/components/subscription-card";
-import { TotalCostsCard } from "@/components/total-costs-card";
-import { ChargedSoonCard } from "@/components/charged-soon-card";
+import { haptics } from "@/lib/haptics";
+import { useTodayKey } from "@/lib/use-today";
+import { spacing } from "@/lib/theme";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
 import { SubscriptionOverviewSkeletons } from "@/components/subscription-overview-skeletons";
-import { fonts, radius, spacing } from "@/lib/theme";
-import {
-  numberFormatOptions,
-  type SubscriptionWithCategory,
-} from "@subscriptions-manager/shared";
-import { isPast } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+import { MonthlySummary } from "@/components/home/monthly-summary";
+import { DayStrip } from "@/components/home/day-strip";
+import { TimelineList } from "@/components/home/timeline-list";
 
 export default function HomeScreen() {
   const colors = useThemeColors();
@@ -45,217 +21,70 @@ export default function HomeScreen() {
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [groupByCategory, setGroupByCategory] = useState(false);
-  const [isGroupPreferenceHydrated, setIsGroupPreferenceHydrated] =
-    useState(false);
-  const [sortBy, setSortBy] = useState<SortBy>("priceAsc");
-  const [isSortPreferenceHydrated, setIsSortPreferenceHydrated] =
-    useState(false);
+  const todayKey = useTodayKey();
 
-  useEffect(() => {
-    let isMounted = true;
+  // Refetches also flip `loading`; keep showing the list instead of the skeleton.
+  const showSkeleton = (authLoading || loading) && subscriptions.length === 0;
 
-    async function hydrateGroupPreference() {
-      const storedGroupPreference = await loadGroupByCategory();
-      if (!isMounted) return;
-      setGroupByCategory(storedGroupPreference);
-      setIsGroupPreferenceHydrated(true);
-    }
-
-    void hydrateGroupPreference();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function hydrateSortPreference() {
-      const storedSortPreference = await loadSortBy();
-      if (!isMounted) return;
-      setSortBy(storedSortPreference);
-      setIsSortPreferenceHydrated(true);
-    }
-
-    void hydrateSortPreference();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isGroupPreferenceHydrated) return;
-    void saveGroupByCategory(groupByCategory);
-  }, [groupByCategory, isGroupPreferenceHydrated]);
-
-  useEffect(() => {
-    if (!isSortPreferenceHydrated) return;
-    void saveSortBy(sortBy);
-  }, [sortBy, isSortPreferenceHydrated]);
-
-  const onRefresh = async () => {
+  async function onRefresh() {
     setRefreshing(true);
     await refresh();
     setRefreshing(false);
-  };
-
-  function sortSubscriptions<T extends SubscriptionWithCategory>(
-    list: T[],
-  ): T[] {
-    const sorted = [...list];
-    switch (sortBy) {
-      case "nameAsc":
-        sorted.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
-        break;
-      case "nameDesc":
-        sorted.sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""));
-        break;
-      case "priceAsc":
-        sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
-        break;
-      case "priceDesc":
-        sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
-        break;
-      case "billedAtAsc":
-        sorted.sort(
-          (a, b) =>
-            new Date(a.billed_at ?? 0).getTime() -
-            new Date(b.billed_at ?? 0).getTime(),
-        );
-        break;
-      case "billedAtDesc":
-        sorted.sort(
-          (a, b) =>
-            new Date(b.billed_at ?? 0).getTime() -
-            new Date(a.billed_at ?? 0).getTime(),
-        );
-        break;
-    }
-    return sorted;
   }
 
-  const total = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
-  const monthlyTotal = subscriptions
-    .filter((s) => s.interval === "month")
-    .reduce((acc, s) => acc + (s.price || 0), 0);
-  const upcoming = subscriptions.filter(
-    (s) => !isPast(utcToZonedTime(s.billed_at, "Europe/Copenhagen")),
-  );
-  const grouped = groupByCategory
-    ? (() => {
-        const groups: Record<string, SubscriptionWithCategory[]> = {};
-        for (const sub of subscriptions) {
-          const key = sub.categories?.name || "Other";
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(sub);
-        }
-        for (const key of Object.keys(groups)) {
-          groups[key] = sortSubscriptions(groups[key]);
-        }
-        return groups;
-      })()
-    : null;
-  const groupTotals = grouped
-    ? Object.fromEntries(
-        Object.entries(grouped).map(([key, subs]) => [
-          key,
-          subs.reduce((acc, s) => acc + (s.price || 0), 0),
-        ]),
-      )
-    : null;
-
-  const isLoading = authLoading || loading;
-
-  function setSortField(field: "name" | "price" | "billedAt") {
-    setSortBy((prev) => {
-      const dir = prev.endsWith("Asc") ? "Asc" : "Desc";
-      const current = prev.startsWith("name")
-        ? "name"
-        : prev.startsWith("price")
-          ? "price"
-          : "billedAt";
-      return current === field ? prev : `${field}${dir}`;
-    });
-  }
-
-  function setSortDirection(dir: "Asc" | "Desc") {
-    setSortBy((prev) => {
-      const base = prev.replace(/(Asc|Desc)$/, "");
-      return `${base}${dir}` as SortBy;
-    });
+  function confirmDeleteAccount() {
+    haptics.warning();
+    Alert.alert(
+      "Delete account",
+      "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            const result = await deleteAccount();
+            if (result.error) {
+              haptics.error();
+              Alert.alert("Error", result.error);
+            } else {
+              haptics.success();
+            }
+            setDeleting(false);
+          },
+        },
+      ],
+    );
   }
 
   return (
     <>
       <Stack.Screen />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          icon="chart.bar.fill"
+          accessibilityLabel="Insights"
+          onPress={() => router.push("/insights")}
+        />
+      </Stack.Toolbar>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           icon="plus"
+          accessibilityLabel="Add subscription"
           onPress={() => {
-            if (process.env.EXPO_OS === "ios") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
+            haptics.medium();
             router.push("/subscription-form");
           }}
         />
-        <Stack.Toolbar.Menu icon="ellipsis">
-          {/* Inline submenu - options appear directly in the menu */}
-          <Stack.Toolbar.Menu inline title="Sort by">
-            <Stack.Toolbar.MenuAction
-              icon="textformat"
-              isOn={sortBy === "nameAsc" || sortBy === "nameDesc"}
-              onPress={() => setSortField("name")}
-            >
-              Name
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-              icon="banknote"
-              isOn={sortBy === "priceAsc" || sortBy === "priceDesc"}
-              onPress={() => setSortField("price")}
-            >
-              Price
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-              icon="calendar"
-              isOn={sortBy === "billedAtAsc" || sortBy === "billedAtDesc"}
-              onPress={() => setSortField("billedAt")}
-            >
-              Next charge
-            </Stack.Toolbar.MenuAction>
-          </Stack.Toolbar.Menu>
-          <Stack.Toolbar.Menu inline title="Order">
-            <Stack.Toolbar.MenuAction
-              icon="arrow.up"
-              isOn={sortBy.endsWith("Asc")}
-              onPress={() => setSortDirection("Asc")}
-            >
-              Ascending
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-              icon="arrow.down"
-              isOn={sortBy.endsWith("Desc")}
-              onPress={() => setSortDirection("Desc")}
-            >
-              Descending
-            </Stack.Toolbar.MenuAction>
-          </Stack.Toolbar.Menu>
-
+        <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="More options">
+          <Stack.Toolbar.MenuAction
+            icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
+            onPress={toggleTheme}
+          >
+            {colorScheme === "dark" ? "Light mode" : "Dark mode"}
+          </Stack.Toolbar.MenuAction>
           <Stack.Toolbar.Menu inline>
-            <Stack.Toolbar.MenuAction
-              icon="rectangle.3.group"
-              onPress={() => setGroupByCategory((prev) => !prev)}
-            >
-              {groupByCategory ? "Show as flat list" : "Group by category"}
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-              icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
-              onPress={toggleTheme}
-            >
-              {colorScheme === "dark" ? "Light mode" : "Dark mode"}
-            </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
               icon="rectangle.portrait.and.arrow.right"
               destructive
@@ -267,35 +96,7 @@ export default function HomeScreen() {
               icon="trash"
               destructive
               disabled={deleting}
-              onPress={() => {
-                if (process.env.EXPO_OS === "ios") {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                }
-                Alert.alert(
-                  "Delete account",
-                  "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Delete",
-                      style: "destructive",
-                      onPress: async () => {
-                        setDeleting(true);
-                        const result = await deleteAccount();
-                        if (result.error) {
-                          if (process.env.EXPO_OS === "ios") {
-                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                          }
-                          Alert.alert("Error", result.error);
-                        } else if (process.env.EXPO_OS === "ios") {
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                        }
-                        setDeleting(false);
-                      },
-                    },
-                  ],
-                );
-              }}
+              onPress={confirmDeleteAccount}
             >
               Delete account
             </Stack.Toolbar.MenuAction>
@@ -304,7 +105,7 @@ export default function HomeScreen() {
       </Stack.Toolbar>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -313,128 +114,18 @@ export default function HomeScreen() {
           />
         }
       >
-        {isLoading ? (
+        {showSkeleton ? (
           <SubscriptionOverviewSkeletons />
         ) : subscriptions.length === 0 ? (
           <EmptySubscriptionsState />
         ) : (
-          <>
-            <Animated.View entering={FadeInUp.duration(400)}>
-              <TotalCostsCard total={total} monthlyTotal={monthlyTotal} />
-            </Animated.View>
-
-            {upcoming.length > 2 && (
-              <Animated.View
-                entering={FadeInUp.duration(400).delay(100)}
-                style={styles.sectionGapMd}
-              >
-                <Text
-                  style={[styles.sectionTitle, { color: colors.foreground }]}
-                >
-                  Charged soon
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.cardGapSm}
-                >
-                  {upcoming.slice(0, 3).map((sub, i) => (
-                    <ChargedSoonCard
-                      key={sub.id}
-                      name={sub.name}
-                      price={sub.price}
-                      billedAt={sub.billed_at}
-                      index={i}
-                    />
-                  ))}
-                </ScrollView>
-              </Animated.View>
-            )}
-
-            <Animated.View
-              entering={FadeInUp.duration(400).delay(150)}
-              layout={LinearTransition}
-              style={styles.sectionGapMd}
-            >
-              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                All subscriptions
-              </Text>
-
-              {grouped
-                ? Object.entries(grouped)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([category, subs]) => (
-                      <View key={category} style={styles.cardGapSm}>
-                        <Animated.View
-                          entering={FadeIn.duration(250)}
-                          exiting={FadeOut.duration(150)}
-                          style={styles.rowBetween}
-                        >
-                          <Text
-                            style={[
-                              styles.categoryTitle,
-                              { color: colors.foreground },
-                            ]}
-                          >
-                            {category}
-                          </Text>
-                          {groupTotals && (
-                            <Text
-                              style={[
-                                styles.categoryTotal,
-                                { color: colors.foreground },
-                              ]}
-                            >
-                              {groupTotals[category].toLocaleString("en-DK", {
-                                ...numberFormatOptions,
-                                maximumFractionDigits: 0,
-                                minimumFractionDigits: 0,
-                              })}
-                            </Text>
-                          )}
-                        </Animated.View>
-                        {subs.map((sub) => (
-                          <SubscriptionCard
-                            key={sub.id}
-                            subscription={sub}
-                            onPress={() =>
-                              router.push({
-                                pathname: "/subscription-form",
-                                params: {
-                                  id: sub.id,
-                                  name: sub.name,
-                                  price: String(sub.price),
-                                  interval: sub.interval,
-                                  billed_at: sub.billed_at,
-                                  category_id: sub.categories?.id ?? "",
-                                },
-                              })
-                            }
-                          />
-                        ))}
-                      </View>
-                    ))
-                : sortSubscriptions(subscriptions).map((sub) => (
-                    <SubscriptionCard
-                      key={sub.id}
-                      subscription={sub}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/subscription-form",
-                          params: {
-                            id: sub.id,
-                            name: sub.name,
-                            price: String(sub.price),
-                            interval: sub.interval,
-                            billed_at: sub.billed_at,
-                            category_id: sub.categories?.id ?? "",
-                          },
-                        })
-                      }
-                    />
-                  ))}
-            </Animated.View>
-          </>
+          // Rows and sections animate in when added later, not on first render.
+          // Keyed by day so date-relative content refreshes after midnight.
+          <LayoutAnimationConfig key={todayKey} skipEntering>
+            <MonthlySummary subscriptions={subscriptions} />
+            <DayStrip subscriptions={subscriptions} />
+            <TimelineList subscriptions={subscriptions} />
+          </LayoutAnimationConfig>
         )}
       </ScrollView>
     </>
@@ -442,29 +133,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    padding: spacing.xl,
-    gap: spacing.xxl,
-  },
-  sectionTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-  },
-  categoryTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-  },
-  categoryTotal: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-  },
-  sectionGapMd: { gap: spacing.md },
-  sectionGapXs: { gap: spacing.xs },
-  cardGapSm: { gap: spacing.sm },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
 });

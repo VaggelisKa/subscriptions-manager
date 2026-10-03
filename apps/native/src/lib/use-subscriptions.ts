@@ -12,6 +12,7 @@ export function useSubscriptions(userId: string | undefined) {
   >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   async function fetchData() {
@@ -33,6 +34,7 @@ export function useSubscriptions(userId: string | undefined) {
       supabase.from("categories").select("*"),
     ]);
 
+    setError(subsResult.error?.message ?? null);
     if (subsResult.data) {
       setSubscriptions(
         subsResult.data as unknown as SubscriptionWithCategory[],
@@ -127,6 +129,7 @@ export function useSubscriptions(userId: string | undefined) {
     subscriptions,
     categories,
     loading,
+    error,
     refresh: fetchData,
     addSubscription,
     updateSubscription,

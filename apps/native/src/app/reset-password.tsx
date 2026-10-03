@@ -1,24 +1,24 @@
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import {
   View,
-  Text,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
+  type TextInputInstance,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
-import { fonts, radius, spacing } from "@/lib/theme";
+import { haptics } from "@/lib/haptics";
+import { spacing } from "@/lib/theme";
+import { AuthHeading, FormError } from "@/components/auth/auth-heading";
+import { TextField } from "@/components/auth/text-field";
+import { Button } from "@/components/auth/button";
 
 export default function ResetPasswordScreen() {
   const colors = useThemeColors();
-  const { updatePassword, isPasswordRecovery, clearPasswordRecovery } =
-    use(AuthContext);
+  const { updatePassword, clearPasswordRecovery } = use(AuthContext);
   const router = useRouter();
+  const confirmRef = useRef<TextInputInstance>(null);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,16 +28,19 @@ export default function ResetPasswordScreen() {
   async function handleSubmit() {
     if (!password.trim()) {
       setError("Please enter a new password");
+      haptics.warning();
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
+      haptics.warning();
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      haptics.warning();
       return;
     }
 
@@ -48,13 +51,9 @@ export default function ResetPasswordScreen() {
 
     if (result.error) {
       setError(result.error);
-      if (process.env.EXPO_OS === "ios") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
+      haptics.error();
     } else {
-      if (process.env.EXPO_OS === "ios") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
+      haptics.success();
       clearPasswordRecovery();
       router.replace("/");
     }
@@ -62,155 +61,78 @@ export default function ResetPasswordScreen() {
     setLoading(false);
   }
 
-  const inputStyle = {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: colors.foreground,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: error ? colors.destructive : colors.input,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderCurve: "continuous" as const,
-  };
-
   return (
     <>
-      <Stack.Screen options={{ title: "Create New Password" }} />
+      <Stack.Screen options={{ title: "" }} />
       <KeyboardAvoidingView
         behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: colors.background }}
       >
         <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            padding: spacing.xl,
+            paddingHorizontal: 22,
+            paddingTop: spacing.lg,
+            paddingBottom: spacing.xl,
           }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <View
             style={{
-              gap: spacing.xl,
-              maxWidth: 340,
+              gap: spacing.xxl,
+              maxWidth: 420,
               alignSelf: "center",
               width: "100%",
             }}
           >
-            <View style={{ gap: spacing.sm }}>
-              <Text
-                style={{
-                  fontFamily: fonts.bold,
-                  fontSize: 28,
-                  color: colors.foreground,
-                  textAlign: "center",
+            <AuthHeading
+              title="Create new password"
+              subtitle="Choose a password with at least 6 characters."
+            />
+
+            <View style={{ gap: 10 }}>
+              <TextField
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setError(null);
                 }}
-              >
-                Create new password
-              </Text>
-              <Text
-                style={{
-                  fontFamily: fonts.regular,
-                  fontSize: 15,
-                  color: colors.mutedForeground,
-                  textAlign: "center",
+                placeholder="New password"
+                error={!!error}
+                autoFocus
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="new-password"
+                textContentType="newPassword"
+                returnKeyType="next"
+                submitBehavior="submit"
+                onSubmitEditing={() => confirmRef.current?.focus()}
+              />
+              <TextField
+                ref={confirmRef}
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  setError(null);
                 }}
-              >
-                Enter your new password below.
-              </Text>
+                placeholder="Confirm password"
+                error={!!error}
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="new-password"
+                textContentType="newPassword"
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
+              />
+              <FormError message={error} />
             </View>
 
-            <View style={{ gap: spacing.md }}>
-              <View style={{ gap: spacing.xs }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.medium,
-                    fontSize: 14,
-                    color: error ? colors.destructive : colors.foreground,
-                  }}
-                >
-                  New Password
-                </Text>
-                <TextInput
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    setError(null);
-                  }}
-                  placeholder="At least 6 characters"
-                  placeholderTextColor={colors.mutedForeground}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  textContentType="newPassword"
-                  style={inputStyle}
-                />
-              </View>
-
-              <View style={{ gap: spacing.xs }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.medium,
-                    fontSize: 14,
-                    color: error ? colors.destructive : colors.foreground,
-                  }}
-                >
-                  Confirm Password
-                </Text>
-                <TextInput
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    setError(null);
-                  }}
-                  placeholder="Confirm your password"
-                  placeholderTextColor={colors.mutedForeground}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  textContentType="newPassword"
-                  style={inputStyle}
-                />
-              </View>
-
-              {error && (
-                <Text
-                  selectable
-                  style={{
-                    fontFamily: fonts.regular,
-                    fontSize: 13,
-                    color: colors.destructive,
-                  }}
-                >
-                  {error}
-                </Text>
-              )}
-            </View>
-
-            <Pressable
+            <Button
+              title="Update password"
               onPress={handleSubmit}
-              disabled={loading}
-              style={({ pressed }) => ({
-                backgroundColor: colors.primary,
-                borderRadius: radius.md,
-                padding: spacing.md,
-                alignItems: "center",
-                opacity: pressed || loading ? 0.7 : 1,
-                borderCurve: "continuous",
-              })}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.primaryForeground} />
-              ) : (
-                <Text
-                  style={{
-                    fontFamily: fonts.semiBold,
-                    fontSize: 15,
-                    color: colors.primaryForeground,
-                  }}
-                >
-                  Update Password
-                </Text>
-              )}
-            </Pressable>
+              loading={loading}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
