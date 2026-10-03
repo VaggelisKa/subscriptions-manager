@@ -11,7 +11,12 @@ import {
 } from "@/providers/theme-provider";
 import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
 import { useFonts } from "expo-font";
-import { ActivityIndicator, useColorScheme, View } from "react-native";
+import {
+  ActivityIndicator,
+  PlatformColor,
+  useColorScheme,
+  View,
+} from "react-native";
 import { fonts } from "@/lib/theme";
 import { BootstrapErrorView } from "@/components/auth/bootstrap-error-view";
 
@@ -120,7 +125,11 @@ function RootLayoutInner() {
               presentation: "formSheet",
               sheetGrabberVisible: true,
               headerTransparent: true,
-              contentStyle: { backgroundColor: "transparent" },
+              // Solid from the first detent; a transparent background shows
+              // the sheet's glass until it's dragged to full height.
+              contentStyle: {
+                backgroundColor: PlatformColor("systemGroupedBackground"),
+              },
               sheetAllowedDetents: [0.75, 1],
             }}
           >

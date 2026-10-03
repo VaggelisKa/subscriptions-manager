@@ -1,5 +1,5 @@
 import { use, useRef, useState } from "react";
-import { View, Alert, ActivityIndicator } from "react-native";
+import { View, Alert, ActivityIndicator, PlatformColor } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
   Picker,
@@ -20,6 +20,7 @@ import {
   foregroundStyle,
   keyboardType,
   labelsHidden,
+  listRowBackground,
   onTapGesture,
   scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
@@ -33,9 +34,15 @@ import { nextChargeDate } from "@/lib/billing";
 import { haptics } from "@/lib/haptics";
 import { intervalName } from "@/lib/format";
 import { SubscriptionPreview } from "@/components/form/subscription-preview";
-import { CategoryChips } from "@/components/form/category-chips";
+import { CategoryPicker } from "@/components/form/category-picker";
 
 const INTERVALS: IntervalEnum[] = ["week", "month", "year"];
+
+// Below full height iOS gives form rows a translucent fill meant for the
+// sheet's glass; pin them to the solid color they have at full height.
+const ROW_MODIFIERS = [
+  listRowBackground(PlatformColor("secondarySystemGroupedBackground")),
+];
 
 /**
  * Accepts "79", "79,50", "79.50", "1.250" and "1.250,50". The decimal pad
@@ -263,7 +270,7 @@ export default function SubscriptionFormScreen() {
             onTapGesture(dismissFormKeyboard),
           ]}
         >
-          <Section>
+          <Section modifiers={ROW_MODIFIERS}>
             <SubscriptionPreview
               name={name}
               price={parsedPrice}
@@ -271,7 +278,7 @@ export default function SubscriptionFormScreen() {
               color={selectedCategory?.color_hex}
             />
           </Section>
-          <Section title="Details">
+          <Section title="Details" modifiers={ROW_MODIFIERS}>
             <TextField
               ref={nameInputRef}
               key={`name-${id ?? "new"}`}
@@ -279,8 +286,19 @@ export default function SubscriptionFormScreen() {
               placeholder="Name"
               onTextChange={setName}
             />
+            {categories.length > 0 && (
+              <CategoryPicker
+                categories={categories}
+                selectedId={effectiveCategoryId}
+                onSelect={(value) => {
+                  dismissFormKeyboard();
+                  haptics.selection();
+                  setCategoryId(value);
+                }}
+              />
+            )}
           </Section>
-          <Section title="Price">
+          <Section title="Price" modifiers={ROW_MODIFIERS}>
             <HStack>
               <TextField
                 ref={priceInputRef}
@@ -293,7 +311,7 @@ export default function SubscriptionFormScreen() {
               <SwiftText modifiers={[foregroundStyle("secondary")]}>kr</SwiftText>
             </HStack>
           </Section>
-          <Section title="Billed">
+          <Section title="Billed" modifiers={ROW_MODIFIERS}>
             <Picker
               label="Interval"
               selection={interval}
@@ -320,19 +338,6 @@ export default function SubscriptionFormScreen() {
               modifiers={[datePickerStyle("compact")]}
             />
           </Section>
-          {categories.length > 0 && (
-            <Section title="Category">
-              <CategoryChips
-                categories={categories}
-                selectedId={effectiveCategoryId}
-                onSelect={(value) => {
-                  dismissFormKeyboard();
-                  haptics.selection();
-                  setCategoryId(value);
-                }}
-              />
-            </Section>
-          )}
         </Form>
       </Host>
     </>
