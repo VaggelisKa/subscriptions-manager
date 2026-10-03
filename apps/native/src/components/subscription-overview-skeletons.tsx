@@ -1,128 +1,96 @@
-import { View, ScrollView, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
 import { Skeleton } from "@/components/skeleton";
 import { radius, spacing } from "@/lib/theme";
 
 /**
- * Skeleton content for the subscription overview - renders only the ScrollView
- * children. Use inside the main index ScrollView when loading.
+ * Loading placeholder mirroring the home layout: summary, day strip and a
+ * grouped block of rows. Renders inside the home ScrollView.
  */
 export function SubscriptionOverviewSkeletons() {
   const colors = useThemeColors();
 
   return (
-    <>
-      {/* TotalCostsCard skeleton */}
-      <View
-        style={[
-          styles.totalCard,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <View style={styles.cardGap2}>
-          <Skeleton width={100} height={18} />
-          <Skeleton width={220} height={14} />
-        </View>
-        <Skeleton width={120} height={32} />
-        <Skeleton width={160} height={14} />
+    <View accessibilityLabel="Loading subscriptions">
+      <View style={styles.summary}>
+        <Skeleton width={210} height={46} style={styles.amount} />
+        <Skeleton width={230} height={14} />
       </View>
 
-      {/* Charged soon section skeleton */}
-      <View style={styles.sectionGapMd}>
-        <Skeleton width={140} height={22} />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardGapSm}
-        >
-          {[1, 2, 3].map((i) => (
-            <View
-              key={i}
-              style={[
-                styles.chargedSoonCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.cardGap2}>
-                <Skeleton width={80} height={14} />
-                <Skeleton width={60} height={13} />
+      <View style={styles.strip}>
+        {Array.from({ length: 9 }, (_, i) => (
+          <Skeleton key={i} width={40} height={58} style={styles.cell} />
+        ))}
+      </View>
+
+      <View style={styles.header}>
+        <Skeleton width={110} height={18} />
+        <Skeleton width={48} height={13} />
+      </View>
+      <View style={[styles.group, { backgroundColor: colors.surface }]}>
+        {[150, 110, 130, 90].map((width, i) => (
+          <View key={i}>
+            {i > 0 && (
+              <View
+                style={[styles.separator, { backgroundColor: colors.separator }]}
+              />
+            )}
+            <View style={styles.row}>
+              <Skeleton width={40} height={40} style={styles.tile} />
+              <View style={styles.rowMain}>
+                <Skeleton width={width} height={15} />
+                <Skeleton width={64} height={12} />
               </View>
-              <Skeleton width={50} height={22} />
+              <Skeleton width={64} height={15} />
             </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* All subscriptions section skeleton */}
-      <View style={styles.sectionGapMd}>
-        <View style={styles.sectionGapXs}>
-          <Skeleton width={180} height={22} />
-          <View style={styles.rowCenter}>
-            <Skeleton width={120} height={14} />
-            <Skeleton width={44} height={24} />
           </View>
-        </View>
-        <View style={styles.cardGapSm}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <View
-              key={i}
-              style={[
-                styles.subscriptionCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.cardRow}>
-                <View style={styles.cardGap2}>
-                  <Skeleton width={140} height={15} />
-                  <Skeleton width={60} height={13} />
-                </View>
-                <View style={styles.cardGap2}>
-                  <Skeleton width={50} height={14} />
-                  <Skeleton width={40} height={13} />
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
+        ))}
       </View>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  totalCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.xl,
+  summary: {
+    paddingHorizontal: spacing.xs,
+    paddingTop: spacing.xs,
     gap: spacing.md,
-    borderCurve: "continuous",
   },
-  chargedSoonCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    minWidth: 140,
-    gap: spacing.sm,
-    borderCurve: "continuous",
+  amount: { borderRadius: radius.md },
+  strip: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 18,
+    marginHorizontal: -spacing.lg,
+    paddingHorizontal: spacing.lg,
+    overflow: "hidden",
   },
-  subscriptionCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.lg,
-    borderCurve: "continuous",
+  cell: { borderRadius: 14 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.xs + 2,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.sm,
   },
-  cardGap2: { gap: 2 },
-  cardGapSm: { gap: spacing.sm },
-  sectionGapMd: { gap: spacing.md },
-  sectionGapXs: { gap: spacing.xs },
-  rowCenter: {
+  group: {
+    borderRadius: radius.xl,
+    borderCurve: "continuous",
+    overflow: "hidden",
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 68,
+  },
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    minHeight: 62,
   },
-  cardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  rowMain: { flex: 1, gap: 6 },
+  tile: { borderRadius: 12 },
 });

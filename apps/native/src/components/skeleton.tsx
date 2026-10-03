@@ -1,17 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, type ComponentProps } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import type { DimensionValue, View } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
 import { radius } from "@/lib/theme";
 
 type Props = {
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
-  style?: object;
+  style?: ComponentProps<typeof View>["style"];
 };
 
 export function Skeleton({ width, height = 16, style }: Props) {
@@ -36,8 +37,9 @@ export function Skeleton({ width, height = 16, style }: Props) {
         {
           width: width ?? "100%",
           height,
-          backgroundColor: colors.muted,
+          backgroundColor: colors.fill,
           borderRadius: radius.sm,
+          borderCurve: "continuous",
         },
         animatedStyle,
         style,

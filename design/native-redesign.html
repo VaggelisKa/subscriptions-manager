@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Native redesign — round 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- Report chrome ---------- */
+  :root {
+    --page: #fafaf9;
+    --ink: #1c1917;
+    --ink-2: #57534e;
+    --ink-3: #a8a29e;
+    --rule: #e7e5e4;
+    --orange: #f97316;
+    --orange-deep: #c2410c;
+    --orange-wash: #fff3ea;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Nunito", ui-rounded, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--orange-deep); }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 88px 0 0; }
+  section:last-of-type { padding-bottom: 120px; }
+
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
+  h1 { font-size: clamp(40px, 6vw, 68px); font-weight: 900; line-height: 1.02; max-width: 14ch; }
+  h2 { font-size: 34px; font-weight: 800; line-height: 1.15; }
+  h3 { font-size: 22px; font-weight: 800; line-height: 1.25; }
+  p { margin: 0; max-width: 64ch; }
+  .lede { font-size: 20px; color: var(--ink-2); max-width: 56ch; }
+  .sub { color: var(--ink-2); margin-top: 12px; }
+  .small { font-size: 15px; color: var(--ink-2); }
+
+  /* hero */
+  .hero { padding-top: 72px; display: grid; grid-template-columns: 1fr auto; gap: 56px; align-items: center; }
+  .hero-text { display: grid; gap: 24px; }
+  .round {
+    display: inline-flex; align-items: center; gap: 8px; align-self: start; justify-self: start;
+    font-weight: 700; font-size: 15px; color: var(--orange-deep);
+    background: var(--orange-wash); padding: 6px 14px; border-radius: 999px;
+  }
+  .hero-phones { display: flex; gap: 20px; align-items: flex-end; }
+  .hero-phones figure { margin: 0; display: grid; gap: 12px; justify-items: center; }
+  .hero-phones figcaption { font-weight: 700; font-size: 15px; color: var(--ink-2); }
+  .hero-phones .then { opacity: .9; transform: scale(.88); transform-origin: bottom right; }
+
+  /* audit */
+  .audit { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 48px; margin-top: 36px; }
+  .audit div { padding: 22px 0; border-top: 1px solid var(--rule); }
+  .audit b { display: block; font-size: 18px; margin-bottom: 4px; }
+  .audit p { color: var(--ink-2); font-size: 16px; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .86em; background: #f0eeec; padding: 1px 6px; border-radius: 6px; }
+
+  /* directions */
+  .dir-tabs { display: flex; gap: 8px; margin-top: 32px; flex-wrap: wrap; }
+  .dir-tabs button {
+    font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+    border: 1.5px solid var(--rule); background: #fff; color: var(--ink);
+    padding: 10px 18px; border-radius: 999px;
+  }
+  .dir-tabs button[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .dir { display: none; grid-template-columns: minmax(280px, 380px) 1fr; gap: 56px; margin-top: 40px; align-items: start; }
+  .dir.active { display: grid; }
+  .dir-copy { display: grid; gap: 20px; position: sticky; top: 24px; }
+  .dir-copy .tag { font-weight: 800; color: var(--orange-deep); font-size: 15px; }
+  .tradeoffs { display: grid; gap: 14px; }
+  .tradeoffs h4 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+  .tradeoffs ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 16px; }
+  .tradeoffs li { margin: 3px 0; }
+  .phones { display: flex; gap: 28px; flex-wrap: wrap; }
+
+  /* pick */
+  .pick { margin-top: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .pick div { background: #fff; border-radius: 22px; padding: 24px; border: 1px solid var(--rule); }
+  .pick b { display: block; font-size: 15px; color: var(--orange-deep); margin-bottom: 6px; }
+  .pick p { font-size: 16px; color: var(--ink-2); }
+
+  .screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 48px 28px; margin-top: 40px; }
+  .screen-card { display: grid; gap: 16px; justify-items: start; }
+  .screen-card .note { max-width: 320px; }
+  .screen-card .note b { display: block; font-size: 17px; }
+  .screen-card .note p { font-size: 15px; color: var(--ink-2); }
+
+  /* foundations */
+  .found { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; margin-top: 40px; }
+  .panel { background: #fff; border: 1px solid var(--rule); border-radius: 26px; padding: 28px; display: grid; gap: 20px; align-content: start; }
+  .panel h3 { font-size: 20px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
+  .sw { display: grid; gap: 6px; font-size: 13px; line-height: 1.3; }
+  .sw i { display: block; height: 52px; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); }
+  .sw b { font-size: 14px; }
+  .sw span { color: var(--ink-2); font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
+  .sw em { font-style: normal; color: var(--orange-deep); font-weight: 700; }
+  .typescale { display: grid; gap: 10px; }
+  .typescale div { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+  .typescale span:last-child { font-size: 12.5px; color: var(--ink-3); font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .shapes { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .shapes div { background: var(--orange-wash); border: 1.5px solid #fed7aa; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--orange-deep); text-align: center; line-height: 1.2; }
+  .rules { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 16px; }
+  .rules li { margin: 6px 0; }
+  .rules b { color: var(--ink); }
+
+  .fixes { margin-top: 32px; display: grid; gap: 0; }
+  .fixes div { display: grid; grid-template-columns: 240px 1fr; gap: 28px; padding: 22px 0; border-top: 1px solid var(--rule); }
+  .fixes b { font-size: 18px; }
+  .fixes p { color: var(--ink-2); font-size: 16px; }
+
+  .qs { margin-top: 32px; display: grid; gap: 16px; counter-reset: q; }
+  .q { background: #fff; border: 1px solid var(--rule); border-radius: 22px; padding: 22px 24px; display: grid; gap: 12px; }
+  .q > b { font-size: 18px; }
+  .q .opts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .q .opts span { font-size: 14.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: #f5f5f4; color: var(--ink-2); }
+  .q .opts span.lean { background: var(--orange-wash); color: var(--orange-deep); }
+
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; }
+    .dir.active { grid-template-columns: 1fr; }
+    .dir-copy { position: static; }
+    .pick, .found { grid-template-columns: 1fr; }
+    .fixes div { grid-template-columns: 1fr; gap: 6px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 18px; }
+    .hero-phones .then { display: none; }
+  }
+
+  /* ---------- Phone mockups ---------- */
+  .phone {
+    width: 320px; height: 694px; flex: none;
+    border-radius: 52px; padding: 9px;
+    background: linear-gradient(145deg, #3a3633, #1c1917 40%, #292524);
+    box-shadow: 0 0 0 1px #0c0a09, 0 30px 60px -20px rgba(28,25,23,.35), 0 12px 24px -12px rgba(28,25,23,.25);
+  }
+  .scr {
+    position: relative; height: 100%; overflow: hidden; border-radius: 43px;
+    background: var(--bg); color: var(--fg);
+    font-family: "Nunito", ui-rounded, sans-serif; font-size: 15px; line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+  }
+  .scr.light {
+    --bg: #f5f5f4; --surface: #ffffff; --surface-2: #fafaf9; --fg: #0c0a09; --muted: #78716c; --faint: #a8a29e;
+    --sep: #e7e5e4; --fill: rgba(120,113,108,.12); --primary: #f97316; --primary-text: #ea580c;
+    --primary-soft: rgba(249,115,22,.12); --glass: rgba(255,255,255,.72); --glass-line: rgba(0,0,0,.06);
+    --danger: #ef4444; --tile-a: .14;
+  }
+  .scr.dark {
+    --bg: #0c0a09; --surface: #1c1917; --surface-2: #292524; --fg: #fafaf9; --muted: #a8a29e; --faint: #78716c;
+    --sep: #292524; --fill: rgba(168,162,158,.16); --primary: #ea580c; --primary-text: #fb923c;
+    --primary-soft: rgba(234,88,12,.2); --glass: rgba(41,37,36,.72); --glass-line: rgba(255,255,255,.08);
+    --danger: #f87171; --tile-a: .24;
+  }
+  /* faithful "today" palette: cards equal background */
+  .scr.legacy { --bg: #ffffff; --surface: #ffffff; --sep: #e7e5e4; }
+
+  .status { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 34px; font-weight: 700; font-size: 15px; position: relative; z-index: 3; }
+  .status::after { content: ""; position: absolute; left: 50%; top: 11px; width: 96px; height: 28px; border-radius: 20px; background: #000; transform: translateX(-50%); }
+  .status svg { display: block; }
+  .homebar { position: absolute; left: 50%; bottom: 8px; width: 110px; height: 4.5px; border-radius: 3px; background: var(--fg); opacity: .85; transform: translateX(-50%); z-index: 5; }
+
+  .nav { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: relative; z-index: 3; }
+  .topfade { position: absolute; top: 0; left: 0; right: 0; height: 104px; z-index: 2; background: linear-gradient(var(--bg) 72%, transparent); }
+  .nav .spacer { flex: 1; }
+  .nav .ctr { position: absolute; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 16px; pointer-events: none; }
+  .glass { display: flex; align-items: center; gap: 2px; background: var(--glass); backdrop-filter: blur(16px) saturate(1.6); -webkit-backdrop-filter: blur(16px) saturate(1.6); border: 1px solid var(--glass-line); border-radius: 999px; box-shadow: 0 4px 16px -6px rgba(0,0,0,.18); }
+  .glass .gb { width: 38px; height: 38px; display: grid; place-items: center; color: var(--fg); }
+  .glass.text { padding: 0 16px; height: 38px; font-weight: 700; font-size: 15px; }
+  .glass.prominent { background: var(--primary); border-color: transparent; color: #fff; }
+  .glass.prominent .gb { color: #fff; }
+
+  .body { padding: 0 16px; }
+  .ltitle { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; padding: 2px 4px 0; }
+
+  .tile { flex: none; display: grid; place-items: center; font-weight: 900; border-radius: 30%; color: var(--c); background: color-mix(in srgb, var(--c) calc(var(--tile-a) * 100%), transparent); }
+  .tile.solid { background: var(--c); color: #fff; border-radius: 26%; }
+
+  .group { background: var(--surface); border-radius: 22px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; position: relative; }
+  .row + .row::before { content: ""; position: absolute; top: 0; right: 0; left: var(--inset, 64px); height: 1px; background: var(--sep); }
+  .row .main { flex: 1; min-width: 0; }
+  .row .name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .meta { font-size: 13px; color: var(--muted); margin-top: 1px; }
+  .row .meta.soon { color: var(--primary-text); font-weight: 700; }
+  .row .amt { text-align: right; font-weight: 800; font-size: 15.5px; white-space: nowrap; }
+  .row .amt small { font-weight: 600; font-size: 12px; color: var(--muted); margin-left: 1px; }
+  .row .chev { color: var(--faint); margin-left: -4px; }
+
+  .sh { display: flex; justify-content: space-between; align-items: baseline; padding: 20px 6px 8px; }
+  .sh b { font-size: 17px; font-weight: 800; }
+  .sh span { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .kr { font-size: .5em; font-weight: 800; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+
+  /* direction A: month strip */
+  .sum { padding: 10px 4px 0; }
+  .sum .big { font-size: 46px; font-weight: 900; letter-spacing: -0.035em; line-height: 1; }
+  .sum .big .per { font-size: 16px; font-weight: 700; color: var(--muted); letter-spacing: 0; margin-left: 6px; }
+  .sum .line { margin-top: 8px; font-size: 14px; color: var(--muted); }
+  .sum .line b { color: var(--fg); }
+  .strip { display: flex; gap: 6px; margin: 18px -16px 0; padding: 0 16px; overflow: hidden; }
+  .day { flex: none; width: 38px; border-radius: 14px; padding: 7px 0 8px; display: grid; justify-items: center; gap: 3px; background: var(--surface); }
+  .day .wd { font-size: 10.5px; font-weight: 700; color: var(--muted); }
+  .day .dn { font-size: 15px; font-weight: 800; }
+  .day .dots { display: flex; gap: 2px; height: 6px; }
+  .day .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+  .day.past { background: transparent; }
+  .day.past .dn, .day.past .wd { color: var(--faint); }
+  .day.today { background: var(--primary); }
+  .day.today .wd, .day.today .dn { color: #fff; }
+
+  /* direction B */
+  .hero-card { background: var(--surface); border-radius: 26px; padding: 18px; margin-top: 10px; }
+  .hero-card .lbl { font-size: 13.5px; color: var(--muted); font-weight: 700; }
+  .hero-card .big { font-size: 38px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-top: 2px; }
+  .bar { display: flex; gap: 3px; height: 10px; margin: 14px 0 12px; }
+  .bar i { border-radius: 5px; background: var(--c); }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 12.5px; }
+  .legend div { display: flex; align-items: center; gap: 6px; }
+  .legend i { width: 8px; height: 8px; border-radius: 3px; background: var(--c); }
+  .legend span { color: var(--muted); margin-left: auto; font-weight: 700; }
+  .next-row { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px; overflow: hidden; }
+  .nc { flex: none; width: 122px; border-radius: 22px; padding: 12px; display: grid; gap: 8px; background: var(--surface); position: relative; overflow: hidden; }
+  .nc::after { content: ""; position: absolute; inset: auto -20px -40px auto; width: 90px; height: 90px; border-radius: 50%; background: var(--c); opacity: .12; }
+  .nc .name { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nc .when { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .nc .p { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+
+  /* direction C */
+  .search { display: flex; align-items: center; gap: 6px; margin: 10px 4px 0; height: 38px; border-radius: 12px; background: var(--fill); color: var(--muted); padding: 0 10px; font-size: 15px; }
+  .ch { font-size: 13px; color: var(--muted); padding: 20px 18px 6px; display: flex; justify-content: space-between; }
+  .kv { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; position: relative; font-size: 15.5px; }
+  .kv + .kv::before { content: ""; position: absolute; top: 0; right: 0; left: 16px; height: 1px; background: var(--sep); }
+  .kv span:last-child { color: var(--muted); font-weight: 600; }
+
+  /* legacy recreation */
+  .lg-title { text-align: center; font-weight: 700; font-size: 16px; padding-top: 12px; }
+  .lg-card { border: 1px solid var(--sep); border-radius: 12px; background: var(--surface); }
+  .lg-sec { font-weight: 700; font-size: 19px; margin: 22px 0 10px; }
+
+  /* sheets */
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .sheet { position: absolute; left: 0; right: 0; top: 58px; bottom: 0; background: var(--bg); border-radius: 34px 34px 0 0; z-index: 2; overflow: hidden; }
+  .grab { width: 38px; height: 5px; border-radius: 3px; background: var(--faint); opacity: .5; margin: 7px auto 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--fill); color: var(--fg); white-space: nowrap; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .chip.on { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--c); }
+  .seg { display: flex; background: var(--fill); border-radius: 12px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 0; font-size: 13.5px; font-weight: 700; border-radius: 10px; color: var(--muted); }
+  .seg span.on { background: var(--surface); color: var(--fg); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+  .scr.dark .seg span.on { background: #44403c; }
+  .field { background: var(--surface); border-radius: 16px; padding: 0 14px; height: 50px; display: flex; align-items: center; font-size: 16px; color: var(--muted); }
+  .field.filled { color: var(--fg); }
+  .btn { height: 52px; border-radius: 16px; display: grid; place-items: center; font-weight: 800; font-size: 16.5px; background: var(--primary); color: #fff; }
+  .btn.dark { background: var(--fg); color: var(--bg); }
+  .tl { display: grid; gap: 0; }
+  .tl div { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 15px; position: relative; }
+  .tl div i { width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid var(--primary); background: var(--surface); flex: none; z-index: 1; }
+  .tl div:first-child i { background: var(--primary); }
+  .tl div:not(:last-child)::after { content: ""; position: absolute; left: 20px; top: 24px; bottom: -10px; width: 2px; background: var(--sep); }
+  .tl div span:last-child { margin-left: auto; color: var(--muted); font-weight: 700; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dir.active .phone { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+    .dir.active .phone + .phone { animation-delay: .07s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===== Hero ===== -->
+  <header class="hero">
+    <div class="hero-text">
+      <span class="round">Round 1 · for sparring</span>
+      <h1>Subscriptions, reorganised around when you pay.</h1>
+      <p class="lede">A redesign proposal for the native app. The orange-and-stone palette stays. The layout, type, surfaces and the way money is shown all change. There are three directions to react to, the one I'd pick, and a list of open questions at the end.</p>
+    </div>
+    <div class="hero-phones">
+      <figure class="then"><div data-screen="legacy"></div><figcaption>Today</figcaption></figure>
+      <figure><div data-screen="a-light"></div><figcaption>Proposed</figcaption></figure>
+    </div>
+  </header>
+
+  <!-- ===== Audit ===== -->
+  <section id="audit">
+    <h2>What makes it feel dated</h2>
+    <p class="sub">The navigation chrome is already modern: Liquid Glass toolbar, native menus and a SwiftUI form sheet. The content underneath is what looks basic.</p>
+    <div class="audit">
+      <div><b>Everything is the same box</b><p>The total, the "charged soon" cards and every row all use a 1px border with <code>radius.lg</code> on white. With no difference in weight, you can't tell what matters most.</p></div>
+      <div><b>Dark mode is flat</b><p><code>card</code> and <code>background</code> are the same colour (<code>hsl(20 14% 4%)</code>), so in dark mode the cards are just outlines. There's no layering at all.</p></div>
+      <div><b>Numbers are noisy</b><p>"149,00 kr." on every row: forced decimals and a trailing currency abbreviation. The price ends up competing with the name.</p></div>
+      <div><b>Subscriptions have no face</b><p>The only category colour is a 3px left border. With no icon, logo or monogram, the list reads as a wall of text.</p></div>
+      <div><b>The headline number means nothing</b><p>"Total costs" adds weekly, monthly and yearly prices together (2.342 kr in the sample below). Dates show as <code>05/10/26</code> when what you want to know is "in 2 days".</p></div>
+      <div><b>Motion everywhere, no focus</b><p>Every card fades in, the list fades up and the chips slide in from the right. Since it all moves, nothing stands out.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== Directions ===== -->
+  <section id="directions">
+    <h2>Three directions</h2>
+    <p class="sub">All three use the same data, palette and native chrome. They differ in what the home screen is about.</p>
+
+    <div class="dir-tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-dir="a">A · Timeline</button>
+      <button role="tab" aria-selected="false" data-dir="b">B · Wallet</button>
+      <button role="tab" aria-selected="false" data-dir="c">C · Pure native</button>
+    </div>
+
+    <div class="dir active" id="dir-a" role="tabpanel">
+      <div class="dir-copy">
+        <span class="tag">A · Timeline</span>
+        <h3>The home screen answers "what's due next?"</h3>
+        <p>The headline is one honest number: what you pay per month, with weekly and yearly prices normalised. Below it, a strip of days shows charges as dots in category colours. The list is grouped by time ("Next 7 days", "Later this month", "Later") rather than shown as one flat list.</p>
+        <div class="tradeoffs">
+          <div><h4>Wins</h4><ul><li>Built around the job a subscription tracker actually has: avoiding surprise charges</li><li>Category colour carries meaning in the dots and tiles, not as decoration</li><li>Replaces the separate "Charged soon" carousel</li></ul></div>
+          <div><h4>Costs</h4><ul><li>Needs next-charge dates calculated from <code>billed_at</code> + interval (see product fixes)</li><li>Sort and "group by category" move to a secondary view</li></ul></div>
+        </div>
+      </div>
+      <div class="phones"><div data-screen="a-light"></div><div data-screen="a-dark"></div></div>
+    </div>
+
+    <div class="dir" id="dir-b" role="tabpanel">
+      <div class="dir-copy">
+        <span class="tag">B · Wallet</span>
+        <h3>The home screen answers "where does my money go?"</h3>
+        <p>A summary card splits monthly spend by category in a segmented bar. Upcoming charges sit in a row of chunky cards, and the full list follows below. It's the most colourful and tactile of the three, closest to Apple Wallet or a banking app.</p>
+        <div class="tradeoffs">
+          <div><h4>Wins</h4><ul><li>Gets the most out of user-chosen category colours</li><li>Keeps today's structure (total, upcoming, all), so it's the easiest migration</li></ul></div>
+          <div><h4>Costs</h4><ul><li>Busier. Clashing category colours will show</li><li>Horizontal cards hide everything past the third</li></ul></div>
+        </div>
+      </div>
+      <div class="phones"><div data-screen="b-light"></div><div data-screen="b-dark"></div></div>
+    </div>
+
+    <div class="dir" id="dir-c" role="tabpanel">
+      <div class="dir-copy">
+        <span class="tag">C · Pure native</span>
+        <h3>The app looks like part of iOS.</h3>
+        <p>Inset grouped lists like the Settings app, a search field, solid Settings-style icon tiles, and orange used only as the tint. Close to zero custom components. It would likely be <code>@expo/ui</code> <code>List</code>/<code>Section</code> end to end, like the form sheet already is.</p>
+        <div class="tradeoffs">
+          <div><h4>Wins</h4><ul><li>Least code to maintain, and it ages with the OS</li><li>Dynamic Type, accessibility and dark mode come for free</li></ul></div>
+          <div><h4>Costs</h4><ul><li>Very little identity. It could be any app</li><li>Hard to express time or proportion inside a grouped list</li></ul></div>
+        </div>
+      </div>
+      <div class="phones"><div data-screen="c-light"></div><div data-screen="c-dark"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== Recommendation ===== -->
+  <section id="pick">
+    <h2>My pick: A, borrowing from B and C</h2>
+    <p class="sub">The timeline home is the strongest idea because it's specific to subscriptions. The other two each contribute one thing.</p>
+    <div class="pick">
+      <div><b>From A</b><p>Home structure: an honest monthly number, the day strip, and the list grouped by time.</p></div>
+      <div><b>From B</b><p>The category bar, moved into a dedicated Insights view where proportion is the point.</p></div>
+      <div><b>From C</b><p>Native chrome and forms everywhere outside the home list: glass toolbar, SwiftUI form, system menus.</p></div>
+    </div>
+
+    <div class="screens">
+      <div class="screen-card">
+        <div data-screen="detail"></div>
+        <div class="note"><b>New: subscription detail</b><p>Tapping a row currently drops you straight into the edit form. A detail sheet shows the yearly cost, upcoming charges and how long you've had it. Editing becomes one tap further away.</p></div>
+      </div>
+      <div class="screen-card">
+        <div data-screen="form"></div>
+        <div class="note"><b>Add / edit</b><p>Still a native SwiftUI Form. A live preview row at the top shows what you're creating, including the per-month equivalent. Interval becomes a segmented control and category becomes colour chips instead of menus.</p></div>
+      </div>
+      <div class="screen-card">
+        <div data-screen="empty"></div>
+        <div class="note"><b>Empty state</b><p>Ghost rows show what the list will look like once it's filled. Quick-add chips for common Danish services prefill the form.</p></div>
+      </div>
+      <div class="screen-card">
+        <div data-screen="login"></div>
+        <div class="note"><b>Sign in</b><p>Left-aligned, with the app mark at the top. Fields are filled instead of outlined, and buttons are full-width with 16pt continuous corners. "Sign in with Apple" is an open question.</p></div>
+      </div>
+      <div class="screen-card">
+        <div data-screen="insights"></div>
+        <div class="note"><b>Insights (B's bar, moved)</b><p>Spend by category plus a yearly projection. This view also takes over "group by category" and sorting from the ⋯ menu.</p></div>
+      </div>
+      <div class="screen-card">
+        <div data-screen="a-dark-scrolled"></div>
+        <div class="note"><b>Dark, after scrolling</b><p>Raised surfaces (<code>#1C1917</code> on <code>#0C0A09</code>) replace outlines. Orange text switches to a lighter tint (<code>#FB923C</code>) so it stays readable.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Foundations ===== -->
+  <section id="foundations">
+    <h2>Foundations</h2>
+    <p class="sub">The palette stays as it is. Everything new below is either a surface layer or a role-specific variant of an existing colour.</p>
+    <div class="found">
+      <div class="panel">
+        <h3>Colour</h3>
+        <div class="swatches" id="swatches"></div>
+        <p class="small"><em style="font-style:normal;color:var(--orange-deep);font-weight:700">Orange labels</em> mark tokens that are new. The others are existing values in <code>theme.ts</code>. Category colours stay user data. Tiles render them at 14% (light) and 24% (dark) opacity behind the full-strength letter.</p>
+      </div>
+      <div class="panel">
+        <h3>Type: Nunito, used with more range</h3>
+        <div class="typescale">
+          <div><span style="font-size:42px;font-weight:900;letter-spacing:-.035em;line-height:1">2.250 kr</span><span>Amount · 46/46 · 900</span></div>
+          <div><span style="font-size:32px;font-weight:900;letter-spacing:-.02em">Subscriptions</span><span>Large title · 34/41 · 900</span></div>
+          <div><span style="font-size:22px;font-weight:800">Later this month</span><span>Title · 22/28 · 800</span></div>
+          <div><span style="font-size:17px;font-weight:700">Spotify Family</span><span>Headline · 17/22 · 700</span></div>
+          <div><span style="font-size:16px">Weekly and yearly prices are normalised.</span><span>Body · 16/22 · 400</span></div>
+          <div><span style="font-size:13px;color:var(--ink-2)">in 2 days</span><span>Footnote · 13/18 · 600</span></div>
+        </div>
+        <p class="small">Adds the Black (900) and ExtraBold (800) weights for amounts and titles. Today the heaviest weight is 700, which is why nothing stands out. Tabular figures everywhere, and the currency is set smaller and muted after the number. Alternative: SF Pro Rounded via <code>ui-rounded</code>, which gives Dynamic Type for free.</p>
+      </div>
+      <div class="panel">
+        <h3>Shape and depth</h3>
+        <div class="shapes">
+          <div style="width:44px;height:44px;border-radius:13px">tile<br>30%</div>
+          <div style="width:64px;height:52px;border-radius:16px">field<br>16</div>
+          <div style="width:90px;height:72px;border-radius:22px">group<br>22</div>
+          <div style="width:110px;height:90px;border-radius:28px">sheet<br>34</div>
+        </div>
+        <ul class="rules">
+          <li><b>Depth comes from layering, not borders.</b> Grouped background, then raised surface, then glass for floating chrome.</li>
+          <li><b>Nested radius</b> = outer radius − padding, always with <code>borderCurve: "continuous"</code>.</li>
+          <li><b>Shadows only on things that float</b> (toolbar glass, sheets). Never on list content.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Motion and haptics</h3>
+        <ul class="rules">
+          <li><b>One entrance moment:</b> the monthly amount counts up on first load. Nothing else animates in.</li>
+          <li><b>Feedback on touch:</b> rows scale to 0.98 with a light haptic. The day strip gives a selection tick as it scrolls.</li>
+          <li><b>Show what changed:</b> layout transitions when a subscription is added or removed, and when the list regroups. Drop the per-card <code>FadeIn</code>/<code>FadeInRight</code>.</li>
+          <li><b>Respect Reduce Motion</b> through Reanimated's <code>ReducedMotionConfig</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Product fixes ===== -->
+  <section id="fixes">
+    <h2>Product fixes the design depends on</h2>
+    <p class="sub">These change behaviour, not only visuals, so I'm calling them out separately.</p>
+    <div class="fixes">
+      <div><b>Normalise to per month</b><p>Show <code>week × 52/12</code> + <code>month</code> + <code>year / 12</code> as the headline instead of a raw sum. In the sample data that's 2,250 kr/mo rather than a meaningless 2.342 kr.</p></div>
+      <div><b>Roll next-charge dates forward</b><p>"Upcoming" is currently <code>!isPast(billed_at)</code>, so once a date passes the subscription drops out of "Charged soon" for good. The next charge should be calculated from <code>billed_at</code> + interval. The timeline needs this.</p></div>
+      <div><b>Friendlier money and dates</b><p>"149 kr" instead of "149,00 kr.", with decimals only when they're non-zero. "In 2 days" or "14 Oct" instead of <code>dd/MM/yy</code>.</p></div>
+      <div><b>Split settings out of ⋯</b><p>Sign out, delete account, theme and sorting are all in one menu today. Move account and appearance settings into their own sheet, behind an avatar button in the toolbar.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== Questions ===== -->
+  <section id="questions">
+    <h2>Questions for you</h2>
+    <p class="sub">My current leaning is highlighted.</p>
+    <div class="qs">
+      <div class="q"><b>1. Which direction for the home screen?</b><div class="opts"><span class="lean">A + bits of B/C</span><span>Pure A</span><span>B</span><span>C</span></div></div>
+      <div class="q"><b>2. Logos or monograms?</b><p class="small">Real brand logos look much better, but they require a logo service (Brandfetch, logo.dev) and a fallback. Monograms work offline and need nothing extra.</p><div class="opts"><span class="lean">Monograms now, logos later</span><span>Logos from day one</span></div></div>
+      <div class="q"><b>3. Keep Nunito?</b><div class="opts"><span class="lean">Keep Nunito, add 800/900</span><span>Switch to SF Pro Rounded</span></div></div>
+      <div class="q"><b>4. Should tapping a row open the detail sheet first?</b><div class="opts"><span class="lean">Detail sheet</span><span>Straight to edit (as today)</span></div></div>
+      <div class="q"><b>5. Single screen, or tabs (Home · Insights)?</b><div class="opts"><span class="lean">Single screen + Insights sheet</span><span>NativeTabs with two tabs</span></div></div>
+      <div class="q"><b>6. Is "Sign in with Apple" in scope?</b><div class="opts"><span>Yes, add it to the login design</span><span class="lean">Not now</span></div></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Inline icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.9" fill="currentColor"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2.2" fill="none"/><path d="M15 15l4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6" fill="currentColor"/><path d="M4.8 19.5c1-3.6 3.9-5.4 7.2-5.4s6.2 1.8 7.2 5.4" fill="currentColor"/></symbol>
+</svg>
+
+<script>
+  // ---------- Sample data (today: Sat 3 Oct 2026) ----------
+  const TODAY = new Date(2026, 9, 3);
+  const C = { ent: "#8B5CF6", food: "#14B8A6", util: "#3B82F6", health: "#22C55E", soft: "#EC4899" };
+  const subs = [
+    { name: "Netflix", cat: "Entertainment", c: C.ent, price: 149, iv: "month", next: [2026, 9, 5], since: "Mar 2021" },
+    { name: "Aarstiderne", cat: "Food", c: C.food, price: 299, iv: "week", next: [2026, 9, 6] },
+    { name: "Spotify Family", cat: "Entertainment", c: C.ent, price: 179, iv: "month", next: [2026, 9, 8] },
+    { name: "iCloud+ 2TB", cat: "Utilities", c: C.util, price: 99, iv: "month", next: [2026, 9, 14] },
+    { name: "YouTube Premium", cat: "Entertainment", c: C.ent, price: 129, iv: "month", next: [2026, 9, 21] },
+    { name: "Fitness World", cat: "Health", c: C.health, price: 299, iv: "month", next: [2026, 10, 1] },
+    { name: "Adobe Lightroom", cat: "Software", c: C.soft, price: 1188, iv: "year", next: [2027, 1, 12] },
+  ].map(s => ({ ...s, date: new Date(...s.next) }));
+
+  const perMonth = s => s.iv === "week" ? s.price * 52 / 12 : s.iv === "year" ? s.price / 12 : s.price;
+  const monthly = subs.reduce((a, s) => a + perMonth(s), 0);
+  const n0 = n => Math.round(n).toLocaleString("en-DK", { maximumFractionDigits: 0 });
+  const kr = n => `${n0(n)}<span class="kr">kr</span>`;
+  const ivShort = { week: "/wk", month: "/mo", year: "/yr" };
+  const days = d => Math.round((d - TODAY) / 864e5);
+  const fmtDate = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const when = d => { const n = days(d); return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n <= 7 ? `in ${n} days` : fmtDate(d); };
+
+  // charges per day for the strip (weekly ones repeat)
+  function chargesOn(date) {
+    return subs.filter(s => {
+      if (s.iv === "week") { const diff = days(date) - days(s.date); return diff % 7 === 0; }
+      if (s.iv === "month") return s.date.getDate() === date.getDate();
+      return s.date.getDate() === date.getDate() && s.date.getMonth() === date.getMonth();
+    });
+  }
+
+  const cats = Object.values(subs.reduce((acc, s) => {
+    (acc[s.cat] ??= { name: s.cat, c: s.c, total: 0, count: 0 }).total += perMonth(s);
+    acc[s.cat].count++;
+    return acc;
+  }, {})).sort((a, b) => b.total - a.total);
+
+  // ---------- Shared pieces ----------
+  const icon = (id, size = 20) => `<svg width="${size}" height="${size}"><use href="#i-${id}"/></svg>`;
+  const status = () => `<div class="status"><span>9:41</span><svg width="62" height="12" viewBox="0 0 62 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M30 3.2c2.6 0 5 1 6.8 2.7l-1.3 1.3A7.7 7.7 0 0 0 30 5a7.7 7.7 0 0 0-5.5 2.2l-1.3-1.3A9.6 9.6 0 0 1 30 3.2Zm0 3.6c1.6 0 3 .6 4.2 1.6L30 12.5l-4.2-4.1c1.1-1 2.6-1.6 4.2-1.6Z"/><rect x="40" y="1" width="20" height="10" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="42" y="3" width="15" height="6" rx="1.5"/><rect x="60.6" y="4" width="1.4" height="4" rx=".7" opacity=".45"/></svg></div>`;
+  const homebar = `<div class="homebar"></div>`;
+  const phone = (theme, inner, extra = "") => `<div class="phone"><div class="scr ${theme} ${extra}">${status()}${inner}${homebar}</div></div>`;
+  const tile = (s, size = 38, solid = false) => `<div class="tile ${solid ? "solid" : ""}" style="--c:${s.c};width:${size}px;height:${size}px;font-size:${Math.round(size * .44)}px">${s.name[0]}</div>`;
+  const homeNav = (left = "") => `<div class="nav">${left || '<span class="glass"><span class="gb">' + icon("chart", 18) + "</span></span>"}<span class="spacer"></span><span class="glass"><span class="gb">${icon("plus")}</span><span class="gb">${icon("more")}</span></span></div>`;
+
+  const rowA = s => {
+    const soon = days(s.date) <= 3;
+    return `<div class="row">${tile(s)}<div class="main"><div class="name">${s.name}</div><div class="meta ${soon ? "soon" : ""}">${when(s.date)}</div></div><div class="amt">${n0(s.price)} kr<small>${ivShort[s.iv]}</small></div></div>`;
+  };
+
+  // ---------- Direction A ----------
+  function screenA(theme, scrolled = false) {
+    const leftThisMonth = (() => {
+      let t = 0;
+      for (let d = 3; d <= 31; d++) t += chargesOn(new Date(2026, 9, d)).reduce((a, s) => a + s.price, 0);
+      return t;
+    })();
+    let strip = "";
+    for (let d = 2; d <= 11; d++) {
+      const date = new Date(2026, 9, d);
+      const ch = chargesOn(date);
+      const cls = d < 3 ? "past" : d === 3 ? "today" : "";
+      strip += `<div class="day ${cls}"><span class="wd">${date.toLocaleDateString("en-GB", { weekday: "narrow" })}</span><span class="dn">${d}</span><span class="dots">${ch.map(s => `<i style="--c:${d === 3 ? "#fff" : s.c}"></i>`).join("")}</span></div>`;
+    }
+    const groups = [
+      ["Next 7 days", subs.filter(s => days(s.date) <= 7)],
+      ["Later this month", subs.filter(s => days(s.date) > 7 && s.date.getMonth() === 9)],
+      ["Later", subs.filter(s => s.date.getMonth() !== 9 || s.date.getFullYear() !== 2026)],
+    ];
+    const list = groups.map(([t, l]) => `<div class="sh"><b>${t}</b><span>${n0(l.reduce((a, s) => a + s.price, 0))} kr</span></div><div class="group">${l.map(rowA).join("")}</div>`).join("");
+    const top = scrolled ? "" : `<div class="ltitle">Subscriptions</div>
+        <div class="sum"><div class="big">${n0(monthly)}<span class="per">kr / month</span></div>
+        <div class="line"><b>${n0(leftThisMonth)} kr</b> still to pay in October</div></div>
+        <div class="strip">${strip}</div>`;
+    const nav = scrolled
+      ? `<div class="nav"><span class="glass"><span class="gb">${icon("chart", 18)}</span></span><span class="ctr">Subscriptions</span><span class="spacer"></span><span class="glass"><span class="gb">${icon("plus")}</span><span class="gb">${icon("more")}</span></span></div>`
+      : homeNav();
+    return phone(theme, `${scrolled ? '<div class="topfade"></div>' : ""}${nav}<div class="body" style="${scrolled ? "margin-top:-150px" : ""}">${top}${list}</div>`);
+  }
+
+  // ---------- Direction B ----------
+  function screenB(theme) {
+    const bar = cats.map(c => `<i style="--c:${c.c};flex:${c.total}"></i>`).join("");
+    const legend = cats.map(c => `<div><i style="--c:${c.c}"></i>${c.name}<span>${n0(c.total)}</span></div>`).join("");
+    const next = subs.slice(0, 4).map(s => `<div class="nc" style="--c:${s.c}">${tile(s, 32)}<div><div class="name">${s.name}</div><div class="when">${when(s.date)}</div></div><div class="p">${n0(s.price)}<span class="kr">kr</span></div></div>`).join("");
+    const all = [...subs].sort((a, b) => b.price - a.price).slice(0, 4).map(s => `<div class="row">${tile(s, 34)}<div class="main"><div class="name">${s.name}</div><div class="meta">${s.cat}</div></div><div class="amt">${n0(s.price)} kr<small>${ivShort[s.iv]}</small></div></div>`).join("");
+    return phone(theme, `${homeNav(" ")}<div class="body"><div class="ltitle">Subscriptions</div>
+      <div class="hero-card"><div class="lbl">Monthly spend</div><div class="big">${kr(monthly)}</div><div class="bar">${bar}</div><div class="legend">${legend}</div></div>
+      <div class="sh"><b>Up next</b><span>See all</span></div><div class="next-row">${next}</div>
+      <div class="sh"><b>All subscriptions</b><span>${subs.length}</span></div><div class="group" style="--inset:60px">${all}</div></div>`);
+  }
+
+  // ---------- Direction C ----------
+  function screenC(theme) {
+    const section = (cat) => {
+      const l = subs.filter(s => s.cat === cat.name);
+      return `<div class="ch"><span>${cat.name}</span><span>${n0(cat.total)} kr/mo</span></div><div class="group" style="border-radius:14px;--inset:54px">${l.map(s => `<div class="row" style="padding:9px 12px">${tile(s, 30, true)}<div class="main"><div class="name" style="font-weight:600">${s.name}</div></div><div class="amt" style="font-weight:600;color:var(--muted)">${n0(s.price)} kr</div><span class="chev">${icon("chev", 16)}</span></div>`).join("")}</div>`;
+    };
+    return phone(theme, `${homeNav(" ")}<div class="body"><div class="ltitle">Subscriptions</div>
+      <div class="search">${icon("search", 17)} Search</div>
+      <div class="ch"><span>Overview</span></div>
+      <div class="group" style="border-radius:14px"><div class="kv"><span>Per month</span><span>${n0(monthly)} kr</span></div><div class="kv"><span>Per year</span><span>${n0(monthly * 12)} kr</span></div><div class="kv"><span>Next charge</span><span>Netflix, Mon</span></div></div>
+      ${section(cats.find(c => c.name === "Entertainment"))}${section(cats.find(c => c.name === "Food"))}${section(cats.find(c => c.name === "Health"))}</div>`);
+  }
+
+  // ---------- Today (faithful recreation) ----------
+  function screenLegacy() {
+    const dkk = (n, o = {}) => n.toLocaleString("en-DK", { style: "currency", currency: "DKK", minimumFractionDigits: 2, maximumFractionDigits: 2, ...o });
+    const raw = subs.reduce((a, s) => a + s.price, 0);
+    const mo = subs.filter(s => s.iv === "month").reduce((a, s) => a + s.price, 0);
+    const dd = d => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(2)}`;
+    const soon = subs.slice(0, 3).map(s => `<div class="lg-card" style="min-width:128px;padding:10px;display:grid;gap:6px"><div><div style="font-weight:600;font-size:13px">${s.name}</div><div style="font-size:12px;color:var(--muted)">${days(s.date)} days</div></div><div style="font-weight:700;font-size:19px">${dkk(s.price, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div></div>`).join("");
+    const rows = [...subs].sort((a, b) => a.price - b.price).slice(0, 4).map(s => `<div class="lg-card" style="padding:13px;border-left:3px solid ${s.c};display:flex;justify-content:space-between;margin-bottom:7px"><div><div style="font-weight:600;font-size:14px">${s.name}</div><div style="font-size:12px;color:var(--muted)">${s.cat}</div></div><div style="text-align:right"><div style="font-weight:600;font-size:13px">${dkk(s.price)}</div><div style="font-size:12px;color:var(--muted)">${dd(s.date)}</div></div></div>`).join("");
+    return phone("light", `<div class="nav"><span class="spacer"></span><span class="glass"><span class="gb">${icon("plus")}</span><span class="gb">${icon("more")}</span></span><span class="ctr" style="font-weight:700">Subscriptions</span></div>
+      <div class="body" style="padding:8px 20px 0">
+        <div class="lg-card" style="padding:18px;display:grid;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)"><div><div style="font-weight:700;font-size:15px">Total costs</div><div style="font-size:12px;color:var(--muted)">Aggregation of all your subscriptions</div></div><div style="font-weight:700;font-size:25px;color:var(--primary)">${dkk(raw)}</div><div style="font-size:12px;font-weight:600">${dkk(mo, { minimumFractionDigits: 0 })} <span style="font-weight:400;color:var(--muted)">of which is monthly</span></div></div>
+        <div class="lg-sec">Charged soon</div><div style="display:flex;gap:7px;overflow:hidden">${soon}</div>
+        <div class="lg-sec">All subscriptions</div>${rows}
+      </div>`, "legacy");
+  }
+
+  // ---------- Detail sheet ----------
+  function screenDetail() {
+    const s = subs[0];
+    const upcoming = [0, 1, 2].map(i => new Date(2026, 9 + i, 5));
+    return phone("light", `<div class="scrim"></div><div class="sheet"><div class="grab"></div>
+      <div class="nav"><span class="glass"><span class="gb">${icon("x", 18)}</span></span><span class="spacer"></span><span class="glass text">Edit</span></div>
+      <div class="body">
+        <div style="display:flex;gap:14px;align-items:center;padding:8px 4px 0">${tile(s, 60)}<div style="display:grid;gap:6px;justify-items:start"><div style="font-size:26px;font-weight:900;letter-spacing:-.02em">${s.name}</div><span class="chip" style="--c:${s.c}"><i></i>${s.cat}</span></div></div>
+        <div style="padding:22px 4px 4px"><div style="font-size:44px;font-weight:900;letter-spacing:-.035em;line-height:1">149<span class="kr">kr</span></div><div style="color:var(--muted);font-weight:600;margin-top:6px">every month · 1.788 kr a year</div></div>
+        <div class="sh"><b>Upcoming charges</b></div>
+        <div class="group tl">${upcoming.map((d, i) => `<div><i></i><span>${d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}</span><span>${i === 0 ? "in 2 days" : "149 kr"}</span></div>`).join("")}</div>
+        <div class="group" style="margin-top:14px"><div class="kv"><span>Tracking since</span><span>${s.since}</span></div><div class="kv"><span>Paid so far</span><span>≈ 9.980 kr</span></div></div>
+        <div style="text-align:center;color:var(--danger);font-weight:700;padding:20px 0">Delete subscription</div>
+      </div></div>`);
+  }
+
+  // ---------- Add form ----------
+  function screenForm() {
+    const p = { name: "Disney+", c: "#8B5CF6" };
+    const chips = [["Entertainment", C.ent, true], ["Software", C.soft], ["Food", C.food], ["Health", C.health]].map(([n, c, on]) => `<span class="chip ${on ? "on" : ""}" style="--c:${c}"><i></i>${n}</span>`).join("");
+    return phone("dark", `<div class="scrim" style="background:rgba(0,0,0,.6)"></div><div class="sheet"><div class="grab"></div>
+      <div class="nav"><span class="glass"><span class="gb">${icon("x", 18)}</span></span><span class="ctr">New subscription</span><span class="spacer"></span><span class="glass prominent"><span class="gb">${icon("check")}</span></span></div>
+      <div class="body">
+        <div class="group" style="margin-top:8px"><div class="row" style="padding:14px">${tile(p, 44)}<div class="main"><div class="name" style="font-size:17px">Disney+</div><div class="meta">948 kr a year</div></div><div class="amt" style="font-size:18px">79 kr<small>/mo</small></div></div></div>
+        <div class="ch" style="padding-left:16px"><span>Details</span></div>
+        <div class="group" style="border-radius:16px"><div class="kv"><span>Disney+</span></div><div class="kv"><span>79</span><span>kr</span></div></div>
+        <div class="ch" style="padding-left:16px"><span>Billed</span></div>
+        <div class="group" style="border-radius:16px;padding:10px 12px;display:grid;gap:12px"><div class="seg"><span>Weekly</span><span class="on">Monthly</span><span>Yearly</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px"><span>Next charge</span><span class="chip" style="background:var(--fill)">12 Oct 2026</span></div></div>
+        <div class="ch" style="padding-left:16px"><span>Category</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 4px">${chips}</div>
+      </div></div>`);
+  }
+
+  // ---------- Empty ----------
+  function screenEmpty() {
+    const ghost = (o, plus) => `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:20px;background:var(--surface);opacity:${o}">${plus ? `<div class="tile" style="--c:#f97316;width:38px;height:38px;font-size:22px">+</div>` : `<div style="width:38px;height:38px;border-radius:30%;background:var(--fill)"></div>`}<div style="flex:1;display:grid;gap:6px"><div style="height:10px;width:${plus ? 60 : 50}%;border-radius:5px;background:var(--fill)"></div><div style="height:8px;width:30%;border-radius:4px;background:var(--fill)"></div></div><div style="height:10px;width:44px;border-radius:5px;background:var(--fill)"></div></div>`;
+    const quick = ["Netflix", "Spotify", "Viaplay", "TV 2 Play"].map(n => `<span class="chip">+ ${n}</span>`).join("");
+    return phone("light", `${homeNav(" ")}<div class="body"><div class="ltitle">Subscriptions</div>
+      <div style="display:grid;gap:8px;margin:22px 0 22px">${ghost(1, true)}${ghost(.6)}${ghost(.3)}</div>
+      <div style="padding:0 4px;display:grid;gap:8px"><div style="font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1.15">Track your first subscription</div><div style="color:var(--muted);font-size:15px">Add what you pay for and see what's due next, and what it adds up to each month.</div></div>
+      <div class="btn" style="margin:22px 0 18px">Add subscription</div>
+      <div style="font-size:13px;color:var(--muted);font-weight:700;padding:0 4px 8px">Quick add</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${quick}</div></div>`);
+  }
+
+  // ---------- Login ----------
+  function screenLogin() {
+    const mark = `<div style="width:60px;height:60px;border-radius:18px;background:var(--primary);display:grid;place-items:center;box-shadow:0 10px 24px -10px rgba(249,115,22,.7)"><svg width="30" height="30" viewBox="0 0 30 30"><rect x="4" y="5" width="22" height="5.5" rx="2.75" fill="#fff"/><rect x="4" y="12.5" width="22" height="5.5" rx="2.75" fill="#fff" opacity=".75"/><rect x="4" y="20" width="14" height="5.5" rx="2.75" fill="#fff" opacity=".5"/></svg></div>`;
+    return phone("light", `<div class="body" style="padding:34px 22px 0;display:grid;gap:0">${mark}
+      <div style="font-size:30px;font-weight:900;letter-spacing:-.025em;line-height:1.1;margin-top:22px">Subscriptions<br>Manager</div>
+      <div style="color:var(--muted);margin-top:8px;font-size:16px">Sign in to see what's due next.</div>
+      <div style="display:grid;gap:10px;margin-top:32px"><div class="field filled">vaggelis@example.com</div><div class="field">Password</div></div>
+      <div style="text-align:right;font-size:14px;font-weight:700;color:var(--primary-text);padding:12px 4px">Forgot password?</div>
+      <div class="btn" style="margin-top:6px">Sign in</div>
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:14px 0">or</div>
+      <div class="btn dark"><span style="display:flex;gap:8px;align-items:center"><svg width="16" height="18" viewBox="0 0 16 19" fill="currentColor"><path d="M13.3 10.1c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8C3.8 4.9 2.3 5.8 1.5 7.3c-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.4-1-2.4-4.1ZM11 3.3c.6-.8 1.1-1.9 1-3-1 0-2.1.6-2.8 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.8-1.3Z"/></svg>Sign in with Apple</span></div>
+      <div style="text-align:center;font-size:15px;color:var(--muted);margin-top:20px">New here? <b style="color:var(--primary-text)">Create an account</b></div></div>`);
+  }
+
+  // ---------- Insights ----------
+  function screenInsights() {
+    const bar = cats.map(c => `<i style="--c:${c.c};flex:${c.total}"></i>`).join("");
+    const rows = cats.map(c => `<div class="row" style="--inset:52px"><div class="tile" style="--c:${c.c};width:28px;height:28px;font-size:0"><i style="width:10px;height:10px;border-radius:3px;background:var(--c)"></i></div><div class="main"><div class="name">${c.name}</div><div class="meta">${Math.round(c.total / monthly * 100)}% of spend</div></div><div class="amt">${n0(c.total)} kr<small>/mo</small></div></div>`).join("");
+    return phone("light", `<div class="scrim"></div><div class="sheet"><div class="grab"></div>
+      <div class="nav"><span class="glass"><span class="gb">${icon("x", 18)}</span></span><span class="ctr">Insights</span></div>
+      <div class="body">
+        <div class="seg" style="margin:6px 0 18px"><span>Week</span><span class="on">Month</span><span>Year</span></div>
+        <div style="padding:0 4px"><div style="font-size:14px;color:var(--muted);font-weight:700">Spend per month</div><div style="font-size:42px;font-weight:900;letter-spacing:-.035em;line-height:1.05">${kr(monthly)}</div><div style="font-size:14px;color:var(--muted);margin-top:4px">${n0(monthly * 12)} kr over the next 12 months</div></div>
+        <div class="bar" style="height:14px;margin:18px 4px 18px">${bar}</div>
+        <div class="group">${rows}</div>
+      </div></div>`);
+  }
+
+  const screens = {
+    legacy: screenLegacy,
+    "a-light": () => screenA("light"),
+    "a-dark": () => screenA("dark"),
+    "a-dark-scrolled": () => screenA("dark", true),
+    "b-light": () => screenB("light"),
+    "b-dark": () => screenB("dark"),
+    "c-light": () => screenC("light"),
+    "c-dark": () => screenC("dark"),
+    detail: screenDetail,
+    form: screenForm,
+    empty: screenEmpty,
+    login: screenLogin,
+    insights: screenInsights,
+  };
+  document.querySelectorAll("[data-screen]").forEach(el => { el.outerHTML = screens[el.dataset.screen](); });
+
+  // ---------- Swatches ----------
+  const sw = [
+    ["Primary", "#F97316", "light · unchanged"],
+    ["Primary", "#EA580C", "dark · unchanged"],
+    ["Primary text", "#FB923C", "dark only", true],
+    ["Primary soft", "rgba(249,115,22,.12)", "chips, today", true],
+    ["Background", "#F5F5F4", "light grouped bg", true],
+    ["Surface", "#FFFFFF", "light raised"],
+    ["Background", "#0C0A09", "dark · unchanged"],
+    ["Surface", "#1C1917", "dark raised", true],
+    ["Foreground", "#0C0A09", "unchanged"],
+    ["Muted text", "#78716C", "unchanged"],
+    ["Separator", "#E7E5E4", "was border"],
+    ["Destructive", "#EF4444", "unchanged"],
+  ];
+  document.getElementById("swatches").innerHTML = sw.map(([n, v, d, isNew]) => `<div class="sw"><i style="background:${v}"></i><b>${n}</b><span>${v}</span>${isNew ? `<em>${d}</em>` : `<span>${d}</span>`}</div>`).join("");
+
+  // ---------- Tabs ----------
+  const tabs = document.querySelectorAll(".dir-tabs button");
+  tabs.forEach(b => b.addEventListener("click", () => {
+    tabs.forEach(t => t.setAttribute("aria-selected", t === b));
+    document.querySelectorAll(".dir").forEach(d => d.classList.toggle("active", d.id === "dir-" + b.dataset.dir));
+  }));
+</script>
+</body>
+</html>
