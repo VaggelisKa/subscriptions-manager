@@ -28,7 +28,7 @@ Run these from `apps/ng-native`:
 
 ```sh
 eas build -p ios --profile preview      # an internal build, installed from the link EAS prints
-eas update --channel preview            # ship JS changes to preview builds over the air
+eas update --channel preview --environment preview --message "…"   # JS changes over the air
 ```
 
 `eas.json` pins Node 24, since Angular 22 refuses older Node. There's no `development` profile:
