@@ -18,6 +18,22 @@ The form, pickers and date picker are SwiftUI views through `@expo/ui`, header b
 bar button items, and brand logos are drawn by `expo-image`, so the app needs a development build
 rather than Expo Go. On iOS 26+ the headers and sheets get Liquid Glass chrome, as in apps/native.
 
+## Deploying
+
+It's a separate EAS project from `apps/native`
+([`@vaggelis_ka/subscriptions-manager-ng`](https://expo.dev/accounts/vaggelis_ka/projects/subscriptions-manager-ng)),
+with its own bundle id (`com.subscriptionsmanager.ng`), so both apps install side by side. Its
+`preview` and `production` environments hold the same `EXPO_PUBLIC_*` variables as the React app's.
+Run these from `apps/ng-native`:
+
+```sh
+eas build -p ios --profile preview      # an internal build, installed from the link EAS prints
+eas update --channel preview            # ship JS changes to preview builds over the air
+```
+
+`eas.json` pins Node 24, since Angular 22 refuses older Node. There's no `development` profile:
+`expo-dev-client` is untested with Angular Native, so use `pnpm ng-native ios` for a dev build.
+
 Note that `apps/native` gained a `@babel/core ^7` devDependency: Angular's compiler brings Babel 8
 into the workspace, and without the pin pnpm resolves React Native's Babel peer to it and Metro
 fails for the React app.

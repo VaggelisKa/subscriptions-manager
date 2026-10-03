@@ -2,6 +2,7 @@
   "expo": {
     "name": "Subscriptions (Angular)",
     "slug": "subscriptions-manager-ng",
+    "owner": "vaggelis_ka",
     "version": "1.0.0",
     "scheme": "subscriptions-manager-ng",
     "platforms": ["ios", "android"],
@@ -11,7 +12,10 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.subscriptionsmanager.ng",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.subscriptionsmanager.ng",
@@ -24,7 +28,17 @@
     "extra": {
       "router": {
         "root": "src/app"
+      },
+      "eas": {
+        "projectId": "4fbb3150-1f11-44f6-8a86-ac8565ccabaa"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4fbb3150-1f11-44f6-8a86-ac8565ccabaa",
+      "enableBsdiffPatchSupport": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
