@@ -1,4 +1,4 @@
-import { HStack, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import { HStack, RNHostView, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import {
   background,
   font,
@@ -10,7 +10,9 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import type { IntervalEnum } from "@subscriptions-manager/shared";
 import { useTheme } from "@/providers/theme-provider";
+import { SubscriptionTile } from "@/components/ui/subscription-tile";
 import { monthlyEquivalent, yearlyEquivalent } from "@/lib/billing";
+import { findBrand } from "@/lib/brands";
 import { formatNumber, formatWholeKr, intervalSuffix } from "@/lib/format";
 import { fonts, withAlpha } from "@/lib/theme";
 
@@ -28,7 +30,8 @@ const HEX = /^#[0-9a-f]{6}$/i;
 /**
  * What the subscription will look like in the list, updated as the form is
  * filled in. Built from SwiftUI views (not an RNHostView) so the Form measures
- * and truncates the text itself; hosted RN text overflowed the row.
+ * and truncates the text itself; hosted RN text overflowed the row. Only a
+ * brand logo is hosted, since SwiftUI can't draw the bundled SVGs.
  */
 export function SubscriptionPreview({ name, price, interval, color }: Props) {
   const { colors, colorScheme } = useTheme();
@@ -48,19 +51,29 @@ export function SubscriptionPreview({ name, price, interval, color }: Props) {
 
   return (
     <HStack spacing={12}>
-      <Text
-        modifiers={[
-          font({ family: fonts.black, size: Math.round(TILE * 0.44) }),
-          foregroundStyle(hasColor ? color : colors.mutedForeground),
-          frame({ width: TILE, height: TILE }),
-          background(
-            withAlpha(color, colorScheme === "dark" ? 0.24 : 0.14, colors.fill),
-            shapes.roundedRectangle({ cornerRadius: TILE * 0.3 }),
-          ),
-        ]}
-      >
-        {trimmed.charAt(0).toUpperCase() || "?"}
-      </Text>
+      {findBrand(trimmed) ? (
+        <RNHostView matchContents>
+          <SubscriptionTile name={trimmed} color={color} size={TILE} />
+        </RNHostView>
+      ) : (
+        <Text
+          modifiers={[
+            font({ family: fonts.black, size: Math.round(TILE * 0.44) }),
+            foregroundStyle(hasColor ? color : colors.mutedForeground),
+            frame({ width: TILE, height: TILE }),
+            background(
+              withAlpha(
+                color,
+                colorScheme === "dark" ? 0.24 : 0.14,
+                colors.fill,
+              ),
+              shapes.roundedRectangle({ cornerRadius: TILE * 0.3 }),
+            ),
+          ]}
+        >
+          {trimmed.charAt(0).toUpperCase() || "?"}
+        </Text>
+      )}
       <VStack alignment="leading" spacing={1}>
         <Text
           modifiers={[
