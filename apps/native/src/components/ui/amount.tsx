@@ -29,6 +29,9 @@ export function Amount({
   return (
     <Text
       selectable
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      maxFontSizeMultiplier={1.2}
       style={[
         {
           fontFamily: fonts.black,

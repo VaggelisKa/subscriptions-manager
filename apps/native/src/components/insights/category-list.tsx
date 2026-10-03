@@ -111,6 +111,7 @@ function CategoryRow({ category, period, open, onPress }: RowProps) {
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
+      accessibilityLabel={`${category.name}, ${Math.round(category.share * 100)}% of spend, ${formatWholeNumber(amount)} kr per ${period}`}
       onPress={() => {
         haptics.light();
         onPress();
@@ -164,6 +165,7 @@ function CategoryRow({ category, period, open, onPress }: RowProps) {
         }}
       >
         <Image
+          accessible={false}
           source="sf:chevron.down"
           tintColor={colors.faint}
           style={styles.chevron}

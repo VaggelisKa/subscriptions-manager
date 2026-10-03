@@ -11,7 +11,11 @@ export function SubscriptionOverviewSkeletons() {
   const colors = useThemeColors();
 
   return (
-    <View accessibilityLabel="Loading subscriptions">
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel="Loading subscriptions"
+    >
       <View style={styles.summary}>
         <Skeleton width={210} height={46} style={styles.amount} />
         <Skeleton width={230} height={14} />

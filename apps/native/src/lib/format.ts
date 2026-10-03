@@ -6,8 +6,11 @@ const LOCALE = "en-DK";
 
 /** "149", "2.250", "79,50" — decimals only when they aren't zero. */
 export function formatNumber(value: number) {
-  const hasDecimals = Math.round(value * 100) % 100 !== 0;
-  return value.toLocaleString(LOCALE, {
+  // Round to øre first so float noise (1.005 → 100.4999…) can't disagree with
+  // the decimals check.
+  const cents = Math.round(value * 100);
+  const hasDecimals = cents % 100 !== 0;
+  return (cents / 100).toLocaleString(LOCALE, {
     minimumFractionDigits: hasDecimals ? 2 : 0,
     maximumFractionDigits: hasDecimals ? 2 : 0,
   });
@@ -46,6 +49,7 @@ export const intervalName: Record<IntervalEnum, string> = {
 
 /** "Today", "Tomorrow", "in 3 days" within a week; otherwise "14 Oct" (with year if not this year). */
 export function formatDueLabel(date: Date, from = today()) {
+  if (isNaN(date.getTime())) return "";
   const days = differenceInCalendarDays(date, from);
   if (days <= 0) return "Today";
   if (days === 1) return "Tomorrow";
@@ -55,6 +59,7 @@ export function formatDueLabel(date: Date, from = today()) {
 
 /** "14 Oct", or "14 Oct 2027" outside the current year. */
 export function formatShortDate(date: Date, from = today()) {
+  if (isNaN(date.getTime())) return "";
   return format(date, isSameYear(date, from) ? "d MMM" : "d MMM yyyy");
 }
 

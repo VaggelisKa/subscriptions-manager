@@ -10,7 +10,6 @@ import {
   Section,
   TextField,
   DatePicker,
-  RNHostView,
   useNativeState,
   type TextFieldRef,
 } from "@expo/ui/swift-ui";
@@ -21,7 +20,6 @@ import {
   foregroundStyle,
   keyboardType,
   labelsHidden,
-  listRowInsets,
   onTapGesture,
   scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
@@ -29,7 +27,8 @@ import type { IntervalEnum } from "@subscriptions-manager/shared";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
-import { setHours } from "date-fns";
+import { format, setHours, setMinutes } from "date-fns";
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { nextChargeDate } from "@/lib/billing";
 import { haptics } from "@/lib/haptics";
 import { intervalName } from "@/lib/format";
@@ -38,12 +37,36 @@ import { CategoryChips } from "@/components/form/category-chips";
 
 const INTERVALS: IntervalEnum[] = ["week", "month", "year"];
 
-/** The decimal pad shows the locale's separator, which is "," in Danish. */
+/**
+ * Accepts "79", "79,50", "79.50", "1.250" and "1.250,50". The decimal pad
+ * shows "," in Danish; "." followed by exactly three digits is a thousands
+ * separator, as the app itself formats amounts that way. Negative prices are
+ * rejected and values are rounded to øre.
+ */
 function parsePrice(text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const value = Number(trimmed.replace(",", "."));
-  return isNaN(value) ? null : value;
+  let t = text.trim().replace(/\s/g, "");
+  if (!t) return null;
+  const lastComma = t.lastIndexOf(",");
+  const lastDot = t.lastIndexOf(".");
+  if (lastComma >= 0 && lastDot >= 0) {
+    // Whichever comes last is the decimal separator.
+    const decimal = lastComma > lastDot ? "," : ".";
+    const grouping = decimal === "," ? "." : ",";
+    t = t.split(grouping).join("").replace(decimal, ".");
+  } else if (lastComma >= 0) {
+    t = t.replace(",", ".");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(t)) {
+    t = t.split(".").join("");
+  }
+  if (!/^\d+(\.\d+)?$/.test(t)) return null;
+  return Math.round(Number(t) * 100) / 100;
+}
+
+/** The calendar day shown in the picker, stored as noon in Copenhagen so the
+ * day can't shift with the device's time zone. */
+function toBilledAt(date: Date) {
+  const day = format(date, "yyyy-MM-dd");
+  return zonedTimeToUtc(`${day}T12:00:00`, "Europe/Copenhagen").toISOString();
 }
 
 export default function SubscriptionFormScreen() {
@@ -80,7 +103,8 @@ export default function SubscriptionFormScreen() {
   } = useSubscriptions(user?.id);
 
   const isEdit = !!id;
-  const defaultCategoryId = categories[0]?.id ?? "";
+  // New subscriptions default to the first category; edits keep "none" as none.
+  const defaultCategoryId = isEdit ? "" : (categories[0]?.id ?? "");
 
   const [name, setName] = useState(paramName ?? "");
   const [price, setPrice] = useState(paramPrice ?? "");
@@ -89,21 +113,20 @@ export default function SubscriptionFormScreen() {
   const [interval, setInterval] = useState<IntervalEnum>(
     paramInterval && INTERVALS.includes(paramInterval) ? paramInterval : "month",
   );
-  // `billed_at` anchors the schedule and may be in the past; show the next
-  // charge instead. Saving it keeps the same schedule.
-  const [billedAt, setBilledAt] = useState(() =>
-    paramBilledAt
-      ? setHours(
-          nextChargeDate(
-            paramBilledAt,
-            paramInterval && INTERVALS.includes(paramInterval)
-              ? paramInterval
-              : "month",
-          ),
-          12,
-        )
-      : new Date(),
-  );
+  // A stale `billed_at` is shown as its next charge (keeping the stored time
+  // of day), but it's only written back if the user picks a date. The web
+  // app's cron advances `billed_at` itself, so rewriting it on every save
+  // would shift the schedule.
+  const [billedAt, setBilledAt] = useState(() => {
+    if (!paramBilledAt) return new Date();
+    const stored = utcToZonedTime(paramBilledAt, "Europe/Copenhagen");
+    const next = nextChargeDate(
+      paramBilledAt,
+      paramInterval && INTERVALS.includes(paramInterval) ? paramInterval : "month",
+    );
+    return setMinutes(setHours(next, stored.getHours()), stored.getMinutes());
+  });
+  const [billedAtChanged, setBilledAtChanged] = useState(false);
   const [categoryId, setCategoryId] = useState(paramCategoryId ?? "");
   const [saving, setSaving] = useState(false);
   const nameInputRef = useRef<TextFieldRef>(null);
@@ -134,7 +157,10 @@ export default function SubscriptionFormScreen() {
       name: name.trim(),
       price: parsedPrice,
       interval,
-      billed_at: billedAt.toUTCString(),
+      billed_at:
+        isEdit && !billedAtChanged && paramBilledAt
+          ? paramBilledAt
+          : toBilledAt(billedAt),
       ...(effectiveCategoryId ? { category_id: effectiveCategoryId } : {}),
     };
 
@@ -171,7 +197,8 @@ export default function SubscriptionFormScreen() {
               return;
             }
             haptics.success();
-            router.back();
+            // The form may sit on top of the detail sheet; close both.
+            router.dismissTo("/");
           },
         },
       ],
@@ -237,21 +264,12 @@ export default function SubscriptionFormScreen() {
           ]}
         >
           <Section>
-            {/* The preview supplies its own padding, so the row is edge to edge. */}
-            <HStack
-              modifiers={[
-                listRowInsets({ top: 0, bottom: 0, leading: 0, trailing: 0 }),
-              ]}
-            >
-              <RNHostView matchContents={{ vertical: true }}>
-                <SubscriptionPreview
-                  name={name}
-                  price={parsedPrice}
-                  interval={interval}
-                  color={selectedCategory?.color_hex}
-                />
-              </RNHostView>
-            </HStack>
+            <SubscriptionPreview
+              name={name}
+              price={parsedPrice}
+              interval={interval}
+              color={selectedCategory?.color_hex}
+            />
           </Section>
           <Section title="Details">
             <TextField
@@ -297,6 +315,7 @@ export default function SubscriptionFormScreen() {
               onDateChange={(date) => {
                 dismissFormKeyboard();
                 setBilledAt(date);
+                setBilledAtChanged(true);
               }}
               modifiers={[datePickerStyle("compact")]}
             />

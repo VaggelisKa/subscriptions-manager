@@ -66,7 +66,11 @@ export function SubscriptionRow({ subscription, nextCharge, meta, onPress }: Pro
           {metaText}
         </Text>
       </View>
-      <Text style={[styles.amount, { color: colors.foreground }]}>
+      <Text
+        numberOfLines={1}
+        maxFontSizeMultiplier={1.4}
+        style={[styles.amount, { color: colors.foreground }]}
+      >
         {formatNumber(subscription.price ?? 0)} kr
         <Text style={[styles.suffix, { color: colors.mutedForeground }]}>
           {intervalSuffix[subscription.interval]}
@@ -89,6 +93,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.bold, fontSize: 16, lineHeight: 21 },
   meta: { fontFamily: fonts.semiBold, fontSize: 13, lineHeight: 18 },
   amount: {
+    flexShrink: 1,
     fontFamily: fonts.extraBold,
     fontSize: 16,
     fontVariant: ["tabular-nums"],

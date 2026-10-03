@@ -8,8 +8,13 @@ import {
   Text,
   View,
 } from "react-native";
-import { Stack, router, useLocalSearchParams } from "expo-router";
-import { format } from "date-fns";
+import {
+  Stack,
+  router,
+  useIsFocused,
+  useLocalSearchParams,
+} from "expo-router";
+import { format, subDays } from "date-fns";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
@@ -36,21 +41,23 @@ export default function SubscriptionDetailScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const { user } = use(AuthContext);
-  const { subscriptions, loading, deleteSubscription } = useSubscriptions(
-    user?.id,
-  );
+  const { subscriptions, loading, error, refresh, deleteSubscription } =
+    useSubscriptions(user?.id);
   const [deleting, setDeleting] = useState(false);
+  const isFocused = useIsFocused();
   // Set once we navigate away so the not-found effect doesn't pop twice.
   const leaving = useRef(false);
 
   const subscription = subscriptions.find((s) => s.id === id);
 
   useEffect(() => {
-    if (!loading && !subscription && !leaving.current) {
+    // Only a successful fetch without this id means it's gone (e.g. deleted).
+    // Not while Edit is on top, or the pop would close the form instead.
+    if (isFocused && !loading && !error && !subscription && !leaving.current) {
       leaving.current = true;
       router.back();
     }
-  }, [loading, subscription]);
+  }, [isFocused, loading, error, subscription]);
 
   if (!subscription) {
     return (
@@ -64,7 +71,24 @@ export default function SubscriptionDetailScreen() {
         />
         </Stack.Toolbar>
         <View style={styles.loading}>
-          <ActivityIndicator color={colors.mutedForeground} />
+          {error && !loading ? (
+            <>
+              <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
+                Couldn't load this subscription. {error}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void refresh()}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text style={[styles.retryText, { color: colors.primaryText }]}>
+                  Try again
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <ActivityIndicator color={colors.mutedForeground} />
+          )}
         </View>
       </>
     );
@@ -88,7 +112,8 @@ export default function SubscriptionDetailScreen() {
     sub.billed_at,
     sub.interval,
     toLocalDay(sub.created_at),
-    today(),
+    // Up to yesterday: a charge due today still counts as "to pay".
+    subDays(today(), 1),
   );
 
   function handleEdit() {
@@ -204,7 +229,7 @@ export default function SubscriptionDetailScreen() {
         <Group separatorInset={spacing.lg} style={styles.info}>
           <InfoRow
             label="Tracking since"
-            value={format(new Date(sub.created_at), "MMM yyyy")}
+            value={format(toLocalDay(sub.created_at), "MMM yyyy")}
           />
           {pastCharges > 0 ? (
             <InfoRow
@@ -241,6 +266,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  errorText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  retryText: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
   },
   content: {
     padding: spacing.lg,

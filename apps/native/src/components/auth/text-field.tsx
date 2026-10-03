@@ -43,7 +43,7 @@ export function TextField({ label, error = false, ref, placeholder, ...props }: 
         selectionColor={colors.primary}
         {...props}
         style={{
-          height: 52,
+          minHeight: 52,
           paddingHorizontal: 14,
           borderRadius: radius.lg,
           borderCurve: "continuous",

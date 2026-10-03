@@ -1,10 +1,18 @@
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { HStack, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import {
+  background,
+  font,
+  foregroundStyle,
+  frame,
+  layoutPriority,
+  lineLimit,
+  shapes,
+} from "@expo/ui/swift-ui/modifiers";
 import type { IntervalEnum } from "@subscriptions-manager/shared";
-import { useThemeColors } from "@/providers/theme-provider";
-import { SubscriptionTile } from "@/components/ui/subscription-tile";
+import { useTheme } from "@/providers/theme-provider";
 import { monthlyEquivalent, yearlyEquivalent } from "@/lib/billing";
 import { formatNumber, formatWholeKr, intervalSuffix } from "@/lib/format";
-import { fonts, spacing } from "@/lib/theme";
+import { fonts, withAlpha } from "@/lib/theme";
 
 type Props = {
   name: string;
@@ -14,11 +22,18 @@ type Props = {
   color: string | null | undefined;
 };
 
-/** What the subscription will look like in the list, updated as the form is filled in. */
+const TILE = 44;
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/**
+ * What the subscription will look like in the list, updated as the form is
+ * filled in. Built from SwiftUI views (not an RNHostView) so the Form measures
+ * and truncates the text itself; hosted RN text overflowed the row.
+ */
 export function SubscriptionPreview({ name, price, interval, color }: Props) {
-  const colors = useThemeColors();
-  const { width: windowWidth } = useWindowDimensions();
+  const { colors, colorScheme } = useTheme();
   const trimmed = name.trim();
+  const hasColor = !!color && HEX.test(color);
 
   const perMonth = `≈ ${formatWholeKr(monthlyEquivalent(price ?? 0, interval))} a month`;
   const perYear = `${formatWholeKr(yearlyEquivalent(price ?? 0, interval))} a year`;
@@ -32,61 +47,64 @@ export function SubscriptionPreview({ name, price, interval, color }: Props) {
           : `${perMonth} · ${perYear}`;
 
   return (
-    // RNHostView sizes to the content's natural width, so a long name would
-    // push the price off-screen. Pin it to the row: window minus form margins.
-    <View style={[styles.row, { width: windowWidth - FORM_MARGIN * 2 }]}>
-      <SubscriptionTile name={trimmed || null} color={color} size={44} />
-      <View style={styles.main}>
+    <HStack spacing={12}>
+      <Text
+        modifiers={[
+          font({ family: fonts.black, size: Math.round(TILE * 0.44) }),
+          foregroundStyle(hasColor ? color : colors.mutedForeground),
+          frame({ width: TILE, height: TILE }),
+          background(
+            withAlpha(color, colorScheme === "dark" ? 0.24 : 0.14, colors.fill),
+            shapes.roundedRectangle({ cornerRadius: TILE * 0.3 }),
+          ),
+        ]}
+      >
+        {trimmed.charAt(0).toUpperCase() || "?"}
+      </Text>
+      <VStack alignment="leading" spacing={1}>
         <Text
-          numberOfLines={1}
-          style={[
-            styles.name,
-            { color: trimmed ? colors.foreground : colors.faint },
+          modifiers={[
+            font({ family: fonts.bold, size: 17 }),
+            lineLimit(1),
+            foregroundStyle(trimmed ? colors.foreground : colors.faint),
           ]}
         >
           {trimmed || "New subscription"}
         </Text>
         <Text
-          numberOfLines={1}
-          style={[styles.meta, { color: colors.mutedForeground }]}
+          modifiers={[
+            font({ family: fonts.semiBold, size: 13 }),
+            lineLimit(1),
+            foregroundStyle(colors.mutedForeground),
+          ]}
         >
           {meta}
         </Text>
-      </View>
-      <Text
-        style={[
-          styles.amount,
-          { color: price === null ? colors.faint : colors.foreground },
-        ]}
+      </VStack>
+      <Spacer />
+      <HStack
+        spacing={0}
+        alignment="firstTextBaseline"
+        modifiers={[layoutPriority(1)]}
       >
-        {formatNumber(price ?? 0)} kr
-        <Text style={[styles.suffix, { color: colors.mutedForeground }]}>
+        <Text
+          modifiers={[
+            font({ family: fonts.extraBold, size: 18 }),
+            lineLimit(1),
+            foregroundStyle(price === null ? colors.faint : colors.foreground),
+          ]}
+        >
+          {`${formatNumber(price ?? 0)} kr`}
+        </Text>
+        <Text
+          modifiers={[
+            font({ family: fonts.semiBold, size: 13 }),
+            foregroundStyle(colors.mutedForeground),
+          ]}
+        >
           {intervalSuffix[interval]}
         </Text>
-      </Text>
-    </View>
+      </HStack>
+    </HStack>
   );
 }
-
-/** Horizontal margin of an inset-grouped SwiftUI Form section on iPhone. */
-const FORM_MARGIN = 16;
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: 14,
-    paddingHorizontal: spacing.lg,
-    minHeight: 72,
-  },
-  main: { flex: 1, minWidth: 0, gap: 1 },
-  name: { fontFamily: fonts.bold, fontSize: 17, lineHeight: 22 },
-  meta: { fontFamily: fonts.semiBold, fontSize: 13, lineHeight: 18 },
-  amount: {
-    fontFamily: fonts.extraBold,
-    fontSize: 18,
-    fontVariant: ["tabular-nums"],
-  },
-  suffix: { fontFamily: fonts.semiBold, fontSize: 13 },
-});

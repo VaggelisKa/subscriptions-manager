@@ -6,6 +6,7 @@ import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { haptics } from "@/lib/haptics";
+import { useTodayKey } from "@/lib/use-today";
 import { spacing } from "@/lib/theme";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
 import { SubscriptionOverviewSkeletons } from "@/components/subscription-overview-skeletons";
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const todayKey = useTodayKey();
 
   // Refetches also flip `loading`; keep showing the list instead of the skeleton.
   const showSkeleton = (authLoading || loading) && subscriptions.length === 0;
@@ -75,7 +77,7 @@ export default function HomeScreen() {
             router.push("/subscription-form");
           }}
         />
-        <Stack.Toolbar.Menu icon="ellipsis">
+        <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="More options">
           <Stack.Toolbar.MenuAction
             icon={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
             onPress={toggleTheme}
@@ -118,7 +120,8 @@ export default function HomeScreen() {
           <EmptySubscriptionsState />
         ) : (
           // Rows and sections animate in when added later, not on first render.
-          <LayoutAnimationConfig skipEntering>
+          // Keyed by day so date-relative content refreshes after midnight.
+          <LayoutAnimationConfig key={todayKey} skipEntering>
             <MonthlySummary subscriptions={subscriptions} />
             <DayStrip subscriptions={subscriptions} />
             <TimelineList subscriptions={subscriptions} />

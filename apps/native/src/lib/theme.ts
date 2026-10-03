@@ -56,12 +56,12 @@ const lightColors = {
   primary: "hsl(24.6, 95%, 53.1%)",
   primaryForeground: "hsl(60, 9.1%, 97.8%)",
   /** Orange for text on surfaces; tuned per scheme for contrast. */
-  primaryText: "hsl(20.5, 90.2%, 48.2%)",
+  primaryText: "hsl(17.5, 88.3%, 40.4%)",
   primarySoft: "hsla(24.6, 95%, 53.1%, 0.12)",
   /** Translucent fill for chips, segmented controls and placeholders. */
   fill: "hsla(25, 5.3%, 44.7%, 0.12)",
   separator: "hsl(20, 5.9%, 90%)",
-  destructive: "hsl(0, 84.2%, 60.2%)",
+  destructive: "hsl(0, 72.2%, 47%)",
   destructiveForeground: "hsl(60, 9.1%, 97.8%)",
   success: "hsl(121, 35%, 51%)",
   successForeground: "hsl(60, 9.1%, 97.8%)",

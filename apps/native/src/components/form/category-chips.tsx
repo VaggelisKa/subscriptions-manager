@@ -29,6 +29,16 @@ const HEX = /^#[0-9a-f]{6}$/i;
  * A horizontally scrolling row of category capsules for a `Form` section.
  * Each chip shows its category colour; the selected one is filled with it.
  */
+/** Light category colours (yellow, white…) need a dark label when filled. */
+function isLight(hex: string | null | undefined) {
+  if (!hex || !HEX.test(hex)) return false;
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
+}
+
 export function CategoryChips({ categories, selectedId, onSelect }: Props) {
   return (
     <ScrollView
@@ -39,6 +49,7 @@ export function CategoryChips({ categories, selectedId, onSelect }: Props) {
       <HStack spacing={8} modifiers={[padding({ horizontal: 16 })]}>
         {categories.map((cat) => {
           const selected = cat.id === selectedId;
+          const onColor = isLight(cat.color_hex) ? "black" : "white";
           const color = cat.color_hex && HEX.test(cat.color_hex) ? cat.color_hex : "gray";
           return (
             <Button
@@ -54,14 +65,14 @@ export function CategoryChips({ categories, selectedId, onSelect }: Props) {
                 <Circle
                   modifiers={[
                     frame({ width: 8, height: 8 }),
-                    foregroundStyle(selected ? "white" : color),
+                    foregroundStyle(selected ? onColor : color),
                   ]}
                 />
                 <SwiftText
                   modifiers={[
                     font({ weight: "semibold", size: 15 }),
                     foregroundStyle(
-                      selected ? "white" : { type: "hierarchical", style: "primary" },
+                      selected ? onColor : { type: "hierarchical", style: "primary" },
                     ),
                   ]}
                 >

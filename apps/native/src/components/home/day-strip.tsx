@@ -1,18 +1,9 @@
-import { useRef } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
 import { useThemeColors } from "@/providers/theme-provider";
 import { chargesBetween, today } from "@/lib/billing";
 import { formatDayDate } from "@/lib/format";
-import { haptics } from "@/lib/haptics";
 import { fonts, spacing } from "@/lib/theme";
 
 const DAYS = 36;
@@ -52,24 +43,10 @@ function buildDays(subscriptions: SubscriptionWithCategory[]): Day[] {
 export function DayStrip({ subscriptions }: Props) {
   const colors = useThemeColors();
   const days = buildDays(subscriptions);
-  const lastIndex = useRef(0);
-
-  function onScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const index = Math.round(
-      event.nativeEvent.contentOffset.x / (CELL_WIDTH + CELL_GAP),
-    );
-    if (index !== lastIndex.current && index >= 0 && index < DAYS) {
-      lastIndex.current = index;
-      haptics.selection();
-    }
-  }
-
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      onScroll={onScroll}
-      scrollEventThrottle={16}
       style={styles.scroll}
       contentContainerStyle={styles.content}
     >
@@ -105,6 +82,7 @@ export function DayStrip({ subscriptions }: Props) {
             ]}
           >
             <Text
+              maxFontSizeMultiplier={1.2}
               style={[
                 styles.weekday,
                 {
@@ -120,7 +98,10 @@ export function DayStrip({ subscriptions }: Props) {
             >
               {format(date, isMonthStart ? "MMM" : "EEEEE")}
             </Text>
-            <Text style={[styles.dayNumber, { color: textColor }]}>
+            <Text
+              maxFontSizeMultiplier={1.2}
+              style={[styles.dayNumber, { color: textColor }]}
+            >
               {format(date, "d")}
             </Text>
             <View style={styles.dots}>
