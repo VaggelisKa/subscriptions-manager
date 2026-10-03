@@ -1,0 +1,51 @@
+{
+  "name": "@subscriptions-manager/ng-native",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "typecheck": "node metro.config.js && ngc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@angular/common": "22.2.1",
+    "@angular/core": "22.2.1",
+    "@angular/forms": "22.2.1",
+    "@angular/router": "22.2.1",
+    "@expo/ui": "~58.0.11",
+    "@ng-native/components": "0.3.0",
+    "@ng-native/device": "0.3.0",
+    "@ng-native/expo": "0.3.0",
+    "@ng-native/fabric": "0.3.0",
+    "@ng-native/metro": "0.3.0",
+    "@ng-native/platform": "0.3.0",
+    "@ng-native/router": "0.3.0",
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@subscriptions-manager/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.97.0",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "expo": "58.0.2",
+    "expo-font": "~58.0.5",
+    "expo-haptics": "~58.0.4",
+    "expo-image": "~58.0.10",
+    "expo-splash-screen": "^58.0.4",
+    "expo-updates": "~58.0.13",
+    "react": "19.3.0",
+    "react-native": "0.88.0-rc.3",
+    "react-native-safe-area-context": "~5.9.1",
+    "react-native-screens": "4.28.0",
+    "react-native-url-polyfill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@angular/compiler-cli": "22.2.1",
+    "@babel/core": "^7.29.7",
+    "@ng-native/testing": "0.3.0",
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}
