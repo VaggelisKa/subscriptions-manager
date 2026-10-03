@@ -9,3 +9,8 @@ nodeLinker: hoisted
 allowBuilds:
   sharp: false
   unrs-resolver: false
+
+# pnpm 11 (used by EAS) rejects packages published in the last 24h. Expo
+# beta SDK bumps routinely pull in same-day @expo/* releases.
+minimumReleaseAgeExclude:
+  - "@expo/*"
