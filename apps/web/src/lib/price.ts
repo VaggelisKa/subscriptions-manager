@@ -41,6 +41,13 @@ export function priceInputValue(price: number | null | undefined) {
  */
 export function toBilledAt(day: string | Date) {
   const value = typeof day === "string" ? day : format(day, "yyyy-MM-dd");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  // Reject days that don't exist ("2026-02-31") instead of rolling them over or throwing.
+  const [year, month, dayOfMonth] = match.slice(1).map(Number);
+  const check = new Date(Date.UTC(year, month - 1, dayOfMonth));
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== dayOfMonth) {
+    return null;
+  }
   return zonedTimeToUtc(`${value}T12:00:00`, "Europe/Copenhagen").toISOString();
 }

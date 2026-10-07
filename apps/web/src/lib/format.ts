@@ -68,6 +68,7 @@ export function formatShortDate(date: Date, from = today()) {
 
 /** "Mon 5 Oct", or "Fri 12 Feb 2027" outside the current year. */
 export function formatDayDate(date: Date, from = today()) {
+  if (isNaN(date.getTime())) return "";
   return format(date, isSameYear(date, from) ? "EEE d MMM" : "EEE d MMM yyyy");
 }
 
