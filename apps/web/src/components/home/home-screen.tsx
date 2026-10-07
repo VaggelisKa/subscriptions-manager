@@ -120,20 +120,24 @@ export function HomeScreen({ subscriptions, categories, email }: Props) {
     setOpen({ sheet: "detail", id, from });
   }
 
-  /** The top bar's Add (and `N`): opens add mode, or returns to Name if it's already open. */
+  /**
+   * The top bar's Add (and `N`): opens add mode, or returns to Name if it's
+   * already open. From a detail, closing the form goes back to it.
+   */
   function addOrFocus() {
-    if (mode?.kind === "add") nameRef.current?.focus();
-    else openForm({});
+    if (mode?.kind === "add") return nameRef.current?.focus();
+    openForm(mode?.kind === "detail" ? { back: { id: mode.id, from: mode.back } } : {});
   }
 
   function startEdit() {
     if (mode?.kind !== "detail" || !detail) return false;
+    setConfirmDeleteId(null);
     openForm({ id: mode.id, back: { id: mode.id, from: mode.back } });
   }
 
   function cancelForm() {
-    if (mode?.kind !== "add") return closeForm();
-    setEmptyFormClosed(true);
+    if (mode?.kind !== "add" || form.back) return closeForm();
+    if (!hasSubscriptions) setEmptyFormClosed(true);
     setOpen({ sheet: "none" });
   }
 
@@ -142,7 +146,8 @@ export function HomeScreen({ subscriptions, categories, email }: Props) {
     if (mode && mode.kind !== "detail" && mode.kind !== "insights") return false;
     const next = index === -1 ? (delta === 1 ? order[0] : undefined) : order[index + delta];
     if (!next) return false;
-    showDetail(next);
+    // Keep the way back to Insights when stepping from it or from a detail opened there.
+    showDetail(next, mode?.kind === "insights" ? "insights" : mode?.kind === "detail" ? mode.back : undefined);
   }
 
   function afterPanelSave(id?: string) {
@@ -161,6 +166,8 @@ export function HomeScreen({ subscriptions, categories, email }: Props) {
     if (from === "insights") return setOpen({ sheet: "insights" });
     const i = selectedId ? order.indexOf(selectedId) : -1;
     const next = i === -1 ? undefined : (order[i + 1] ?? order[i - 1]);
+    // The last row under a day filter is gone: drop the filter rather than show an empty ledger.
+    if (!next) setFilterDay(null);
     setOpen(next ? { sheet: "detail", id: next } : { sheet: "none" });
   }
 
@@ -181,7 +188,8 @@ export function HomeScreen({ subscriptions, categories, email }: Props) {
 
   useHotkeys(
     {
-      n: addOrFocus,
+      // `N` doesn't replace an open edit (focus sits on the panel, so it isn't typing), keeping its changes.
+      n: () => (mode?.kind === "edit" ? false : addOrFocus()),
       ArrowDown: () => step(1),
       ArrowUp: () => step(-1),
       e: startEdit,

@@ -252,15 +252,17 @@ export function SubscriptionForm({
 
   useHotkeys(
     {
+      // While saving, still swallow the key so it can't submit the form natively.
       "Mod+Enter": () => {
-        if (saving) return false;
-        formRef.current?.requestSubmit();
+        if (!saving) formRef.current?.requestSubmit();
       },
     },
     panel,
   );
 
   function submit(formData: FormData) {
+    // Enter in a field can submit again while a save is in flight.
+    if (saving) return;
     setError(null);
     if (!name.trim()) return setError("Give the subscription a name.");
     if (parsedPrice === null) return setError("Enter a price, like 79 or 79,50.");

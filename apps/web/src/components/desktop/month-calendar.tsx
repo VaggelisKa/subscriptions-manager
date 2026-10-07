@@ -95,7 +95,11 @@ export function MonthCalendar({ subscriptions, selectedId, filterDay, onSelectSu
   }
 
   function activate(day: Day) {
-    if (day.charges.length === 1) return onSelectSubscription(day.charges[0].id);
+    if (day.charges.length === 1) {
+      // A day filter could be hiding the subscription that's about to open.
+      if (filterDay) onFilterDay(null);
+      return onSelectSubscription(day.charges[0].id);
+    }
     onFilterDay(filterDay && isSameDay(filterDay, day.date) ? null : day.date);
   }
 
@@ -110,7 +114,11 @@ export function MonthCalendar({ subscriptions, selectedId, filterDay, onSelectSu
             : event.key === "End"
               ? chargeDays.length - 1 - index
               : 0;
-    if (event.key === "Escape") return hideTooltip();
+    if (event.key === "Escape") {
+      // A showing tooltip takes the first Esc, before the inspector or day filter.
+      if (tooltipKey) event.preventDefault();
+      return hideTooltip();
+    }
     if (!step) return;
     // Handled here, so the ledger's ↑/↓ shortcuts don't also fire.
     event.preventDefault();
