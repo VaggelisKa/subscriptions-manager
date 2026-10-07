@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { ChevronDown } from "lucide-react";
 import { Amount } from "@/components/ui/amount";
 import { Segmented } from "@/components/ui/segmented";
@@ -116,15 +116,22 @@ function CategoryRow({ category, period, open, onToggle, onSelect }: RowProps) {
   );
 }
 
+/** The chosen period and expanded categories, kept by the parent so they survive the sheet closing. */
+export type InsightsView = { period: Period; expanded: string[] };
+
+export const initialInsightsView: InsightsView = { period: "month", expanded: [] };
+
 type Props = {
   subscriptions: SubscriptionWithCategory[];
   onSelect: (id: string) => void;
+  view: InsightsView;
+  onViewChange: (view: InsightsView) => void;
 };
 
 /** Spend by category: the period total, a proportion bar and expandable categories. */
-export function Insights({ subscriptions, onSelect }: Props) {
-  const [period, setPeriod] = useState<Period>("month");
-  const [expanded, setExpanded] = useState<string[]>([]);
+export function Insights({ subscriptions, onSelect, view, onViewChange }: Props) {
+  const { period, expanded } = view;
+  const setPeriod = (next: Period) => onViewChange({ ...view, period: next });
 
   if (subscriptions.length === 0) {
     return (
@@ -138,9 +145,10 @@ export function Insights({ subscriptions, onSelect }: Props) {
   const categories = spendByCategory(subscriptions);
 
   const toggle = (key: string) =>
-    setExpanded((keys) =>
-      keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key],
-    );
+    onViewChange({
+      ...view,
+      expanded: expanded.includes(key) ? expanded.filter((k) => k !== key) : [...expanded, key],
+    });
 
   return (
     <div className="pb-6">
