@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "./supabase-server";
+import { parsePrice, toBilledAt } from "./price";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
@@ -26,14 +27,49 @@ export async function loginWithMagicLinkAction(formData: FormData) {
   redirect("/login/confirmation");
 }
 
-export async function addNewSubscription(data: FormData) {
-  const inputs = Object.fromEntries(data) as {
-    name: string;
-    price: string;
-    interval: "week" | "month" | "year";
-    billed_at: string;
-    category?: string;
-  };
+type SubscriptionInputs = {
+  name?: string;
+  price?: string;
+  interval?: string;
+  /** Calendar day ("2026-10-09"); omitted on edits that keep the schedule. */
+  billed_at?: string;
+  id?: string;
+  category?: string;
+};
+
+const INTERVALS = ["week", "month", "year"] as const;
+
+/** Validates the form; returns the row fields or an error message. */
+function parseSubscription(inputs: SubscriptionInputs, requireDate: boolean) {
+  const name = inputs.name?.trim();
+  if (!name) return { message: "Give the subscription a name." } as const;
+
+  const price = parsePrice(inputs.price);
+  if (price === null) {
+    return { message: "Enter a price, like 79 or 79,50." } as const;
+  }
+
+  const interval = INTERVALS.find((i) => i === inputs.interval);
+  if (!interval) return { message: "Choose how often it's billed." } as const;
+
+  const billedAt = inputs.billed_at ? toBilledAt(inputs.billed_at) : null;
+  if ((requireDate || inputs.billed_at) && !billedAt) {
+    return { message: "Pick the date of the next charge." } as const;
+  }
+
+  return {
+    data: {
+      name,
+      price,
+      interval,
+      ...(billedAt ? { billed_at: billedAt } : {}),
+      ...(inputs.category ? { category_id: inputs.category } : {}),
+    },
+  } as const;
+}
+
+export async function addNewSubscription(formData: FormData) {
+  const inputs = Object.fromEntries(formData) as SubscriptionInputs;
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -44,29 +80,17 @@ export async function addNewSubscription(data: FormData) {
     redirect("/login");
   }
 
-  if (!inputs.name) {
-    return { message: "Name of subscription is required" };
-  }
-
-  if (!inputs.price) {
-    return { message: "Price of subscription should be given" };
-  }
-
-  if (!inputs.interval) {
-    return { message: "Interval period should be passed" };
-  }
+  const parsed = parseSubscription(inputs, true);
+  if (!parsed.data) return { message: parsed.message };
 
   const { error } = await supabase.from("subscriptions").insert({
-    name: inputs.name,
-    price: parseFloat(inputs.price),
-    interval: inputs.interval,
-    billed_at: new Date(inputs.billed_at).toUTCString(),
+    ...parsed.data,
+    billed_at: parsed.data.billed_at!,
     user_id: user.id,
-    ...(!!inputs.category?.length && { category_id: inputs.category }),
   });
 
   if (error) {
-    return { message: "Server error" };
+    return { message: "Couldn't save the subscription. Try again." };
   }
 
   revalidatePath("/");
@@ -74,15 +98,13 @@ export async function addNewSubscription(data: FormData) {
   return { success: true };
 }
 
-export async function updateSubscription(data: FormData) {
-  const inputs = Object.fromEntries(data) as {
-    name: string;
-    price: string;
-    interval: "week" | "month" | "year";
-    billed_at: string;
-    id?: string;
-    category?: string;
-  };
+/**
+ * Saves an edit. `billed_at` is only written when the date was changed: the
+ * cron (`/api/update-expired-subs`) advances it, so rewriting it on every
+ * save would shift the schedule. Same rule as the native form.
+ */
+export async function updateSubscription(formData: FormData) {
+  const inputs = Object.fromEntries(formData) as SubscriptionInputs;
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -93,32 +115,19 @@ export async function updateSubscription(data: FormData) {
     redirect("/login");
   }
 
-  if (!inputs.name) {
-    return { message: "Name of subscription is required" };
-  }
+  if (!inputs.id) return { message: "This subscription no longer exists." };
 
-  if (!inputs.price) {
-    return { message: "Price of subscription should be given" };
-  }
-
-  if (!inputs.interval) {
-    return { message: "Interval period should be passed" };
-  }
+  const parsed = parseSubscription(inputs, false);
+  if (!parsed.data) return { message: parsed.message };
 
   const { error } = await supabase
     .from("subscriptions")
-    .update({
-      name: inputs.name,
-      price: parseFloat(inputs.price),
-      interval: inputs.interval,
-      billed_at: new Date(inputs.billed_at).toUTCString(),
-      category_id: inputs.category,
-    })
-    .eq("id", inputs.id ?? "")
+    .update(parsed.data)
+    .eq("id", inputs.id)
     .select();
 
   if (error) {
-    return { message: "Server error" };
+    return { message: "Couldn't save the subscription. Try again." };
   }
 
   revalidatePath("/");
@@ -144,7 +153,7 @@ export async function deleteSubscription(formData: FormData) {
     .eq("id", subscriptionId);
 
   if (error) {
-    return { message: "Server error" };
+    return { message: "Couldn't delete the subscription. Try again." };
   }
 
   revalidatePath("/");
