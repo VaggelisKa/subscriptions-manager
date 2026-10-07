@@ -83,11 +83,14 @@ export async function addNewSubscription(formData: FormData) {
   const parsed = parseSubscription(inputs, true);
   if (!parsed.data) return { message: parsed.message };
 
-  const { error } = await supabase.from("subscriptions").insert({
-    ...parsed.data,
-    billed_at: parsed.data.billed_at!,
-    user_id: user.id,
-  });
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .insert({
+      ...parsed.data,
+      billed_at: parsed.data.billed_at!,
+      user_id: user.id,
+    })
+    .select("id");
 
   if (error) {
     return { message: "Couldn't save the subscription. Try again." };
@@ -95,7 +98,8 @@ export async function addNewSubscription(formData: FormData) {
 
   revalidatePath("/");
 
-  return { success: true };
+  // The new row's id, so the desktop layout can select it.
+  return { success: true, id: data?.[0]?.id as string | undefined };
 }
 
 /**

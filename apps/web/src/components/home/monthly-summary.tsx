@@ -1,10 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { endOfMonth, format } from "date-fns";
 import { Amount } from "@/components/ui/amount";
 import { chargesBetween, today, totalPerMonth } from "@/lib/billing";
 import { formatWholeKr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /** Sum of every charge from today to the end of the month (weekly ones count each time). */
 function stillToPayThisMonth(subscriptions: SubscriptionWithCategory[]) {
@@ -17,14 +18,18 @@ function stillToPayThisMonth(subscriptions: SubscriptionWithCategory[]) {
   );
 }
 
-/** Counts up once per page load; later changes show the new total directly. */
+/**
+ * Counts up once per page load; later changes show the new total directly.
+ * The page renders a mobile and a desktop summary (one is `display: none`),
+ * so only the visible one counts.
+ */
 let hasCounted = false;
 
-function useCountUp(target: number) {
+function useCountUp(target: number, ref: RefObject<HTMLElement | null>) {
   const [value, setValue] = useState<number | null>(null);
 
   useLayoutEffect(() => {
-    if (hasCounted) return;
+    if (hasCounted || !ref.current?.getClientRects().length) return;
     hasCounted = true;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -56,16 +61,29 @@ function useCountUp(target: number) {
  * The headline: what everything costs per month (weekly and yearly prices
  * normalised), and what's left to pay this month.
  */
-export function MonthlySummary({ subscriptions }: { subscriptions: SubscriptionWithCategory[] }) {
+export function MonthlySummary({
+  subscriptions,
+  amountClassName,
+}: {
+  subscriptions: SubscriptionWithCategory[];
+  /** Extra classes for the amount (the desktop rail sets it larger). */
+  amountClassName?: string;
+}) {
+  const ref = useRef<HTMLElement>(null);
   const total = totalPerMonth(subscriptions);
   const remaining = stillToPayThisMonth(subscriptions);
   const month = format(today(), "MMMM");
-  const shown = useCountUp(total);
+  const shown = useCountUp(total, ref);
 
   return (
-    <section aria-label="Monthly total" className="flex flex-col gap-2 px-1 pt-1">
+    <section ref={ref} aria-label="Monthly total" className="flex flex-col gap-2 px-1 pt-1">
       <div role="img" aria-label={`${formatWholeKr(total)} per month`}>
-        <Amount value={shown} whole trailing="/ month" className="[&>span]:align-baseline" />
+        <Amount
+          value={shown}
+          whole
+          trailing="/ month"
+          className={cn("[&>span]:align-baseline", amountClassName)}
+        />
       </div>
       <p className="text-[14px] font-semibold leading-[19px] text-muted-foreground">
         <strong className="font-extrabold text-foreground">{formatWholeKr(remaining)}</strong>

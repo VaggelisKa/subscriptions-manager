@@ -1,9 +1,9 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Option<T extends string> = { value: T; label: string };
+type Option<T extends string> = { value: T; label: string; icon?: ReactNode };
 
 type Props<T extends string> = {
   options: Option<T>[];
@@ -40,6 +40,7 @@ export function Segmented<T extends string>({
             key={option.value}
             className={cn(
               "relative flex h-8 cursor-pointer select-none items-center justify-center rounded-[7px] text-[14px] font-semibold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary",
+              option.icon && "gap-1.5 [&_svg]:size-3.5 [&_svg]:shrink-0",
               checked
                 ? "bg-surface text-foreground shadow-[0_3px_8px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)] dark:bg-[hsl(24_6%_28%)]"
                 : "text-foreground/80 hover:text-foreground",
@@ -53,6 +54,7 @@ export function Segmented<T extends string>({
               checked={checked}
               onChange={() => onChange(option.value)}
             />
+            {option.icon}
             {option.label}
           </label>
         );

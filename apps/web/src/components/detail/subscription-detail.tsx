@@ -5,6 +5,7 @@ import { format, subDays } from "date-fns";
 import { Amount } from "@/components/ui/amount";
 import { Group, SectionHeader } from "@/components/ui/grouped";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
+import { Kbd } from "@/components/ui/kbd";
 import { ChargeTimeline } from "@/components/detail/charge-timeline";
 import { DeleteConfirm } from "@/components/detail/delete-confirm";
 import {
@@ -23,7 +24,36 @@ const HEX = /^#[0-9a-f]{6}$/i;
 type Props = {
   subscription: SubscriptionWithCategory;
   onDeleted: () => void;
+  /** How many upcoming charges to list; more than 3 adds a "next N" label. */
+  upcomingCount?: number;
+  /** The desktop key hints under the delete button (pointer devices only). */
+  showKeyHints?: boolean;
+  /** Colour of the "in N days" label in the timeline. */
+  dueEmphasis?: "primary" | "foreground";
+  /** Controls the inline delete confirmation (so a shortcut can open it); local state when omitted. */
+  confirming?: boolean;
+  onConfirmingChange?: (confirming: boolean) => void;
 };
+
+function KeyHints() {
+  return (
+    <p className="hidden flex-wrap gap-x-3.5 gap-y-1.5 px-0.5 pt-3.5 text-[12.5px] font-semibold leading-[18px] text-muted-foreground [@media(hover:hover)]:flex">
+      <span className="inline-flex items-center gap-[5px]">
+        <Kbd>↑</Kbd>
+        <Kbd>↓</Kbd> next / previous
+      </span>
+      <span className="inline-flex items-center gap-[5px]">
+        <Kbd>E</Kbd> edit
+      </span>
+      <span className="inline-flex items-center gap-[5px]">
+        <Kbd>⌫</Kbd> delete
+      </span>
+      <span className="inline-flex items-center gap-[5px]">
+        <Kbd>Esc</Kbd> close
+      </span>
+    </p>
+  );
+}
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -37,8 +67,21 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 /** The detail sheet: price, upcoming charges and history for one subscription. */
-export function SubscriptionDetail({ subscription: sub, onDeleted }: Props) {
-  const [confirming, setConfirming] = useState(false);
+export function SubscriptionDetail({
+  subscription: sub,
+  onDeleted,
+  upcomingCount = 3,
+  showKeyHints = false,
+  dueEmphasis = "primary",
+  confirming: confirmingProp,
+  onConfirmingChange,
+}: Props) {
+  const [confirmingState, setConfirmingState] = useState(false);
+  const confirming = confirmingProp ?? confirmingState;
+  const setConfirming = (next: boolean) => {
+    setConfirmingState(next);
+    onConfirmingChange?.(next);
+  };
 
   const price = sub.price ?? 0;
   const category = sub.categories;
@@ -49,7 +92,7 @@ export function SubscriptionDetail({ subscription: sub, onDeleted }: Props) {
       ? `${formatWholeKr(monthlyEquivalent(price, sub.interval))} a month`
       : `${formatWholeKr(yearlyEquivalent(price, sub.interval))} a year`;
 
-  const upcoming = upcomingChargeDates(sub.billed_at, sub.interval, 3);
+  const upcoming = upcomingChargeDates(sub.billed_at, sub.interval, upcomingCount);
 
   // Charges on the schedule since tracking started. Price or date edits
   // aren't recorded, hence the "≈".
@@ -97,8 +140,12 @@ export function SubscriptionDetail({ subscription: sub, onDeleted }: Props) {
         </p>
       </div>
 
-      <SectionHeader title="Upcoming charges" as="h3" />
-      <ChargeTimeline dates={upcoming} price={price} />
+      <SectionHeader
+        title="Upcoming charges"
+        as="h3"
+        trailing={upcomingCount > 3 ? `next ${upcomingCount}` : undefined}
+      />
+      <ChargeTimeline dates={upcoming} price={price} emphasis={dueEmphasis} />
 
       <dl className="mt-3.5">
         <Group separatorInset={16}>
@@ -128,6 +175,8 @@ export function SubscriptionDetail({ subscription: sub, onDeleted }: Props) {
           Delete subscription
         </button>
       )}
+
+      {showKeyHints ? <KeyHints /> : null}
     </div>
   );
 }
