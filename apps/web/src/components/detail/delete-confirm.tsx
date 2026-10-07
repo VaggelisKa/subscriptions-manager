@@ -32,7 +32,7 @@ export function DeleteConfirm({ id, name, onCancel, onDeleted, className }: Prop
 
   return (
     <div
-      role="alertdialog"
+      role="group"
       aria-labelledby={`${labelId}-title`}
       aria-describedby={`${labelId}-desc`}
       className={cn("rounded-xl bg-surface p-4", className)}
