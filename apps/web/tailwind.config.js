@@ -22,7 +22,7 @@ module.exports = {
         primary: {
           DEFAULT: color("primary"),
           foreground: color("primary-foreground"),
-          // Fill for orange buttons with white text (darker than the accent).
+          // Fill for orange buttons with white text (a step deeper than the accent).
           button: color("primary-button"),
           "button-hover": color("primary-button-hover"),
           "button-active": color("primary-button-active"),
