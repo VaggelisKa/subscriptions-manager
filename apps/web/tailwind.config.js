@@ -88,11 +88,17 @@ module.exports = {
           to: { transform: "translateY(100%)" },
         },
         skeleton: { "0%, 100%": { opacity: "0.5" }, "50%": { opacity: "0.85" } },
+        // A newly added ledger row: a stronger tint settling into the selected one.
+        "row-flash": {
+          "0%, 35%": { backgroundColor: "hsl(var(--primary) / 0.3)" },
+          "100%": { backgroundColor: "hsl(var(--primary-soft))" },
+        },
       },
       animation: {
         "sheet-up": "sheet-up 320ms cubic-bezier(0.32, 0.72, 0, 1)",
         "sheet-down": "sheet-down 220ms cubic-bezier(0.32, 0.72, 0, 1)",
         skeleton: "skeleton 2.4s ease-in-out infinite",
+        "row-flash": "row-flash 1.2s ease-out",
       },
     },
   },

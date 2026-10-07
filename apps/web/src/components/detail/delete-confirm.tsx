@@ -10,11 +10,13 @@ type Props = {
   name: string;
   onCancel: () => void;
   onDeleted: () => void;
+  /** Esc cancels while focus is inside (the desktop inspector; sheets close on Esc instead). */
+  cancelOnEscape?: boolean;
   className?: string;
 };
 
 /** Inline confirmation before deleting, in place of the native alert. */
-export function DeleteConfirm({ id, name, onCancel, onDeleted, className }: Props) {
+export function DeleteConfirm({ id, name, onCancel, onDeleted, cancelOnEscape = false, className }: Props) {
   const labelId = useId();
   const [error, setError] = useState<string | null>(null);
   const [deleting, startDelete] = useTransition();
@@ -35,6 +37,15 @@ export function DeleteConfirm({ id, name, onCancel, onDeleted, className }: Prop
       role="group"
       aria-labelledby={`${labelId}-title`}
       aria-describedby={`${labelId}-desc`}
+      onKeyDown={
+        cancelOnEscape
+          ? (event) => {
+              if (event.key !== "Escape" || deleting) return;
+              event.preventDefault();
+              onCancel();
+            }
+          : undefined
+      }
       className={cn("rounded-xl bg-surface p-4", className)}
     >
       <p id={`${labelId}-title`} className="text-headline">

@@ -119,4 +119,33 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /*
+   * Desktop ledger columns follow the ledger's own width (it narrows when
+   * the inspector opens): Name · Next charge · Price, plus Category from 660px.
+   */
+  .ledger {
+    container: ledger / inline-size;
+  }
+
+  .ledger-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px 118px;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ledger-category {
+    display: none;
+  }
+
+  @container ledger (min-width: 660px) {
+    .ledger-cols {
+      grid-template-columns: minmax(0, 1fr) 150px 140px 132px;
+    }
+
+    .ledger-category {
+      display: block;
+    }
+  }
 }

@@ -2,10 +2,10 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const QUICK_ADD = ["Netflix", "Spotify", "Viaplay", "TV 2 Play"];
+export const QUICK_ADD = ["Netflix", "Spotify", "Viaplay", "TV 2 Play"];
 
 /** Placeholder row hinting at what a tracked subscription will look like. */
-function GhostRow({ className, plus = false }: { className?: string; plus?: boolean }) {
+export function GhostRow({ className, plus = false }: { className?: string; plus?: boolean }) {
   return (
     <div className={cn("flex items-center gap-3 rounded-[20px] bg-surface px-3.5 py-[11px]", className)}>
       <span

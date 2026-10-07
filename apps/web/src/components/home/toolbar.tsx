@@ -1,7 +1,6 @@
 "use client";
 
 import { Ellipsis, LogOut, Monitor, Moon, Plus, Sun } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import {
@@ -13,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ToolbarButton, ToolbarGroup } from "@/components/ui/toolbar-button";
-import { supabaseClient } from "@/lib/supabase-client";
+import { useSignOut } from "@/lib/use-sign-out";
 
 type Props = {
   email: string | undefined;
@@ -24,7 +23,7 @@ type Props = {
 const noop = () => () => {};
 
 /** Filled bars, like SF Symbols' `chart.bar.fill` used by the native app. */
-function ChartBarsIcon() {
+export function ChartBarsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <rect x="3" y="10" width="5" height="11" rx="1.6" />
@@ -39,16 +38,11 @@ function ChartBarsIcon() {
  * Insights on the left; add and the ⋯ menu (appearance, sign out) on the right.
  */
 export function Toolbar({ email, onInsights, onAdd }: Props) {
-  const router = useRouter();
+  const signOut = useSignOut();
   const { theme, resolvedTheme, setTheme } = useTheme();
   // The theme is only known in the browser.
   const mounted = useSyncExternalStore(noop, () => true, () => false);
   const isDark = mounted && resolvedTheme === "dark";
-
-  async function signOut() {
-    await supabaseClient.auth.signOut({ scope: "global" });
-    router.replace("/login");
-  }
 
   return (
     <div className="pointer-events-none sticky top-0 z-30 -mx-4 flex items-center justify-between px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] sm:-mx-1 sm:px-1 sm:pt-6">

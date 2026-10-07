@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 type Props = {
   dates: Date[];
   price: number;
+  /** Colour of the "in N days" label: orange on mobile, bold foreground on desktop. */
+  emphasis?: "primary" | "foreground";
 };
 
 /** Next charges as a vertical timeline: dot + connecting line per row. */
-export function ChargeTimeline({ dates, price }: Props) {
+export function ChargeTimeline({ dates, price, emphasis = "primary" }: Props) {
   return (
     <ol className="rounded-xl bg-surface py-1">
       {dates.map((date, i) => {
@@ -38,7 +40,11 @@ export function ChargeTimeline({ dates, price }: Props) {
             <span
               className={cn(
                 "text-[15px] font-bold leading-5 tabular-nums",
-                soon ? "text-primary-text" : "text-muted-foreground",
+                soon
+                  ? emphasis === "primary"
+                    ? "text-primary-text"
+                    : "font-extrabold text-foreground"
+                  : "text-muted-foreground",
               )}
             >
               {showDue ? formatDueLabel(date) : formatKr(price)}
