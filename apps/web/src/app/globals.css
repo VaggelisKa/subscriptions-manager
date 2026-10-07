@@ -77,6 +77,18 @@
     @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
   }
 
+  /*
+   * iOS Safari zooms the page into any text field under 16px on focus.
+   * Preflight sizes fields at 100% of their parent; never let that drop
+   * below 16px. Fields with their own text-* size must keep it >= 16px.
+   * (Pinch-zoom stays enabled: don't set maximum-scale instead.)
+   */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+
   /* Menus, popovers and sheets take focus as containers; their items show
      focus with a fill instead of a ring. */
   [role="menu"]:focus-visible,
