@@ -2,7 +2,7 @@
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ToolbarButton } from "@/components/ui/toolbar-button";
 
@@ -35,12 +35,22 @@ export function Sheet({
   children,
   className,
 }: SheetProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none" />
         <DialogPrimitive.Content
+          ref={contentRef}
           {...(description ? {} : { "aria-describedby": undefined })}
+          // Don't move focus into the sheet's fields on open: on phones that
+          // pops the keyboard up before the sheet has even finished sliding
+          // in. Focus the sheet itself instead so screen readers and keyboard
+          // users still land inside the dialog; tap a field when ready.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            contentRef.current?.focus({ preventScroll: true });
+          }}
           className={cn(
             "fixed inset-x-2 bottom-2 z-50 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-sheet bg-background shadow-sheet outline-none",
             "data-[state=open]:animate-sheet-up data-[state=closed]:animate-sheet-down",

@@ -202,7 +202,6 @@ export function SubscriptionFormSheet({
               autoComplete="off"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              autoFocus={!isEdit && !initialName}
               className="h-[52px] w-full bg-transparent px-4 text-[17px] outline-none placeholder:text-faint focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             {categories.length > 0 ? (
