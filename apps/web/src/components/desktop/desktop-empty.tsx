@@ -32,7 +32,7 @@ export function DesktopEmpty({ formOpen, onAdd }: Props) {
         <button
           type="button"
           onClick={() => onAdd()}
-          className="mt-[22px] inline-flex h-11 items-center gap-2 rounded-full bg-primary-button px-5 text-[16px] font-extrabold text-primary-foreground shadow-float transition-[transform,background-color] duration-150 hover:bg-primary-button-hover active:bg-primary-button-active active:scale-95"
+          className="mt-[22px] inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[16px] font-extrabold text-primary-foreground shadow-float transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-95"
         >
           <Plus aria-hidden className="size-[18px]" strokeWidth={2.75} />
           Add subscription
