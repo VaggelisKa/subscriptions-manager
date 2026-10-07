@@ -270,7 +270,12 @@ export function SubscriptionFormSheet({
                 label="Interval"
                 options={INTERVALS.map((value) => ({ value, label: intervalName[value] }))}
                 value={interval}
-                onChange={setInterval}
+                onChange={(next) => {
+                  setInterval(next);
+                  // Keep the shown next charge in step with the schedule the
+                  // server will compute from the unchanged anchor.
+                  if (subscription && !dateChanged) setDate(nextChargeDate(subscription.billed_at, next));
+                }}
               />
             </div>
             <div aria-hidden className="ml-4 h-px bg-separator" />
