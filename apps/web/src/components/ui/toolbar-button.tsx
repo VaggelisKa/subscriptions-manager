@@ -17,9 +17,9 @@ export const ToolbarButton = forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         type={type}
         className={cn(
-          "inline-flex h-11 min-w-11 select-none items-center justify-center rounded-full px-2.5 text-[17px] font-semibold transition-[transform,opacity] duration-150 active:scale-95 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-[22px] [&_svg]:shrink-0",
+          "inline-flex h-11 min-w-11 select-none items-center justify-center rounded-full px-2.5 text-[17px] font-semibold transition-[transform,opacity,background-color] duration-150 active:scale-95 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-[22px] [&_svg]:shrink-0",
           variant === "glass" && "glass text-foreground shadow-float",
-          variant === "prominent" && "bg-primary text-primary-foreground shadow-float hover:opacity-90",
+          variant === "prominent" && "bg-primary-button text-primary-foreground shadow-float hover:bg-primary-button-hover active:bg-primary-button-active",
           variant === "bare" && "text-foreground hover:bg-fill",
           className,
         )}

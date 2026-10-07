@@ -43,7 +43,7 @@ function Calendar({
           "size-10 rounded-full text-[16px] font-semibold tabular-nums aria-selected:opacity-100",
         ),
         day_selected:
-          "!bg-primary font-extrabold !text-primary-foreground hover:!bg-primary",
+          "!bg-primary-button font-extrabold !text-primary-foreground hover:!bg-primary-button-hover",
         day_today: "text-primary-text font-extrabold",
         day_outside: "text-faint",
         day_disabled: "text-faint opacity-50",

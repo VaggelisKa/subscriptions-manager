@@ -558,7 +558,7 @@ export function SubscriptionForm({
               type="submit"
               disabled={saving}
               aria-keyshortcuts={isMac ? "Meta+Enter" : "Control+Enter"}
-              className="inline-flex h-[38px] items-center gap-2 rounded-full bg-primary pl-3.5 pr-2 text-[15px] font-extrabold text-primary-foreground shadow-float transition-opacity hover:opacity-90 disabled:opacity-70"
+              className="inline-flex h-[38px] items-center gap-2 rounded-full bg-primary-button pl-3.5 pr-2 text-[15px] font-extrabold text-primary-foreground shadow-float transition-colors hover:bg-primary-button-hover active:bg-primary-button-active disabled:opacity-70"
             >
               {saving ? <Loader2 aria-hidden className="size-[18px] animate-spin" /> : null}
               {isEdit ? "Save changes" : "Add subscription"}

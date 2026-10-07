@@ -16,8 +16,14 @@
     --muted-foreground: 25 5.3% 44.7%;
     --faint: 24 5.4% 63.9%;
     --primary: 24.6 95% 53.1%;
-    /* #1c1917: dark text on orange fills reads at 6.2:1 (white is 2.8:1). */
-    --primary-foreground: 24 9.8% 10%;
+    --primary-foreground: 60 9.1% 97.8%;
+    /*
+     * Filled orange buttons use a darker orange than the accent so white text
+     * reads at 5:1 (#c2410c; #f97316 is 2.8:1). Hover and press go a step darker.
+     */
+    --primary-button: 17.5 88.3% 40.4%;
+    --primary-button-hover: 15 79.1% 33.7%;
+    --primary-button-active: 15 74.6% 27.8%;
     /* Orange for text on surfaces; tuned per scheme for contrast. */
     --primary-text: 17.5 88.3% 40.4%;
     --primary-soft: 24.6 95% 53.1% / 0.12;
@@ -41,7 +47,10 @@
     --muted-foreground: 24 5.4% 63.9%;
     --faint: 25 5.3% 44.7%;
     --primary: 20.5 90.2% 48.2%;
-    --primary-foreground: 24 9.8% 10%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --primary-button: 17.5 88.3% 40.4%;
+    --primary-button-hover: 15 79.1% 33.7%;
+    --primary-button-active: 15 74.6% 27.8%;
     --primary-text: 27 96% 61%;
     --primary-soft: 20.5 90.2% 48.2% / 0.2;
     --fill: 24 5.4% 63.9% / 0.16;

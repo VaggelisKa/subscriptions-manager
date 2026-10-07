@@ -69,7 +69,7 @@ export function TopBar({ email, insightsOpen, onInsights, onAdd }: Props) {
         onClick={onAdd}
         title="New subscription (N)"
         aria-keyshortcuts="N"
-        className="inline-flex h-[38px] select-none items-center gap-2 whitespace-nowrap rounded-full bg-primary pl-3.5 pr-2 text-[15px] font-extrabold text-primary-foreground shadow-float transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-95"
+        className="inline-flex h-[38px] select-none items-center gap-2 whitespace-nowrap rounded-full bg-primary-button pl-3.5 pr-2 text-[15px] font-extrabold text-primary-foreground shadow-float transition-[transform,background-color] duration-150 hover:bg-primary-button-hover active:bg-primary-button-active active:scale-95"
       >
         <Plus aria-hidden className="size-[18px]" strokeWidth={2.75} />
         Add subscription
