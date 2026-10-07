@@ -18,13 +18,20 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const [{ data: subscriptions }, { data: categories }] = await Promise.all([
-    supabase
-      .from("subscriptions")
-      .select("id, name, price, billed_at, interval, created_at, description, user_id, categories(*)")
-      .order("billed_at", { ascending: true }),
-    supabase.from("categories").select("*").order("name"),
-  ]);
+  const [{ data: subscriptions, error: subscriptionsError }, { data: categories, error: categoriesError }] =
+    await Promise.all([
+      supabase
+        .from("subscriptions")
+        .select("id, name, price, billed_at, interval, created_at, description, user_id, categories(*)")
+        .order("billed_at", { ascending: true }),
+      supabase.from("categories").select("*").order("name"),
+    ]);
+
+  // A failed load must not look like an empty account: let error.tsx offer a retry.
+  const loadError = subscriptionsError ?? categoriesError;
+  if (loadError) {
+    throw new Error(`Couldn't load subscriptions: ${loadError.message}`);
+  }
 
   return (
     <HomeScreen
