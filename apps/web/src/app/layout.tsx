@@ -1,15 +1,22 @@
-import { cn } from "@/lib/utils";
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
-import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
-const font = Nunito({ subsets: ["latin"] });
+// Nunito with the heavy weights (800, 900) the native redesign uses for amounts and titles.
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Subscriptions manager",
   description: "Register and track your subscriptions",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f5f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0a09" },
+  ],
 };
 
 export default function RootLayout({
@@ -18,11 +25,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn(font.className)}>
+    <html lang="en" className={nunito.variable} suppressHydrationWarning>
+      <body className="min-h-dvh font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <main className="px-6 py-12 md:mx-auto md:max-w-4xl">{children}</main>
-          <Toaster />
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>

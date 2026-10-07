@@ -2,67 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens from the native app (`apps/native/src/lib/theme.ts`).
+ * Values are HSL channels so Tailwind opacity modifiers work; the two
+ * translucent fills carry their own alpha.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Grouped page background; raised content sits on `surface`. */
+    --background: 60 4.8% 95.9%;
+    --surface: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
+    --muted-foreground: 25 5.3% 44.7%;
+    --faint: 24 5.4% 63.9%;
     --primary: 24.6 95% 53.1%;
     --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
-    --destructive: 0 84.2% 60.2%;
+    /* Orange for text on surfaces; tuned per scheme for contrast. */
+    --primary-text: 17.5 88.3% 40.4%;
+    --primary-soft: 24.6 95% 53.1% / 0.12;
+    /* Translucent fill for chips, segmented controls and placeholders. */
+    --fill: 25 5.3% 44.7% / 0.12;
+    --separator: 20 5.9% 90%;
+    --destructive: 0 72.2% 47%;
     --destructive-foreground: 60 9.1% 97.8%;
     --success: 121 35% 51%;
     --success-foreground: 60 9.1% 97.8%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 24.6 95% 53.1%;
-    --radius: 0.75rem;
+
+    /* Floating chrome (toolbar buttons, menus) is glass over the content. */
+    --glass: 0 0% 100% / 0.72;
+    --tile-alpha: 14%;
   }
 
   .dark {
     --background: 20 14.3% 4.1%;
+    --surface: 24 9.8% 10%;
     --foreground: 60 9.1% 97.8%;
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --faint: 25 5.3% 44.7%;
     --primary: 20.5 90.2% 48.2%;
     --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --primary-text: 27 96% 61%;
+    --primary-soft: 20.5 90.2% 48.2% / 0.2;
+    --fill: 24 5.4% 63.9% / 0.16;
+    --separator: 12 6.5% 15.1%;
     --destructive: 0 72.2% 50.6%;
     --destructive-foreground: 60 9.1% 97.8%;
     --success: 116 46% 49%;
     --success-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --ring: 20.5 90.2% 48.2%;
+
+    --glass: 24 9.8% 14% / 0.72;
+    --tile-alpha: 24%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-separator;
   }
 
   html {
     -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-body text-foreground antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Menus, popovers and sheets take focus as containers; their items show
+     focus with a fill instead of a ring. */
+  [role="menu"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="menuitemradio"]:focus-visible,
+  [role="dialog"]:focus-visible,
+  [data-radix-popper-content-wrapper] > :focus-visible {
+    @apply ring-0 ring-offset-0;
+  }
+}
+
+@layer components {
+  /* A category colour (`--tile`, user data) as a soft tint behind its letter or dot. */
+  .tile-tint {
+    background-color: color-mix(in srgb, var(--tile) var(--tile-alpha), transparent);
+  }
+
+  .glass {
+    background-color: hsl(var(--glass));
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

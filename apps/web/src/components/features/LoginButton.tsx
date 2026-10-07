@@ -8,9 +8,9 @@ export function LoginButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button aria-disabled={pending} type="submit">
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {pending ? "Sending..." : "Send magic link"}
+    <Button aria-disabled={pending} type="submit" className="mt-2">
+      {pending ? <Loader2 aria-hidden className="size-5 animate-spin" /> : null}
+      {pending ? "Sending link…" : "Email me a sign-in link"}
     </Button>
   );
 }

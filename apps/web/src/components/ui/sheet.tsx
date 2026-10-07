@@ -1,142 +1,80 @@
 "use client";
 
-import * as React from "react";
-import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { Cross2Icon } from "@radix-ui/react-icons";
-import { cva, type VariantProps } from "class-variance-authority";
-
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/lib/hooks/useIsMobile";
+import { ToolbarButton } from "@/components/ui/toolbar-button";
 
-const Sheet = SheetPrimitive.Root;
-
-const SheetTrigger = SheetPrimitive.Trigger;
-
-const SheetClose = SheetPrimitive.Close;
-
-const SheetPortal = SheetPrimitive.Portal;
-
-const SheetOverlay = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  />
-));
-SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
-
-const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
-  {
-    variants: {
-      side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
-        bottom:
-          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
-        right:
-          "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
-      },
-    },
-    defaultVariants: {
-      side: "right",
-    },
-  },
-);
-
-interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
-
-const SheetContent = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Content>,
-  SheetContentProps
->(({ side = "bottom", className, children, ...props }, ref) => {
-  const isMobile = useIsMobile();
-
-  return (
-    <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Content
-        ref={ref}
-        className={cn(
-          sheetVariants({ side: isMobile ? "bottom" : "right" }),
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <SheetPrimitive.Close className="absolute right-6 top-6 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-          <Cross2Icon className="h-6 w-6" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
-      </SheetPrimitive.Content>
-    </SheetPortal>
-  );
-});
-SheetContent.displayName = SheetPrimitive.Content.displayName;
-
-const SheetHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
-      className,
-    )}
-    {...props}
-  />
-);
-SheetHeader.displayName = "SheetHeader";
-
-const SheetFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("", className)} {...props} />
-);
-SheetFooter.displayName = "SheetFooter";
-
-const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold text-foreground", className)}
-    {...props}
-  />
-));
-SheetTitle.displayName = SheetPrimitive.Title.displayName;
-
-const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-));
-SheetDescription.displayName = SheetPrimitive.Description.displayName;
-
-export {
-  Sheet,
-  SheetPortal,
-  SheetOverlay,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
+type SheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Accessible title; shown in the header unless `hideTitle`. */
+  title: string;
+  hideTitle?: boolean;
+  description?: string;
+  /** Buttons on the right of the header (Edit, Save, …). */
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
 };
+
+/**
+ * The native form sheet, on the web: a card that slides up from the bottom
+ * on phones (with a grabber, inset from the screen edges) and a centred
+ * modal card on larger screens. Header: a round close button on the left,
+ * the title in the middle, actions on the right.
+ */
+export function Sheet({
+  open,
+  onOpenChange,
+  title,
+  hideTitle = false,
+  description,
+  actions,
+  children,
+  className,
+}: SheetProps) {
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none" />
+        <DialogPrimitive.Content
+          {...(description ? {} : { "aria-describedby": undefined })}
+          className={cn(
+            "fixed inset-x-2 bottom-2 z-50 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-sheet bg-background shadow-sheet outline-none",
+            "data-[state=open]:animate-sheet-up data-[state=closed]:animate-sheet-down",
+            "sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[min(780px,calc(100dvh-4rem))] sm:w-full sm:max-w-[480px]",
+            "sm:data-[state=open]:animate-in sm:data-[state=closed]:animate-out sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
+            "motion-reduce:animate-none sm:motion-reduce:animate-none",
+            className,
+          )}
+        >
+          <div aria-hidden className="mx-auto mt-1.5 h-[5px] w-9 shrink-0 rounded-full bg-faint/60 sm:hidden" />
+          <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 pb-2 pt-2.5 sm:pt-4">
+            <DialogPrimitive.Close asChild>
+              <ToolbarButton aria-label="Close" className="justify-self-start">
+                <X strokeWidth={2.25} />
+              </ToolbarButton>
+            </DialogPrimitive.Close>
+            {hideTitle ? (
+              <span aria-hidden />
+            ) : (
+              <DialogPrimitive.Title className="truncate text-center text-[17px] font-extrabold leading-[22px]">
+                {title}
+              </DialogPrimitive.Title>
+            )}
+            <div className="flex items-center gap-2 justify-self-end">{actions}</div>
+          </header>
+          {hideTitle ? <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title> : null}
+          {description ? (
+            <DialogPrimitive.Description className="sr-only">{description}</DialogPrimitive.Description>
+          ) : null}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            {children}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
