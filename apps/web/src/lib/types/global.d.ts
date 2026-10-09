@@ -3,7 +3,7 @@ import type {
   Subscription as Sub,
   SubscriptionWithCategory as SubWithCat,
   Category as Cat,
-} from "@subscriptions-manager/shared";
+} from "@subscriptions-manager/shared/types";
 
 declare global {
   type Database = DB;

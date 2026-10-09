@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import { findBrand } from "@/lib/brands";
+import { findBrand } from "@subscriptions-manager/shared/brands";
+import { brandIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -36,7 +37,7 @@ export function SubscriptionTile({ name, color, size = 40, className }: Props) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- tiny static SVG glyph */}
         <img
-          src={brand.icon}
+          src={brandIcons[brand.slug]}
           alt=""
           width={Math.round(size * 0.55)}
           height={Math.round(size * 0.55)}

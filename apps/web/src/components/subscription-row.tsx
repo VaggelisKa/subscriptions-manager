@@ -6,7 +6,7 @@ import {
   intervalLabel,
   intervalSuffix,
   isDueSoon,
-} from "@/lib/format";
+} from "@subscriptions-manager/shared/format";
 
 type Props = {
   subscription: SubscriptionWithCategory;

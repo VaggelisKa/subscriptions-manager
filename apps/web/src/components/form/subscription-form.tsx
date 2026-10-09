@@ -27,9 +27,9 @@ import { SubscriptionTile } from "@/components/ui/subscription-tile";
 import { ToolbarButton } from "@/components/ui/toolbar-button";
 import { DeleteConfirm } from "@/components/detail/delete-confirm";
 import { addNewSubscription, updateSubscription } from "@/lib/actions";
-import { monthlyEquivalent, nextChargeDate, today, yearlyEquivalent } from "@/lib/billing";
-import { formatNumber, formatWholeKr, intervalName, intervalSuffix } from "@/lib/format";
-import { parsePrice, priceInputValue } from "@/lib/price";
+import { monthlyEquivalent, nextChargeDate, today, yearlyEquivalent } from "@subscriptions-manager/shared/billing";
+import { formatNumber, formatWholeKr, intervalName, intervalSuffix } from "@subscriptions-manager/shared/format";
+import { parsePrice, priceInputValue } from "@subscriptions-manager/shared/price";
 import { useHotkeys } from "@/lib/use-hotkeys";
 import { cn } from "@/lib/utils";
 

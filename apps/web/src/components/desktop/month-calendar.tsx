@@ -13,8 +13,8 @@ import {
   startOfWeek,
 } from "date-fns";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
-import { chargesBetween, today } from "@/lib/billing";
-import { formatDayDate, formatKr } from "@/lib/format";
+import { chargesBetween, today } from "@subscriptions-manager/shared/billing";
+import { formatDayDate, formatKr } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatNumber, formatWholeNumber } from "@/lib/format";
+import { formatNumber, formatWholeNumber } from "@subscriptions-manager/shared/format";
 
 type Props = {
   value: number;

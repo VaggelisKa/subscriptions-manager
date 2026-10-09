@@ -1,6 +1,6 @@
 // Ported from apps/native/src/components/insights/spend-by-category.ts.
 
-import { monthlyEquivalent } from "@/lib/billing";
+import { monthlyEquivalent } from "@subscriptions-manager/shared/billing";
 
 export type Period = "week" | "month" | "year";
 

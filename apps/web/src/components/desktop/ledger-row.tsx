@@ -1,6 +1,6 @@
 import { differenceInCalendarDays } from "date-fns";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
-import { monthlyEquivalent, today } from "@/lib/billing";
+import { monthlyEquivalent, today } from "@subscriptions-manager/shared/billing";
 import {
   formatDayDate,
   formatDueLabel,
@@ -9,7 +9,7 @@ import {
   intervalLabel,
   intervalSuffix,
   isDueSoon,
-} from "@/lib/format";
+} from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 const HEX = /^#[0-9a-f]{6}$/i;

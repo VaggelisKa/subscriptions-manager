@@ -5,8 +5,8 @@ import { ChevronDown } from "lucide-react";
 import { Amount } from "@/components/ui/amount";
 import { Segmented } from "@/components/ui/segmented";
 import { SubscriptionRow } from "@/components/subscription-row";
-import { nextChargeDate, totalPerMonth } from "@/lib/billing";
-import { formatWholeKr, formatWholeNumber, intervalSuffix } from "@/lib/format";
+import { nextChargeDate, totalPerMonth } from "@subscriptions-manager/shared/billing";
+import { formatWholeKr, formatWholeNumber, intervalSuffix } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 import {
   periodFactor,
