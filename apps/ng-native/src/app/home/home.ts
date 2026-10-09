@@ -230,9 +230,13 @@ export class Home {
     if (!sure) return;
 
     this.deleting.set(true);
-    const result = await this.auth.deleteAccount(() => this.askForPassword());
-    this.passwordPrompt.set(null);
-    this.deleting.set(false);
+    let result: Awaited<ReturnType<Auth["deleteAccount"]>>;
+    try {
+      result = await this.auth.deleteAccount(() => this.askForPassword());
+    } finally {
+      this.passwordPrompt.set(null);
+      this.deleting.set(false);
+    }
     if (result.cancelled) return;
     if (result.error) {
       this.haptics.notify("error");
@@ -260,6 +264,10 @@ export class Home {
         return;
       }
       confirmed = true;
+    } catch (e) {
+      console.warn("Re-authentication failed:", e);
+      this.haptics.notify("error");
+      this.passwordError.set("Couldn't verify password. Try again.");
     } finally {
       // Stays open, busy, while the deletion is retried.
       if (!confirmed) this.passwordBusy.set(false);
