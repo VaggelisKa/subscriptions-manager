@@ -103,9 +103,9 @@ export async function addNewSubscription(formData: FormData) {
 }
 
 /**
- * Saves an edit. `billed_at` is only written when the date was changed: the
- * cron (`/api/update-expired-subs`) advances it, so rewriting it on every
- * save would shift the schedule. Same rule as the native form.
+ * Saves an edit. `billed_at` is the anchor every charge date is computed
+ * from, so it's only written when the user picked a new date. Same rule as
+ * the native form.
  */
 export async function updateSubscription(formData: FormData) {
   const inputs = Object.fromEntries(formData) as SubscriptionInputs;
