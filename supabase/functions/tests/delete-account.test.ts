@@ -2,7 +2,8 @@
 // serves the function twice and sets DELETE_ACCOUNT_TEST_MODE:
 //   gateway        verify_jwt = true (config.toml) and the real local secret key.
 //   admin-failure  --no-verify-jwt and SB_SECRET_KEY = the publishable key, so every token reaches the
-//                  function's own checks and the Admin API delete fails.
+//                  function's own checks (which use the publishable key, so still work) and only the
+//                  Admin API delete fails.
 // Env: SUPABASE_URL, SB_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY, JWT_SECRET (all from `supabase status -o env`),
 // ALLOWED_ORIGIN (listed in the served ALLOWED_ORIGINS), EDGE_RUNTIME_URL (the edge runtime without Kong,
 // whose CORS plugin rewrites Access-Control-Allow-Origin locally; required by the gateway CORS tests).
@@ -346,7 +347,7 @@ failureTest("stale or non-password/otp sign-in is still checked before the Admin
   }
 });
 
-failureTest("Admin API error → 500 delete_failed with no detail; nothing deleted", async () => {
+failureTest("Admin API error (broken SB_SECRET_KEY) → 500 delete_failed, not 401; nothing deleted", async () => {
   const user = await createUser(["Kept A", "Kept B"]);
   try {
     // A genuine fresh token and a sign-in 9 minutes ago both pass the recency check and hit the Admin API.

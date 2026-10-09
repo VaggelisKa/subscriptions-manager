@@ -2,7 +2,8 @@
 # Runs the delete-account Deno tests against the local stack (`supabase start` must be running).
 # Two passes, each behind its own `supabase functions serve` (see delete-account.test.ts):
 #   gateway        config.toml settings (verify_jwt = true) and the local sb_secret_… key
-#   admin-failure  --no-verify-jwt and the publishable key as SB_SECRET_KEY
+#   admin-failure  --no-verify-jwt and the publishable key as SB_SECRET_KEY (token checks use the
+#                  platform's SUPABASE_ANON_KEY, so only the Admin API delete fails)
 # `functions serve` replaces the stack's edge runtime container while it runs and removes it on exit.
 # Overrides: SUPABASE (CLI command), DOCKER (docker command), DENO, EXTRA_FUNCTIONS_ENV (file whose
 # lines are appended to the generated serve env file).

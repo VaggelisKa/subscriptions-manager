@@ -19,12 +19,15 @@ Deno.serve(async (req) => {
   const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!jwt) return json({ code: "unauthorized" }, 401);
 
-  // The `sb_secret_…` key, set with `supabase secrets set SB_SECRET_KEY=…`.
-  // The legacy service_role key is never used here.
+  // The caller is verified with the publishable key (an optional `SB_PUBLISHABLE_KEY` secret, else
+  // the platform's SUPABASE_ANON_KEY), so a broken secret key surfaces as delete_failed, not a 401.
+  // The `sb_secret_…` key, set with `supabase secrets set SB_SECRET_KEY=…`, is only used for the
+  // delete itself. The legacy service_role key is never used here.
   const url = Deno.env.get("SUPABASE_URL");
+  const publishableKey = Deno.env.get("SB_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY");
   const secretKey = Deno.env.get("SB_SECRET_KEY");
-  if (!url || !secretKey) {
-    console.error("delete-account: SUPABASE_URL or SB_SECRET_KEY is not set");
+  if (!url || !publishableKey || !secretKey) {
+    console.error("delete-account: SUPABASE_URL, SUPABASE_ANON_KEY or SB_SECRET_KEY is not set");
     return json({ code: "delete_failed" }, 500);
   }
   // A rejected token is a 401; an Auth outage (network, 5xx, unexpected throw) is a logged 500.
@@ -33,14 +36,13 @@ Deno.serve(async (req) => {
     console.error("delete-account: token verification failed", e);
     return json({ code: "delete_failed" }, 500);
   };
-  const admin = createClient(url, secretKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const clientOptions = { auth: { persistSession: false, autoRefreshToken: false } };
+  const verifier = createClient(url, publishableKey, clientOptions);
 
   // Parse and verify the token first. Anything malformed or unverifiable is a 401, never a 500.
   let claims: { sub?: string; amr?: unknown };
   try {
-    const { data, error } = await admin.auth.getClaims(jwt); // JWKS for asymmetric keys, Auth otherwise
+    const { data, error } = await verifier.auth.getClaims(jwt); // JWKS for asymmetric keys, Auth otherwise
     if (error) return authFailure(error);
     if (!data?.claims?.sub) return json({ code: "unauthorized" }, 401);
     claims = data.claims;
@@ -51,8 +53,9 @@ Deno.serve(async (req) => {
   // Authoritative check: the user still exists and the session is valid.
   let userId: string;
   try {
-    const { data: { user }, error } = await admin.auth.getUser(jwt);
+    const { data, error } = await verifier.auth.getUser(jwt);
     if (error) return authFailure(error);
+    const user = data?.user;
     if (!user || user.id !== claims.sub) return json({ code: "unauthorized" }, 401);
     userId = user.id;
   } catch (e) {
@@ -64,6 +67,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const admin = createClient(url, secretKey, clientOptions);
     const { error } = await admin.auth.admin.deleteUser(userId);
     if (error) throw error;
     return json({ success: true }, 200);
