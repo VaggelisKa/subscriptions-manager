@@ -24,6 +24,9 @@ create function pg_temp.logout() returns void language sql as $$
   select set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true),
          set_config('role', 'anon', true);
 $$;
+-- 1b: functions created by postgres no longer get PUBLIC EXECUTE (global default privilege),
+-- so the helpers must be granted explicitly to the roles that call them.
+grant execute on function pg_temp.login(uuid), pg_temp.logout() to anon, authenticated;
 
 -- ── privileges ──
 select ok(not has_table_privilege('anon', 'public.subscriptions', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER'), 'anon has no privilege on subscriptions');
@@ -55,22 +58,24 @@ select throws_ok($$ insert into public.categories (name, color_hex, type) values
 select throws_ok($$ update public.categories set name = 'hacked' $$, '42501', null, 'authenticated cannot update categories');
 select throws_ok($$ delete from public.categories where id = '00000000-0000-0000-0000-0000000000c1' $$, '42501', null, 'authenticated cannot delete categories');
 
-select lives_ok($$ insert into public.subscriptions (id, user_id, name, price, interval, billed_at)
-                   values ('00000000-0000-0000-0000-00000000a1a1', '00000000-0000-0000-0000-0000000000a1', 'Netflix', 79, 'month', now()) $$,
+-- 1b: `id` is no longer client-insertable (column grants), so the row id is read back after the insert
+select lives_ok($$ insert into public.subscriptions (user_id, name, price, interval, billed_at)
+                   values ('00000000-0000-0000-0000-0000000000a1', 'Netflix', 79, 'month', now()) $$,
                 'alice inserts her own row');
+do $$ begin perform set_config('test.alice_row', (select id::text from public.subscriptions where name = 'Netflix'), true); end $$;
 select throws_ok($$ insert into public.subscriptions (user_id, name, price, interval, billed_at)
                     values ('00000000-0000-0000-0000-0000000000b2', 'spam', 1, 'month', now()) $$,
                  '42501', null, 'alice cannot insert a row for bob (cross-user insert)');
 select results_eq($$ select id from public.subscriptions $$,
-                  $$ values ('00000000-0000-0000-0000-00000000a1a1'::uuid) $$, 'alice sees only her own row');
-select lives_ok($$ update public.subscriptions set price = 99 where id = '00000000-0000-0000-0000-00000000a1a1' $$, 'alice updates her own row');
+                  $$ values (current_setting('test.alice_row')::uuid) $$, 'alice sees only her own row');
+select lives_ok($$ update public.subscriptions set price = 99 where id = current_setting('test.alice_row')::uuid $$, 'alice updates her own row');
 select is_empty($$ update public.subscriptions set price = 0 where id = '00000000-0000-0000-0000-00000000b0b0' returning id $$,
                 'alice cannot update bob''s row (cross-user update touches nothing)');
-select throws_ok($$ update public.subscriptions set user_id = '00000000-0000-0000-0000-0000000000b2' where id = '00000000-0000-0000-0000-00000000a1a1' $$,
+select throws_ok($$ update public.subscriptions set user_id = '00000000-0000-0000-0000-0000000000b2' where id = current_setting('test.alice_row')::uuid $$,
                  '42501', null, 'alice cannot hand her row to bob');
 select is_empty($$ delete from public.subscriptions where id = '00000000-0000-0000-0000-00000000b0b0' returning id $$,
                 'alice cannot delete bob''s row');
-select lives_ok($$ delete from public.subscriptions where id = '00000000-0000-0000-0000-00000000a1a1' $$, 'alice deletes her own row');
+select lives_ok($$ delete from public.subscriptions where id = current_setting('test.alice_row')::uuid $$, 'alice deletes her own row');
 
 -- ── state re-read as the owner ──
 reset role;

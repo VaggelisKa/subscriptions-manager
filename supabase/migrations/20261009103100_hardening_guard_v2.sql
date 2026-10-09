@@ -1,0 +1,118 @@
+-- Phase 1b, file 1 of 3 (spec §4.3 guard v2, §5.2 file 1; rulings rev 6–7).
+-- Guard v2: one definition of the hardening checks (A)–(E3) as functions, so later
+-- migrations end with `select private.assert_hardening();` and pgTAP calls the same code.
+-- Scope: same as the 1a guard in 20261009083122_hardening.sql; the only extra exclusion is `net`.
+-- KEEP IN SYNC: scope predicate also in 20261009083122_hardening.sql and supabase/tests/hardening.test.sql.
+
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
+create or replace function private.hardening_violations()
+returns setof text
+language plpgsql
+stable
+set search_path = ''
+as $fn$
+declare
+  -- KEEP IN SYNC with supabase/tests/hardening.test.sql and spec §4.3
+  scope constant text := $s$
+    n.nspname not in ('pg_catalog','information_schema','auth','storage','realtime',
+                      'extensions','graphql','vault','cron','pgsodium','pg_toast',
+                      'net')  -- net: pg_net's http_get/http_post are SECURITY DEFINER + client-executable (verified, PR #55)
+    and n.nspname not like 'supabase\_%'      escape '\'
+    and n.nspname not like 'pg\_temp%'        escape '\'
+    and n.nspname not like 'pg\_toast\_temp%' escape '\' $s$;
+begin
+  return query execute format($q$
+    -- (A) views without security_invoker
+    select format('view %%I.%%I lacks security_invoker', n.nspname, c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind = 'v' and %1$s
+      and not exists (select 1 from unnest(coalesce(c.reloptions, '{}'::text[])) o
+                      where lower(btrim(split_part(o,'=',1))) = 'security_invoker'
+                        and lower(btrim(split_part(o,'=',2))) in ('true','on','1','yes'))
+    union all
+    -- (B) matviews readable by client roles
+    select format('matview %%I.%%I is selectable by anon/authenticated', n.nspname, c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind = 'm' and %1$s
+      and (has_table_privilege('anon', c.oid, 'SELECT') or has_table_privilege('authenticated', c.oid, 'SELECT'))
+    union all
+    -- (C) security definer functions executable by PUBLIC/anon/authenticated
+    select format('security definer %%I.%%I(%%s) executable by public/anon/authenticated',
+                  n.nspname, p.proname, pg_get_function_identity_arguments(p.oid))
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where p.prosecdef and %1$s
+      and (exists (select 1 from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                   where a.grantee = 0 and a.privilege_type = 'EXECUTE')
+           or has_function_privilege('anon', p.oid, 'EXECUTE')
+           or has_function_privilege('authenticated', p.oid, 'EXECUTE'))
+    union all
+    -- (D) tables with RLS disabled
+    select format('table %%I.%%I has row level security disabled', n.nspname, c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind in ('r','p') and %1$s and not c.relrowsecurity
+    union all
+    -- (E1) any table/view/matview/foreign-table privilege (table- or column-level) held by anon
+    select format('relation %%I.%%I grants privileges to anon', n.nspname, c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind in ('r','p','v','m','f') and %1$s
+      and (has_table_privilege('anon', c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+           or has_any_column_privilege('anon', c.oid, 'SELECT,INSERT,UPDATE,REFERENCES'))
+    union all
+    -- (E2) any sequence privilege held by anon
+    select format('sequence %%I.%%I grants privileges to anon', n.nspname, c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind = 'S' and %1$s
+      and case when c.relkind = 'S'   -- CASE: has_sequence_privilege errors on non-sequences if evaluated first
+               then has_sequence_privilege('anon', c.oid, 'USAGE,SELECT,UPDATE') end
+    union all
+    -- (E3) any function executable by anon, or with EXECUTE granted to PUBLIC
+    --      (explicit PUBLIC entry, or a NULL proacl = built-in default PUBLIC EXECUTE)
+    select format('function %%I.%%I(%%s) executable by anon or PUBLIC',
+                  n.nspname, p.proname, pg_get_function_identity_arguments(p.oid))
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where %1$s
+      and (   has_function_privilege('anon', p.oid, 'EXECUTE')
+           or p.proacl is null
+           or exists (select 1 from aclexplode(p.proacl) a
+                      where a.grantee = 0 and a.privilege_type = 'EXECUTE'))
+  $q$, scope);
+end
+$fn$;
+
+revoke all on function private.hardening_violations() from public, anon, authenticated;
+
+create or replace function private.assert_hardening()
+returns void
+language plpgsql
+set search_path = ''
+as $fn$
+declare v text[];
+begin
+  select coalesce(array_agg(x), '{}') into v from private.hardening_violations() as x;
+  if cardinality(v) > 0 then
+    raise exception 'hardening guard: % violation(s): %', cardinality(v), array_to_string(v, '; ');
+  end if;
+end
+$fn$;
+
+revoke all on function private.assert_hardening() from public, anon, authenticated;
+
+-- Global (all schemas): functions created by postgres no longer get EXECUTE for PUBLIC (ruling, revision 7).
+-- The explicit-revoke rule and guard (E3) remain the backstop.
+alter default privileges for role postgres revoke execute on functions from public;
+
+-- pg_graphql off (ruling, revision 7). PRECONDITION (checked in the 1b PR):
+--   rg -n -i 'graphql|/graphql/v1' apps/web apps/native apps/ng-native packages   → zero hits
+drop extension if exists pg_graphql;
+-- Supabase's issue_graphql_placeholder event trigger recreates graphql_public.graphql(...) as a
+-- "pg_graphql extension is not enabled" stub. Take EXECUTE away from clients explicitly; if this
+-- has no effect (stub owned by a platform role), the assert below fails → back to the Architect, no exclusion.
+do $$ begin
+  if to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is not null then
+    revoke all on function graphql_public.graphql(text, text, jsonb, jsonb) from public, anon, authenticated;
+  end if;
+end $$;
+
+select private.assert_hardening();
