@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import { corsHeaders, preflight } from "../_shared/cors.ts";
 import { hasRecentSignIn } from "../_shared/recent-auth.ts";
+import { isAuthRejection } from "./auth-errors.ts";
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
@@ -26,6 +27,12 @@ Deno.serve(async (req) => {
     console.error("delete-account: SUPABASE_URL or SB_SECRET_KEY is not set");
     return json({ code: "delete_failed" }, 500);
   }
+  // A rejected token is a 401; an Auth outage (network, 5xx, unexpected throw) is a logged 500.
+  const authFailure = (e: unknown) => {
+    if (isAuthRejection(e)) return json({ code: "unauthorized" }, 401);
+    console.error("delete-account: token verification failed", e);
+    return json({ code: "delete_failed" }, 500);
+  };
   const admin = createClient(url, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -34,16 +41,18 @@ Deno.serve(async (req) => {
   let claims: { sub?: string; amr?: unknown };
   try {
     const { data, error } = await admin.auth.getClaims(jwt); // JWKS for asymmetric keys, Auth otherwise
-    if (error || !data?.claims?.sub) return json({ code: "unauthorized" }, 401);
+    if (error) return authFailure(error);
+    if (!data?.claims?.sub) return json({ code: "unauthorized" }, 401);
     claims = data.claims;
-  } catch {
-    return json({ code: "unauthorized" }, 401);
+  } catch (e) {
+    return authFailure(e);
   }
 
   try {
     // Authoritative check: the user still exists and the session is valid.
     const { data: { user }, error } = await admin.auth.getUser(jwt);
-    if (error || !user || user.id !== claims.sub) return json({ code: "unauthorized" }, 401);
+    if (error) return authFailure(error);
+    if (!user || user.id !== claims.sub) return json({ code: "unauthorized" }, 401);
 
     if (!hasRecentSignIn(claims.amr, Date.now() / 1000)) {
       return json({ code: "reauth_required" }, 401);
