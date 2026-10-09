@@ -1,6 +1,3 @@
-// Ported from apps/native/src/lib/billing.ts so web and native agree on next
-// charges, totals and formatting. Keep the two in sync.
-
 import {
   addMonths,
   addWeeks,
@@ -15,7 +12,7 @@ import { utcToZonedTime } from "date-fns-tz";
 import type {
   IntervalEnum,
   SubscriptionWithCategory,
-} from "@subscriptions-manager/shared";
+} from "./types";
 
 const TIME_ZONE = "Europe/Copenhagen";
 

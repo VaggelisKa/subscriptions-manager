@@ -1,301 +1,307 @@
+/** A well-known subscription's logo tile, minus the glyph. */
 export type Brand = {
-  /** Tile background; the bundled glyph is white. */
+  /** Names the glyph; each app maps it to its own asset in `icons.ts`. */
+  slug: BrandSlug;
+  /** Tile background; the glyph is white. */
   color: string;
-  /** Public path of the white glyph (copied from `apps/native/assets/brands`). */
-  icon: string;
 };
 
-type BrandEntry = Brand & { aliases: string[] };
+type BrandEntry = {
+  slug: string;
+  color: string;
+  aliases: readonly string[];
+};
 
 /**
  * Logos for common subscriptions, looked up by `findBrand`. Aliases are
  * lowercase names the subscription usually starts with; the matcher handles
- * spacing, "+" and small typos itself. Glyphs live in `public/brands`.
- *
- * Ported from `apps/native/src/lib/brands.ts`; keep the two lists in sync.
+ * spacing, "+" and small typos itself. The glyphs stay in each app
+ * (`apps/web/src/lib/icons.ts`, `apps/native/src/lib/icons.ts`), keyed by slug.
  */
-const BRANDS: BrandEntry[] = [
+export const BRANDS = [
   {
+    slug: "chatgpt",
     color: "#000000",
-    icon: "/brands/chatgpt.svg",
     aliases: ["chatgpt", "openai"],
   },
   {
+    slug: "claude",
     color: "#D97757",
-    icon: "/brands/claude.svg",
     aliases: ["claude", "anthropic"],
   },
   {
+    slug: "perplexity",
     color: "#1FB8CD",
-    icon: "/brands/perplexity.svg",
     aliases: ["perplexity"],
   },
   {
+    slug: "gemini",
     color: "#1A73E8",
-    icon: "/brands/gemini.svg",
     aliases: ["gemini", "google gemini", "google ai"],
   },
   {
+    slug: "githubcopilot",
     color: "#000000",
-    icon: "/brands/githubcopilot.svg",
     aliases: ["github copilot", "copilot"],
   },
   {
+    slug: "github",
     color: "#181717",
-    icon: "/brands/github.svg",
     aliases: ["github"],
   },
   {
+    slug: "cursor",
     color: "#000000",
-    icon: "/brands/cursor.svg",
     aliases: ["cursor"],
   },
   {
+    slug: "netflix",
     color: "#E50914",
-    icon: "/brands/netflix.svg",
     aliases: ["netflix"],
   },
   {
+    slug: "primevideo",
     color: "#1F2E3E",
-    icon: "/brands/primevideo.svg",
     aliases: ["prime video", "amazon prime video"],
   },
   {
+    slug: "amazonprime",
     color: "#00A8E1",
-    icon: "/brands/amazonprime.svg",
     aliases: ["amazon prime", "prime", "amazon"],
   },
   {
+    slug: "disneyplus",
     color: "#0E3D8A",
-    icon: "/brands/disneyplus.svg",
     aliases: ["disney plus", "disney"],
   },
   {
+    slug: "hbomax",
     color: "#002BE7",
-    icon: "/brands/hbomax.svg",
     aliases: ["hbo max", "hbo", "max"],
   },
   {
+    slug: "viaplay",
     color: "#FE365F",
-    icon: "/brands/viaplay.svg",
     aliases: ["viaplay"],
   },
   {
+    slug: "appletv",
     color: "#000000",
-    icon: "/brands/appletv.svg",
     aliases: ["apple tv"],
   },
   {
+    slug: "applemusic",
     color: "#FA243C",
-    icon: "/brands/applemusic.svg",
     aliases: ["apple music"],
   },
   {
+    slug: "applearcade",
     color: "#000000",
-    icon: "/brands/applearcade.svg",
     aliases: ["apple arcade"],
   },
   {
+    slug: "icloud",
     color: "#3693F3",
-    icon: "/brands/icloud.svg",
     aliases: ["icloud", "apple one", "apple"],
   },
   {
+    slug: "paramountplus",
     color: "#0064FF",
-    icon: "/brands/paramountplus.svg",
     aliases: ["paramount plus", "paramount"],
   },
   {
+    slug: "crunchyroll",
     color: "#FF5E00",
-    icon: "/brands/crunchyroll.svg",
     aliases: ["crunchyroll"],
   },
   {
+    slug: "dazn",
     color: "#000000",
-    icon: "/brands/dazn.svg",
     aliases: ["dazn"],
   },
   {
+    slug: "mubi",
     color: "#000000",
-    icon: "/brands/mubi.svg",
     aliases: ["mubi"],
   },
   {
+    slug: "youtubemusic",
     color: "#FF0000",
-    icon: "/brands/youtubemusic.svg",
     aliases: ["youtube music", "yt music"],
   },
   {
+    slug: "youtube",
     color: "#FF0000",
-    icon: "/brands/youtube.svg",
     aliases: ["youtube", "yt premium"],
   },
   {
+    slug: "twitch",
     color: "#9146FF",
-    icon: "/brands/twitch.svg",
     aliases: ["twitch"],
   },
   {
+    slug: "spotify",
     color: "#1ED760",
-    icon: "/brands/spotify.svg",
     aliases: ["spotify"],
   },
   {
+    slug: "tidal",
     color: "#000000",
-    icon: "/brands/tidal.svg",
     aliases: ["tidal"],
   },
   {
+    slug: "deezer",
     color: "#A238FF",
-    icon: "/brands/deezer.svg",
     aliases: ["deezer"],
   },
   {
+    slug: "soundcloud",
     color: "#FF5500",
-    icon: "/brands/soundcloud.svg",
     aliases: ["soundcloud"],
   },
   {
+    slug: "audible",
     color: "#F8991C",
-    icon: "/brands/audible.svg",
     aliases: ["audible"],
   },
   {
+    slug: "playstation",
     color: "#0070D1",
-    icon: "/brands/playstation.svg",
     aliases: ["playstation", "ps plus", "psn"],
   },
   {
+    slug: "xbox",
     color: "#107C10",
-    icon: "/brands/xbox.svg",
     aliases: ["xbox", "game pass"],
   },
   {
+    slug: "microsoft",
     color: "#0078D4",
-    icon: "/brands/microsoft.svg",
     aliases: ["microsoft", "office 365", "office", "m365"],
   },
   {
+    slug: "adobe",
     color: "#FF0000",
-    icon: "/brands/adobe.svg",
     aliases: ["adobe", "photoshop", "lightroom", "creative cloud"],
   },
   {
+    slug: "figma",
     color: "#F24E1E",
-    icon: "/brands/figma.svg",
     aliases: ["figma"],
   },
   {
+    slug: "notion",
     color: "#000000",
-    icon: "/brands/notion.svg",
     aliases: ["notion"],
   },
   {
+    slug: "linear",
     color: "#5E6AD2",
-    icon: "/brands/linear.svg",
     aliases: ["linear"],
   },
   {
+    slug: "slack",
     color: "#4A154B",
-    icon: "/brands/slack.svg",
     aliases: ["slack"],
   },
   {
+    slug: "zoom",
     color: "#0B5CFF",
-    icon: "/brands/zoom.svg",
     aliases: ["zoom"],
   },
   {
+    slug: "dropbox",
     color: "#0061FF",
-    icon: "/brands/dropbox.svg",
     aliases: ["dropbox"],
   },
   {
+    slug: "googledrive",
     color: "#1A73E8",
-    icon: "/brands/googledrive.svg",
     aliases: ["google one", "google drive", "google storage"],
   },
   {
+    slug: "onepassword",
     color: "#145FE4",
-    icon: "/brands/onepassword.svg",
     aliases: ["1password"],
   },
   {
+    slug: "bitwarden",
     color: "#175DDC",
-    icon: "/brands/bitwarden.svg",
     aliases: ["bitwarden"],
   },
   {
+    slug: "nordvpn",
     color: "#4687FF",
-    icon: "/brands/nordvpn.svg",
     aliases: ["nordvpn", "nord vpn"],
   },
   {
+    slug: "expressvpn",
     color: "#DA3940",
-    icon: "/brands/expressvpn.svg",
     aliases: ["expressvpn", "express vpn"],
   },
   {
+    slug: "proton",
     color: "#6D4AFF",
-    icon: "/brands/proton.svg",
     aliases: ["proton"],
   },
   {
+    slug: "duolingo",
     color: "#58CC02",
-    icon: "/brands/duolingo.svg",
     aliases: ["duolingo"],
   },
   {
+    slug: "headspace",
     color: "#F47D31",
-    icon: "/brands/headspace.svg",
     aliases: ["headspace"],
   },
   {
+    slug: "strava",
     color: "#FC4C02",
-    icon: "/brands/strava.svg",
     aliases: ["strava"],
   },
   {
+    slug: "patreon",
     color: "#000000",
-    icon: "/brands/patreon.svg",
     aliases: ["patreon"],
   },
   {
+    slug: "discord",
     color: "#5865F2",
-    icon: "/brands/discord.svg",
     aliases: ["discord"],
   },
   {
+    slug: "linkedin",
     color: "#0A66C2",
-    icon: "/brands/linkedin.svg",
     aliases: ["linkedin"],
   },
   {
+    slug: "x",
     color: "#000000",
-    icon: "/brands/x.svg",
     aliases: ["x premium", "twitter", "x"],
   },
   {
+    slug: "telegram",
     color: "#26A5E4",
-    icon: "/brands/telegram.svg",
     aliases: ["telegram"],
   },
   {
+    slug: "medium",
     color: "#000000",
-    icon: "/brands/medium.svg",
     aliases: ["medium"],
   },
   {
+    slug: "substack",
     color: "#FF6719",
-    icon: "/brands/substack.svg",
     aliases: ["substack"],
   },
   {
+    slug: "uber",
     color: "#000000",
-    icon: "/brands/uber.svg",
     aliases: ["uber"],
   },
-];
+] as const satisfies readonly BrandEntry[];
+
+export type BrandSlug = (typeof BRANDS)[number]["slug"];
 
 function words(text: string) {
   return text

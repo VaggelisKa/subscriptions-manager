@@ -2,7 +2,7 @@
 // Clients delete accounts through the delete-account Edge Function.
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import type { Database } from "@subscriptions-manager/shared";
+import type { Database } from "@subscriptions-manager/shared/types";
 import { hasRecentSignIn } from "@supabase-functions/_shared/recent-auth";
 import { isUserNotFound } from "@supabase-functions/_shared/user-not-found";
 import { isAuthRejection } from "@supabase-functions/delete-account/auth-errors";

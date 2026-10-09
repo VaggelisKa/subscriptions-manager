@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import type {
   SubscriptionWithCategory,
   Category,
-} from "@subscriptions-manager/shared";
+} from "@subscriptions-manager/shared/types";
+import type { SubscriptionWrite } from "@subscriptions-manager/shared/schemas";
 
 export function useSubscriptions(userId: string | undefined) {
   const channelId = useId();
@@ -57,9 +58,23 @@ export function useSubscriptions(userId: string | undefined) {
 
     const channel = supabase
       .channel(`subscriptions-changes-${channelId}`)
+      // Inserts and updates are filtered to this user to cut server-side fan-out.
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "subscriptions" },
+        { event: "INSERT", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },
+        () => setRefreshTrigger((t) => t + 1),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },
+        () => setRefreshTrigger((t) => t + 1),
+      )
+      // Deletes stay unfiltered: the old row only carries the primary key, so a
+      // user_id filter would never match. Every client gets every delete (id
+      // only), so an event only means "refetch", never data.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "subscriptions" },
         () => setRefreshTrigger((t) => t + 1),
       )
       .subscribe((status) => {
@@ -78,13 +93,9 @@ export function useSubscriptions(userId: string | undefined) {
     };
   }, [userId, channelId]);
 
-  async function addSubscription(data: {
-    name: string;
-    price: number;
-    interval: "week" | "month" | "year";
-    billed_at: string;
-    category_id?: string;
-  }) {
+  async function addSubscription(
+    data: SubscriptionWrite & { billed_at: string },
+  ) {
     if (!userId) return { error: "Not authenticated" };
 
     const { error } = await supabase.from("subscriptions").insert({
@@ -96,16 +107,8 @@ export function useSubscriptions(userId: string | undefined) {
     return {};
   }
 
-  async function updateSubscription(
-    id: string,
-    data: {
-      name: string;
-      price: number;
-      interval: "week" | "month" | "year";
-      billed_at: string;
-      category_id?: string;
-    },
-  ) {
+  /** `billed_at` is left out unless the user picked a new date (`toSubscriptionWrite`). */
+  async function updateSubscription(id: string, data: SubscriptionWrite) {
     const { error } = await supabase
       .from("subscriptions")
       .update(data)

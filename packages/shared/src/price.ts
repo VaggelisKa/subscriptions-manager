@@ -5,7 +5,7 @@ import { zonedTimeToUtc } from "date-fns-tz";
  * Accepts "79", "79,50", "79.50", "1.250" and "1.250,50". "." followed by
  * exactly three digits is a thousands separator, as the app itself formats
  * amounts that way. Negative prices are rejected and values are rounded to
- * øre. Same rules as the native form (`apps/native/src/app/subscription-form.tsx`).
+ * øre. Used by the web and native forms.
  */
 export function parsePrice(text: string | null | undefined) {
   let t = (text ?? "").trim().replace(/\s/g, "");
@@ -37,7 +37,8 @@ export function priceInputValue(price: number | null | undefined) {
 
 /**
  * A calendar day ("2026-10-09", or a Date's local day) stored as noon in
- * Copenhagen, so the day can't shift with the browser's or server's time zone.
+ * Copenhagen, so the day can't shift with the device's or server's time zone.
+ * Returns `null` for a day that doesn't exist.
  */
 export function toBilledAt(day: string | Date) {
   const value = typeof day === "string" ? day : format(day, "yyyy-MM-dd");

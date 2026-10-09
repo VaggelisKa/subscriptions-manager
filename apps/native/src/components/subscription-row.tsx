@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
+import type { SubscriptionWithCategory } from "@subscriptions-manager/shared/types";
 import { useThemeColors } from "@/providers/theme-provider";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
 import { haptics } from "@/lib/haptics";
@@ -10,7 +10,7 @@ import {
   intervalLabel,
   intervalSuffix,
   isDueSoon,
-} from "@/lib/format";
+} from "@subscriptions-manager/shared/format";
 
 type Props = {
   subscription: SubscriptionWithCategory;

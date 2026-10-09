@@ -1,6 +1,6 @@
 import { differenceInCalendarDays } from "date-fns";
-import { today } from "@/lib/billing";
-import { formatDayDate, formatDueLabel, formatKr, isDueSoon } from "@/lib/format";
+import { today } from "@subscriptions-manager/shared/billing";
+import { formatDayDate, formatDueLabel, formatKr, isDueSoon } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 type Props = {

@@ -3,8 +3,8 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { endOfMonth, format } from "date-fns";
 import { Amount } from "@/components/ui/amount";
-import { chargesBetween, today, totalPerMonth } from "@/lib/billing";
-import { formatWholeKr } from "@/lib/format";
+import { chargesBetween, today, totalPerMonth } from "@subscriptions-manager/shared/billing";
+import { formatWholeKr } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 /** Sum of every charge from today to the end of the month (weekly ones count each time). */

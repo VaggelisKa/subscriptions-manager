@@ -8,8 +8,8 @@ import Animated, {
 import { router } from "expo-router";
 import { useTheme } from "@/providers/theme-provider";
 import { SubscriptionRow } from "@/components/subscription-row";
-import { nextChargeDate } from "@/lib/billing";
-import { formatWholeNumber, intervalSuffix } from "@/lib/format";
+import { nextChargeDate } from "@subscriptions-manager/shared/billing";
+import { formatWholeNumber, intervalSuffix } from "@subscriptions-manager/shared/format";
 import { haptics } from "@/lib/haptics";
 import { fonts, radius, spacing, withAlpha } from "@/lib/theme";
 import {

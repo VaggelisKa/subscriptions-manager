@@ -1,6 +1,6 @@
 // Preloaded into `next start` (NODE_OPTIONS=--require …) so the server agrees with the
 // browser's `page.clock.setFixedTime` about what "today" is. The app computes today on the
-// server too: apps/web/src/lib/billing.ts `today()` → `new Date()`, rendered during SSR by
+// server too: packages/shared/src/billing.ts `today()` → `new Date()`, rendered during SSR by
 // the day strip, timeline buckets, monthly summary, ledger, calendar and detail.
 //
 // What's faked: the wall clock the app reads, i.e. `new Date()` and `Date()` with no

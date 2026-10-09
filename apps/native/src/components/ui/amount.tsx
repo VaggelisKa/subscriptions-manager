@@ -1,7 +1,7 @@
 import { Text, type TextStyle } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts } from "@/lib/theme";
-import { formatNumber, formatWholeNumber } from "@/lib/format";
+import { formatNumber, formatWholeNumber } from "@subscriptions-manager/shared/format";
 
 type Props = {
   value: number;

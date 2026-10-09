@@ -8,7 +8,7 @@ export const REPO_ROOT = path.resolve(PARITY_DIR, "../..");
 /** The fixed "now" (spec §12A.2). Browser: `page.clock`; Next server: `support/fake-clock.cjs`. */
 export const FIXED_TIME = "2026-10-14T10:00:00+02:00";
 export const TIME_ZONE = "Europe/Copenhagen";
-/** What the app formats numbers with (`apps/web/src/lib/format.ts`, `LOCALE`). */
+/** What the app formats numbers with (`packages/shared/src/format.ts`, `LOCALE`). */
 export const LOCALE = "en-DK";
 
 export type Target = "next" | "expo";

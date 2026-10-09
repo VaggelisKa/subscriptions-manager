@@ -1,7 +1,7 @@
 import { Group, SectionHeader } from "@/components/ui/grouped";
 import { SubscriptionRow } from "@/components/subscription-row";
-import { bucketByTime, scheduleSubscriptions } from "@/lib/billing";
-import { formatWholeKr } from "@/lib/format";
+import { bucketByTime, scheduleSubscriptions } from "@subscriptions-manager/shared/billing";
+import { formatWholeKr } from "@subscriptions-manager/shared/format";
 
 type Props = {
   subscriptions: SubscriptionWithCategory[];

@@ -7,7 +7,7 @@ import {
   tag,
   tint,
 } from "@expo/ui/swift-ui/modifiers";
-import type { Category } from "@subscriptions-manager/shared";
+import type { Category } from "@subscriptions-manager/shared/types";
 
 type Props = {
   categories: Category[];

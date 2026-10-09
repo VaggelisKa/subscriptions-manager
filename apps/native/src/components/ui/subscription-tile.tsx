@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "@/providers/theme-provider";
-import { findBrand } from "@/lib/brands";
+import { findBrand } from "@subscriptions-manager/shared/brands";
+import { brandIcons } from "@/lib/icons";
 import { fonts, withAlpha } from "@/lib/theme";
 
 type Props = {
@@ -41,7 +42,7 @@ export function SubscriptionTile({ name, color, size = 40 }: Props) {
         ]}
       >
         <Image
-          source={brand.icon}
+          source={brandIcons[brand.slug]}
           contentFit="contain"
           style={{ width: size * 0.55, height: size * 0.55 }}
         />

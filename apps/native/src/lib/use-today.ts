@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { addDays, differenceInMilliseconds } from "date-fns";
-import { today } from "@/lib/billing";
+import { today } from "@subscriptions-manager/shared/billing";
 
 /**
  * A key for the current billing day ("2026-10-03"). It changes at midnight and

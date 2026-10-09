@@ -1,9 +1,6 @@
-// Ported from apps/native/src/lib/format.ts so web and native agree on next
-// charges, totals and formatting. Keep the two in sync.
-
 import { differenceInCalendarDays, format, isSameYear } from "date-fns";
-import type { IntervalEnum } from "@subscriptions-manager/shared";
-import { today } from "@/lib/billing";
+import type { IntervalEnum } from "./types";
+import { today } from "./billing";
 
 const LOCALE = "en-DK";
 

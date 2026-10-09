@@ -1,4 +1,4 @@
-Brand glyphs for `src/lib/brands.ts`, recoloured white on a 24×24 viewBox.
+Brand glyphs for `src/lib/icons.ts`, recoloured white on a 24×24 viewBox.
 
 - Most come from [Simple Icons](https://simpleicons.org) (CC0). Brands that
   later releases dropped come from older versions: `chatgpt` (`openai`),

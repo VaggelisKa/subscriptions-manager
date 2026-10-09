@@ -1,6 +1,6 @@
 import { addDays, differenceInCalendarDays, format } from "date-fns";
-import { chargesBetween, today } from "@/lib/billing";
-import { formatDayDate } from "@/lib/format";
+import { chargesBetween, today } from "@subscriptions-manager/shared/billing";
+import { formatDayDate } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 const DAYS = 36;

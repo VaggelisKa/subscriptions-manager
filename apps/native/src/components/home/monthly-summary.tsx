@@ -9,11 +9,11 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { endOfMonth, format } from "date-fns";
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
+import type { SubscriptionWithCategory } from "@subscriptions-manager/shared/types";
 import { useThemeColors } from "@/providers/theme-provider";
 import { Amount } from "@/components/ui/amount";
-import { chargesBetween, today, totalPerMonth } from "@/lib/billing";
-import { formatWholeKr } from "@/lib/format";
+import { chargesBetween, today, totalPerMonth } from "@subscriptions-manager/shared/billing";
+import { formatWholeKr } from "@subscriptions-manager/shared/format";
 import { fonts, spacing } from "@/lib/theme";
 
 type Props = {

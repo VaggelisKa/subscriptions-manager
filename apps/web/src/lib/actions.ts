@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getURL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "./supabase-server";
-import { parsePrice, toBilledAt } from "./price";
+import { subscriptionFormSchema, toSubscriptionWrite } from "@subscriptions-manager/shared/schemas";
 
 export async function loginWithMagicLinkAction(formData: FormData) {
   try {
@@ -37,35 +37,22 @@ type SubscriptionInputs = {
   category?: string;
 };
 
-const INTERVALS = ["week", "month", "year"] as const;
-
 /** Validates the form; returns the row fields or an error message. */
-function parseSubscription(inputs: SubscriptionInputs, requireDate: boolean) {
-  const name = inputs.name?.trim();
-  if (!name) return { message: "Give the subscription a name." } as const;
+function parseSubscription(inputs: SubscriptionInputs, isInsert: boolean) {
+  const parsed = subscriptionFormSchema.safeParse({
+    name: inputs.name,
+    price: inputs.price,
+    interval: inputs.interval,
+    billedAtDay: inputs.billed_at,
+    categoryId: inputs.category,
+  });
+  if (!parsed.success) return { message: parsed.error.issues[0].message } as const;
 
-  const price = parsePrice(inputs.price);
-  if (price === null) {
-    return { message: "Enter a price, like 79 or 79,50." } as const;
+  try {
+    return { data: toSubscriptionWrite(parsed.data, isInsert) } as const;
+  } catch (error) {
+    return { message: (error as Error).message } as const;
   }
-
-  const interval = INTERVALS.find((i) => i === inputs.interval);
-  if (!interval) return { message: "Choose how often it's billed." } as const;
-
-  const billedAt = inputs.billed_at ? toBilledAt(inputs.billed_at) : null;
-  if ((requireDate || inputs.billed_at) && !billedAt) {
-    return { message: "Pick the date of the next charge." } as const;
-  }
-
-  return {
-    data: {
-      name,
-      price,
-      interval,
-      ...(billedAt ? { billed_at: billedAt } : {}),
-      ...(inputs.category ? { category_id: inputs.category } : {}),
-    },
-  } as const;
 }
 
 export async function addNewSubscription(formData: FormData) {
@@ -103,9 +90,9 @@ export async function addNewSubscription(formData: FormData) {
 }
 
 /**
- * Saves an edit. `billed_at` is the anchor every charge date is computed
- * from, so it's only written when the user picked a new date. Same rule as
- * the native form.
+ * Saves an edit. `billed_at` is the schedule's anchor, so it's only written
+ * when the date was changed (`toSubscriptionWrite`); rewriting it on every
+ * save would shift the schedule. Same rule as the native form.
  */
 export async function updateSubscription(formData: FormData) {
   const inputs = Object.fromEntries(formData) as SubscriptionInputs;
@@ -127,8 +114,7 @@ export async function updateSubscription(formData: FormData) {
   const { error } = await supabase
     .from("subscriptions")
     .update(parsed.data)
-    .eq("id", inputs.id)
-    .select();
+    .eq("id", inputs.id);
 
   if (error) {
     return { message: "Couldn't save the subscription. Try again." };

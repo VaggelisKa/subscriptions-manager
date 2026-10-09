@@ -16,8 +16,8 @@ import {
   monthlyEquivalent,
   scheduleSubscriptions,
   type ScheduledSubscription,
-} from "@/lib/billing";
-import { formatDayDate, formatWholeKr } from "@/lib/format";
+} from "@subscriptions-manager/shared/billing";
+import { formatDayDate, formatWholeKr } from "@subscriptions-manager/shared/format";
 import { cn } from "@/lib/utils";
 
 export type LedgerSort = "next" | "price" | "name";

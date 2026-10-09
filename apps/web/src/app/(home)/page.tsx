@@ -22,7 +22,7 @@ export default async function Home() {
     await Promise.all([
       supabase
         .from("subscriptions")
-        .select("id, name, price, billed_at, interval, created_at, description, user_id, categories(*)")
+        .select("id, name, price, billed_at, interval, created_at, user_id, categories(*)")
         .order("billed_at", { ascending: true }),
       supabase.from("categories").select("*").order("name"),
     ]);
