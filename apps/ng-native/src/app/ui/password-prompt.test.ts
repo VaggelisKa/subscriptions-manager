@@ -85,15 +85,32 @@ test("a double tap confirms once, until the parent is done with the attempt", as
   expect(events).toEqual([["confirm", "hunter22"], ["confirm", "hunter22"]]);
 });
 
-test("an error from the parent unlocks confirm", async () => {
+test("a failed attempt unlocks confirm, even with the same error message again", async () => {
   const { events, result } = await open();
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Password"), "hunter22");
-  await user.press(screen.getByRole("button", { name: "Delete account" }));
-  expect(disabled("Delete account")).toBe(true);
-
-  await result.rerender({ inputs: { ...inputs, error: "Invalid login credentials" } });
-  expect(disabled("Delete account")).toBe(false);
-  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    await user.press(screen.getByRole("button", { name: "Delete account" }));
+    expect(disabled("Delete account")).toBe(true);
+    await result.rerender({ inputs: { ...inputs, busy: true, error: null } });
+    await result.rerender({ inputs: { ...inputs, busy: false, error: "Invalid login credentials" } });
+    expect(screen.getByText("Invalid login credentials")).toBeTruthy();
+    expect(disabled("Delete account")).toBe(false);
+    expect(disabled("Cancel")).toBe(false);
+  }
   expect(events).toEqual([["confirm", "hunter22"], ["confirm", "hunter22"]]);
+});
+
+test("clearing the error doesn't unlock an attempt that is still running", async () => {
+  const { events, result } = await open({ error: "Invalid login credentials" });
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText("Password"), "hunter22");
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+
+  await result.rerender({ inputs: { ...inputs, error: null } });
+  expect(disabled("Delete account")).toBe(true);
+  expect(disabled("Cancel")).toBe(true);
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  await user.press(screen.getByRole("button", { name: "Cancel" }));
+  expect(events).toEqual([["confirm", "hunter22"]]);
 });

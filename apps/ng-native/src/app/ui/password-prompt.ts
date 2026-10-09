@@ -11,7 +11,8 @@ import {
 /**
  * A centered password dialog for re-authentication. `Dialogs.ask` is iOS-only and has no secure
  * entry, so this is a transparent `<modal>` that looks the same on iOS and Android. Put it in an
- * `@if` to show it; the parent owns `busy` and `error` and answers `(confirm)` and `(cancel)`.
+ * `@if` to show it; the parent owns `busy` and `error` and answers `(confirm)` and `(cancel)`. The
+ * parent must set `busy` synchronously in its `(confirm)` handler.
  */
 @Component({
   selector: "app-password-prompt",
@@ -65,8 +66,8 @@ import {
             <pressable
               class="cancel"
               accessibilityRole="button"
-              [accessibilityState]="{ disabled: busy() }"
-              [disabled]="busy()"
+              [accessibilityState]="{ disabled: locked() }"
+              [disabled]="locked()"
               (press)="dismiss()"
             >
               <text class="cancel-label">Cancel</text>
@@ -141,14 +142,14 @@ export class PasswordPrompt {
 
   protected readonly password = signal("");
   /**
-   * Set on submit, before the parent's `busy` arrives, so a double tap can't confirm twice. Cleared
-   * whenever `busy` or `error` changes: the parent has taken the attempt over or finished it.
+   * Set on submit, so a double tap can't confirm twice. Cleared whenever `busy` changes: the parent
+   * has taken the attempt over (busy) or finished it (not busy). `error` doesn't clear it, since the
+   * same message may come back twice or be cleared while an attempt is still running.
    */
-  private readonly submitted = linkedSignal({
-    source: () => [this.busy(), this.error()],
-    computation: () => false,
-  });
-  protected readonly disabled = computed(() => !this.password() || this.busy() || this.submitted());
+  private readonly submitted = linkedSignal({ source: this.busy, computation: () => false });
+  /** A password is on its way: the parent may already be continuing with it. */
+  protected readonly locked = computed(() => this.busy() || this.submitted());
+  protected readonly disabled = computed(() => !this.password() || this.locked());
 
   protected submit(): void {
     if (this.disabled()) return;
@@ -157,7 +158,6 @@ export class PasswordPrompt {
   }
 
   protected dismiss(): void {
-    // Not once a password is on its way: the parent may already be continuing with it.
-    if (!this.busy() && !this.submitted()) this.cancel.emit();
+    if (!this.locked()) this.cancel.emit();
   }
 }

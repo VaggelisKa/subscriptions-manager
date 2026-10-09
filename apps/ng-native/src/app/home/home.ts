@@ -272,7 +272,7 @@ export class Home {
       // Stays open, busy, while the deletion is retried.
       if (!confirmed) this.passwordBusy.set(false);
     }
-    this.passwordPrompt()?.resolve(true);
+    if (confirmed) this.passwordPrompt()?.resolve(true);
   }
 
   protected cancelPasswordPrompt(): void {

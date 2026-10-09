@@ -19,15 +19,21 @@ export async function functionErrorCode(error: unknown): Promise<string | undefi
   const context: unknown = "context" in error ? error.context : undefined;
   if (!context || typeof context !== "object" || !("json" in context)) return undefined;
   if (typeof context.json !== "function") return undefined;
+  type Body = { json: () => Promise<unknown> };
+  const response = context as Body & { clone: () => Body };
+  let body: unknown;
   try {
-    const response: { json: () => Promise<unknown> } =
-      "clone" in context && typeof context.clone === "function" ? context.clone() : context;
-    const body = await response.json();
-    if (body && typeof body === "object" && "code" in body) {
-      return typeof body.code === "string" ? body.code : undefined;
-    }
+    body = await response.clone().json();
   } catch {
-    // Not JSON (e.g. a gateway error page).
+    // No `clone`, or the clone couldn't be read: read the original response instead.
+    try {
+      body = await response.json();
+    } catch {
+      return undefined; // Not JSON (e.g. a gateway error page).
+    }
+  }
+  if (body && typeof body === "object" && "code" in body) {
+    return typeof body.code === "string" ? body.code : undefined;
   }
   return undefined;
 }

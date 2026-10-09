@@ -19,6 +19,14 @@ test("reads the body directly when the response can't be cloned", async () => {
   expect(await functionErrorCode(httpError(context))).toBe("reauth_required");
 });
 
+test("falls back to the original response when the clone fails", async () => {
+  const body = { code: "reauth_required" };
+  const cloneThrows = { clone: () => { throw new TypeError("Body already used"); }, json: async () => body };
+  expect(await functionErrorCode(httpError(cloneThrows))).toBe("reauth_required");
+  const cloneUnreadable = { clone: () => ({ json: () => Promise.reject(new TypeError("locked")) }), json: async () => body };
+  expect(await functionErrorCode(httpError(cloneUnreadable))).toBe("reauth_required");
+});
+
 test("a body that isn't JSON, or other errors, have no code", async () => {
   const notJson = { json: async () => JSON.parse("<html>") };
   expect(await functionErrorCode(httpError(notJson))).toBeUndefined();
