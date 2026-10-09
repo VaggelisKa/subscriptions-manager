@@ -77,8 +77,12 @@ export default function HomeScreen() {
   async function runDeleteAccount() {
     setDeleting(true);
     let result: Awaited<ReturnType<typeof deleteAccount>>;
+    let prompted = false;
     try {
-      result = await deleteAccount(askForPassword);
+      result = await deleteAccount(() => {
+        prompted = true;
+        return askForPassword();
+      });
     } catch {
       result = { error: "Something went wrong. Please try again." };
     } finally {
@@ -89,7 +93,11 @@ export default function HomeScreen() {
     if (result.cancelled) return;
     if (result.error) {
       haptics.error();
-      Alert.alert("Couldn't delete account", result.error);
+      const message = result.error;
+      const showError = () => Alert.alert("Couldn't delete account", message);
+      // Presented while the password Modal fades out, the alert would be dismissed along with it.
+      if (prompted) setTimeout(showError, 400);
+      else showError();
     } else {
       haptics.success();
     }

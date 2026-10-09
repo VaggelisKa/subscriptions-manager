@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Modal, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, View } from "react-native";
 import { useThemeColors } from "@/providers/theme-provider";
 import { radius, spacing, type } from "@/lib/theme";
 import { FormError } from "@/components/auth/auth-heading";
@@ -61,13 +61,14 @@ export function PasswordPrompt({
     <Modal
       visible
       transparent
+      presentationStyle="overFullScreen"
       animationType="fade"
       statusBarTranslucent
       navigationBarTranslucent
       onRequestClose={cancel}
     >
       <KeyboardAvoidingView
-        behavior="padding"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1, justifyContent: "center", padding: spacing.xl }}
       >
         <Pressable
