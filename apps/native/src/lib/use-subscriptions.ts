@@ -58,17 +58,23 @@ export function useSubscriptions(userId: string | undefined) {
 
     const channel = supabase
       .channel(`subscriptions-changes-${channelId}`)
+      // Inserts and updates are filtered to this user to cut server-side fan-out.
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "subscriptions",
-          // Cuts server-side fan-out. DELETE events skip both RLS and this
-          // filter, so every client gets every delete (old row id only):
-          // treat an event only as "refetch", never as data.
-          filter: `user_id=eq.${userId}`,
-        },
+        { event: "INSERT", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },
+        () => setRefreshTrigger((t) => t + 1),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },
+        () => setRefreshTrigger((t) => t + 1),
+      )
+      // Deletes stay unfiltered: the old row only carries the primary key, so a
+      // user_id filter would never match. Every client gets every delete (id
+      // only), so an event only means "refetch", never data.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "subscriptions" },
         () => setRefreshTrigger((t) => t + 1),
       )
       .subscribe((status) => {
