@@ -386,6 +386,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Gateway JWT check while the project signs with the legacy symmetric JWT secret.
+# If it moves to asymmetric signing keys, set this to false and rely on the
+# in-function auth.getUser(jwt) check (spec §7).
+[functions.delete-account]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
