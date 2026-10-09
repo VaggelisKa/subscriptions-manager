@@ -47,6 +47,7 @@ export default function HomeScreen() {
 
   function askForPassword() {
     return new Promise<boolean>((resolve) => {
+      resolvePassword.current?.(false); // Never leave an earlier request hanging.
       resolvePassword.current = resolve;
       setPasswordPrompt({ confirmed: false });
     });
@@ -78,6 +79,8 @@ export default function HomeScreen() {
     let result: Awaited<ReturnType<typeof deleteAccount>>;
     try {
       result = await deleteAccount(askForPassword);
+    } catch {
+      result = { error: "Something went wrong. Please try again." };
     } finally {
       resolvePassword.current = null;
       setPasswordPrompt(null);

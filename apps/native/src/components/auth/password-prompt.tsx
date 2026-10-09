@@ -42,9 +42,8 @@ export function PasswordPrompt({
     let result: string | undefined;
     try {
       result = await onConfirm(password);
-    } catch (e) {
-      setSubmitting(false);
-      throw e;
+    } catch {
+      result = "Something went wrong. Please try again.";
     }
     // On success the dialog stays locked until it unmounts.
     if (result) {
