@@ -4,12 +4,15 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(26);
+select plan(28);
 
 -- fixtures (as postgres)
 insert into auth.users (id, email, aud, role)
 values ('00000000-0000-0000-0000-0000000000a1', 'alice@test.local', 'authenticated', 'authenticated'),
        ('00000000-0000-0000-0000-0000000000b2', 'bob@test.local',   'authenticated', 'authenticated');
+-- own category fixture, so nothing here depends on seed.sql
+insert into public.categories (id, name, color_hex, type)
+values ('00000000-0000-0000-0000-0000000000c1', 'Fixture category', '#123456', 'utilities');
 insert into public.subscriptions (id, user_id, name, price, interval, billed_at)
 values ('00000000-0000-0000-0000-00000000b0b0', '00000000-0000-0000-0000-0000000000b2', 'Bob sub', 50, 'month', now());
 
@@ -28,6 +31,7 @@ select ok(not has_table_privilege('anon', 'public.categories',    'SELECT,INSERT
 select ok(not has_table_privilege('authenticated', 'public.subscriptions', 'TRUNCATE,REFERENCES,TRIGGER'), 'authenticated: no TRUNCATE/REFERENCES/TRIGGER on subscriptions');
 select ok(not has_table_privilege('authenticated', 'public.categories',    'TRUNCATE,REFERENCES,TRIGGER'), 'authenticated: no TRUNCATE/REFERENCES/TRIGGER on categories');
 select ok((select relrowsecurity from pg_class where oid = 'public.categories'::regclass), 'RLS enabled on categories');
+select ok(not has_table_privilege('authenticated', 'public.categories', 'INSERT,UPDATE,DELETE'), 'authenticated: categories is read-only (no INSERT/UPDATE/DELETE privilege)');
 select policies_are('public', 'subscriptions',
   array['subscriptions_select_own','subscriptions_insert_own','subscriptions_update_own','subscriptions_delete_own'],
   'subscriptions has exactly the four owner policies');
@@ -46,9 +50,10 @@ select throws_ok($$ delete from public.subscriptions $$,          '42501', null,
 
 -- ── alice (authenticated) ──
 select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
-select ok((select count(*) from public.categories) > 0, 'authenticated can read categories');
+select ok(exists (select 1 from public.categories where id = '00000000-0000-0000-0000-0000000000c1'), 'authenticated can read categories (fixture row)');
 select throws_ok($$ insert into public.categories (name, color_hex, type) values ('x', '#000000', 'business') $$, '42501', null, 'authenticated cannot insert categories');
-select is_empty($$ update public.categories set name = 'hacked' returning id $$, 'authenticated update on categories touches no rows');
+select throws_ok($$ update public.categories set name = 'hacked' $$, '42501', null, 'authenticated cannot update categories');
+select throws_ok($$ delete from public.categories where id = '00000000-0000-0000-0000-0000000000c1' $$, '42501', null, 'authenticated cannot delete categories');
 
 select lives_ok($$ insert into public.subscriptions (id, user_id, name, price, interval, billed_at)
                    values ('00000000-0000-0000-0000-00000000a1a1', '00000000-0000-0000-0000-0000000000a1', 'Netflix', 79, 'month', now()) $$,
