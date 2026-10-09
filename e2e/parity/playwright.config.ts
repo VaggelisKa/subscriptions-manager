@@ -42,6 +42,9 @@ const appServer: NonNullable<PlaywrightTestConfig["webServer"]> =
           NEXT_PUBLIC_SUPABASE_URL: PROXY_URL,
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PARITY_SUPABASE_PUBLISHABLE_KEY ?? "",
           NEXT_TELEMETRY_DISABLED: "1",
+          // Own build directory: the proxy URL is inlined at build time, so this build must not
+          // replace the developer's apps/web/.next.
+          NEXT_DIST_DIR: ".next-parity",
           TZ: TIME_ZONE,
           PARITY_FIXED_TIME: FIXED_TIME,
         },

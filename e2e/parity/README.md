@@ -10,7 +10,8 @@ same PR, labelled `parity-baseline-change` and reviewed.
 
 ## Run
 
-Prerequisites: Docker, `pnpm install`, and the local Supabase stack running (`supabase start`
+Prerequisites: Docker with host networking (on macOS: Docker Desktop 4.34+ with host networking
+enabled in Settings → Resources → Network), `pnpm install`, and the local Supabase stack running (`supabase start`
 from `supabase/`). The suite only ever talks to the local stack. `run.sh` reads its URL, DB URL
 and publishable key from `supabase status` and refuses anything that isn't on 127.0.0.1.
 
@@ -19,18 +20,20 @@ e2e/parity/run.sh                       # compare with baseline/ and axe-baselin
 e2e/parity/run.sh --update              # re-capture baseline/ and axe-baseline.json
 e2e/parity/run.sh --project=flows       # extra args go to `playwright test`
 SUPABASE_CLI="npx supabase" e2e/parity/run.sh   # if the CLI isn't on PATH as `supabase`
+DOCKER="sudo docker" e2e/parity/run.sh          # default: `docker`, else `sudo -n docker`
 ```
 
 - Everything runs in `mcr.microsoft.com/playwright:v<@playwright/test version>-noble` with
   `--network host` and `TZ=Europe/Copenhagen`, as the calling user. The Next server runs inside
   that container too, started by Playwright's `webServer`. `next build` uses
   `NEXT_PUBLIC_SUPABASE_URL` = the fault proxy, and the build is skipped with
-  `PARITY_SKIP_BUILD=1`. `next start` listens on 127.0.0.1:3210 (`PARITY_PORT`).
+  `PARITY_SKIP_BUILD=1`. The build goes to `apps/web/.next-parity` (`NEXT_DIST_DIR`), so it never
+  replaces the regular `.next` build. `next start` listens on 127.0.0.1:3210 (`PARITY_PORT`).
 - `PARITY_TARGET=expo PARITY_EXPO_DIR=<expo export -p web output>` serves that directory instead
   and compares it against the same baseline. Never use `--update` for it.
 - Report: `e2e/parity/playwright-report/` (expected / actual / diff for failed shots).
 - Thresholds: `toHaveScreenshot({ threshold: 0.2, maxDiffPixelRatio: 0.005 })`. Per-screen
-  overrides go in `thresholds.ts` only, with a reason, capped at 2%.
+  overrides go in `thresholds.ts` only, with a reason and an entry in `APPROVED_DIFFS.md`, capped at 2%.
 - axe: WCAG 2.1 A/AA on every captured state. `PARITY_AXE=compare` (the default) fails when a
   state has a rule that `axe-baseline.json` doesn't list for it, or more failing nodes for a rule
   than recorded. Nodes are counted rather than matched by selector, because axe's selectors shift

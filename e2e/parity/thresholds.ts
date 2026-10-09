@@ -2,8 +2,8 @@
  * Per-screen visual thresholds (spec §12A.4a). Empty for the Next baseline.
  *
  * The default for every shot is `threshold: 0.2, maxDiffPixelRatio: 0.005` (playwright.config.ts).
- * An override is allowed only with a reason and an entry in APPROVED_DIFFS.md, and is capped at
- * 2% of pixels. Keys: `<area>/<state>` (every viewport and theme) or
+ * An override is allowed only with a reason here and an entry in APPROVED_DIFFS.md, and is
+ * capped at 2% of pixels. Keys: `<area>/<state>` (every viewport and theme) or
  * `<area>/<state>--<width>-<theme>` (one shot), e.g.
  *
  *   "desktop/ledger--1440-dark": { maxDiffPixelRatio: 0.01, reason: "text antialiasing in RN Web `Text`" },

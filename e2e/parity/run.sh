@@ -8,13 +8,22 @@
 #   e2e/parity/run.sh --project=flows     any other args go to `playwright test`
 #
 # Env: PARITY_TARGET=next|expo (default next), PARITY_EXPO_DIR (expo), PARITY_SKIP_BUILD=1
-# (reuse apps/web/.next), PARITY_WORKERS, SUPABASE_CLI (default `supabase`), DOCKER (default
-# `sudo -n docker`).
+# (reuse apps/web/.next-parity), PARITY_WORKERS, SUPABASE_CLI (default `supabase`), DOCKER
+# (default `docker`, or `sudo -n docker` when plain `docker` can't reach the daemon).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-DOCKER="${DOCKER:-sudo -n docker}"
+if [[ -z "${DOCKER:-}" ]]; then
+  if docker info >/dev/null 2>&1; then
+    DOCKER="docker"
+  elif sudo -n docker info >/dev/null 2>&1; then
+    DOCKER="sudo -n docker"
+  else
+    echo "run.sh: can't reach Docker with \`docker\` or \`sudo -n docker\`; set DOCKER=..." >&2
+    exit 1
+  fi
+fi
 SUPABASE_CLI="${SUPABASE_CLI:-supabase}"
 
 # The image must match the installed @playwright/test exactly (same Chromium build, same fonts).
@@ -65,7 +74,7 @@ fi
 # root) is handed back before and after.
 hand_back() {
   $DOCKER run --rm -v "$ROOT:$ROOT" "$IMAGE" \
-    chown -R "$(id -u):$(id -g)" "$HERE" "$ROOT/apps/web/.next" 2>/dev/null || true
+    chown -R "$(id -u):$(id -g)" "$HERE" "$ROOT/apps/web/.next-parity" 2>/dev/null || true
 }
 hand_back
 

@@ -32,10 +32,16 @@ http
   .createServer((req, res) => {
     const pathname = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
     let file = path.join(root, pathname);
-    if (!file.startsWith(root)) file = path.join(root, "index.html");
+    const rel = path.relative(root, file);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) file = path.join(root, "index.html");
     // Expo Router exports `/insights` as `insights.html`.
     const candidates = [file, `${file}.html`, path.join(file, "index.html"), path.join(root, "index.html")];
     const found = candidates.find((f) => fs.existsSync(f) && fs.statSync(f).isFile());
+    if (!found) {
+      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      res.end("not found");
+      return;
+    }
     res.writeHead(200, { "content-type": types[path.extname(found)] ?? "application/octet-stream" });
     fs.createReadStream(found).pipe(res);
   })
