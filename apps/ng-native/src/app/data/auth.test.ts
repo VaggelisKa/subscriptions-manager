@@ -1,7 +1,19 @@
-import { expect, test, vi } from "vitest";
-import { functionErrorCode, isFunctionsFetchError } from "./auth.ts";
+import { cleanup, injectService } from "@ng-native/testing";
+import { afterEach, expect, test, vi } from "vitest";
+import { Auth, functionErrorCode, isFunctionsFetchError } from "./auth.ts";
 
-vi.mock("./supabase.ts", () => ({ supabase: {}, supabaseConfigured: true }));
+const supabase = vi.hoisted(() => ({
+  auth: {
+    getSession: vi.fn(),
+    onAuthStateChange: vi.fn(),
+    signOut: vi.fn(),
+  },
+  functions: { invoke: vi.fn() },
+}));
+
+vi.mock("./supabase.ts", () => ({ supabase, supabaseConfigured: true }));
+
+afterEach(cleanup);
 
 /** Shaped like supabase-js's error, but built here, so `instanceof` checks against its classes fail. */
 function httpError(context: unknown) {
@@ -40,4 +52,20 @@ test("recognizes a look-alike FunctionsFetchError by name", () => {
   expect(isFunctionsFetchError(httpError(undefined))).toBe(false);
   expect(isFunctionsFetchError(new Error("FunctionsFetchError"))).toBe(false);
   expect(isFunctionsFetchError(null)).toBe(false);
+});
+
+test("deleteAccount clears the session even if signing out emits no auth event", async () => {
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  const session = { user: { id: "a" } };
+  supabase.auth.getSession.mockResolvedValue({ data: { session } });
+  supabase.auth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: () => {} } } });
+  supabase.functions.invoke.mockResolvedValue({ data: { success: true }, error: null });
+  const auth = injectService(Auth);
+  await auth.whenReady();
+  expect(auth.session()).toBe(session);
+
+  supabase.auth.signOut.mockResolvedValue({ error: new Error("storage unavailable") });
+  expect(await auth.deleteAccount(async () => true)).toEqual({});
+  expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
+  expect(auth.session()).toBeNull();
 });

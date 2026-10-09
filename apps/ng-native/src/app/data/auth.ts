@@ -126,6 +126,7 @@ export class Auth {
     } catch (error) {
       console.warn("Local sign-out after account deletion failed:", error);
     }
+    this.current.set(null); // In case signing out didn't emit SIGNED_OUT.
     return {};
   }
 
