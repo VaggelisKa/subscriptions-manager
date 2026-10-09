@@ -61,6 +61,14 @@ if [[ -n "${PARITY_EXPO_DIR:-}" ]]; then
   mounts+=(-v "$PARITY_EXPO_DIR:$PARITY_EXPO_DIR:ro")
 fi
 
+# The container runs as the calling user; anything left root-owned (e.g. by an earlier run as
+# root) is handed back before and after.
+hand_back() {
+  $DOCKER run --rm -v "$ROOT:$ROOT" "$IMAGE" \
+    chown -R "$(id -u):$(id -g)" "$HERE" "$ROOT/apps/web/.next" 2>/dev/null || true
+}
+hand_back
+
 echo "run.sh: $IMAGE, target=${PARITY_TARGET:-next}, axe=$axe_mode"
 set +e
 $DOCKER run --rm --network host --ipc host \
@@ -80,7 +88,5 @@ $DOCKER run --rm --network host --ipc host \
 code=$?
 set -e
 
-# The container runs as the calling user, but hand back anything that ended up root-owned.
-$DOCKER run --rm -v "$ROOT:$ROOT" "$IMAGE" \
-  chown -R "$(id -u):$(id -g)" "$HERE" "$ROOT/apps/web/.next" 2>/dev/null || true
+hand_back
 exit $code
