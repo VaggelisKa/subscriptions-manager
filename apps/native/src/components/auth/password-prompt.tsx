@@ -53,8 +53,9 @@ export function PasswordPrompt({
     }
   }
 
+  // Cancelling is allowed while the password is being checked, not once the deletion has resumed.
   function cancel() {
-    if (!loading) onCancel();
+    if (!busy) onCancel();
   }
 
   return (
@@ -137,7 +138,7 @@ export function PasswordPrompt({
             <Button
               title="Cancel"
               variant="plain"
-              disabled={loading}
+              disabled={busy}
               onPress={cancel}
             />
           </View>

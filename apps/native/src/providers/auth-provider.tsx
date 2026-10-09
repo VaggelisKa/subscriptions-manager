@@ -302,10 +302,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // The user and all their sessions are gone server-side; just clear this device.
     try {
-      await supabase.auth.signOut({ scope: "local" });
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) console.warn("Local sign-out after account deletion failed:", error);
     } catch (error) {
       console.warn("Local sign-out after account deletion failed:", error);
     }
+    setSession(null);
     return {};
   }
 
