@@ -55,6 +55,20 @@ test("cancel emits, but not while busy", async () => {
   expect(screen.getByText("Please wait…")).toBeTruthy();
 });
 
+test("cancel doesn't emit once a password was submitted", async () => {
+  const { events, result } = await open();
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText("Password"), "hunter22");
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  await user.press(screen.getByRole("button", { name: "Cancel" }));
+  expect(events).toEqual([["confirm", "hunter22"]]);
+
+  // Still ignored while the parent is busy with it.
+  await result.rerender({ inputs: { ...inputs, busy: true } });
+  await user.press(screen.getByRole("button", { name: "Cancel" }));
+  expect(events).toEqual([["confirm", "hunter22"]]);
+});
+
 test("a double tap confirms once, until the parent is done with the attempt", async () => {
   const { events, result } = await open();
   const user = userEvent.setup();

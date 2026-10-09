@@ -157,6 +157,7 @@ export class PasswordPrompt {
   }
 
   protected dismiss(): void {
-    if (!this.busy()) this.cancel.emit();
+    // Not once a password is on its way: the parent may already be continuing with it.
+    if (!this.busy() && !this.submitted()) this.cancel.emit();
   }
 }
