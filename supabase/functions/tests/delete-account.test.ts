@@ -4,8 +4,8 @@
 //   admin-failure  --no-verify-jwt and SB_SECRET_KEY = the publishable key, so every token reaches the
 //                  function's own checks and the Admin API delete fails.
 // Env: SUPABASE_URL, SB_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY, JWT_SECRET (all from `supabase status -o env`),
-// ALLOWED_ORIGIN (listed in the served ALLOWED_ORIGINS), EDGE_RUNTIME_URL (optional: the edge runtime
-// without Kong, whose CORS plugin rewrites Access-Control-Allow-Origin locally).
+// ALLOWED_ORIGIN (listed in the served ALLOWED_ORIGINS), EDGE_RUNTIME_URL (the edge runtime without Kong,
+// whose CORS plugin rewrites Access-Control-Allow-Origin locally; required by the gateway CORS tests).
 import { assert, assertEquals, assertFalse } from "jsr:@std/assert@1.0.19";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 
@@ -263,7 +263,14 @@ gatewayTest("fresh password token → 200; user and their subscriptions gone, ot
 // CORS: Kong's local CORS plugin overwrites Access-Control-Allow-Origin with "*", so these talk to the
 // edge runtime directly. The JWT gate still applies there (verify_jwt = true).
 const corsTest = (name: string, fn: () => Promise<void>) =>
-  Deno.test({ name: `[gateway] CORS: ${name}`, ignore: MODE !== "gateway" || !EDGE_RUNTIME_URL, fn });
+  Deno.test({
+    name: `[gateway] CORS: ${name}`,
+    ignore: MODE !== "gateway",
+    fn: () => {
+      if (!EDGE_RUNTIME_URL) throw new Error("EDGE_RUNTIME_URL is not set: the CORS tests can't reach the edge runtime");
+      return fn();
+    },
+  });
 
 corsTest("OPTIONS preflight from an allowed origin echoes it", async () => {
   const res = await call(null, { method: "OPTIONS", origin: ALLOWED_ORIGIN, url: EDGE_RUNTIME_URL });

@@ -18,6 +18,7 @@ project_id=$(sed -n 's/^project_id *= *"\(.*\)"/\1/p' supabase/config.toml)
 umask 077
 tmp=$(mktemp -d)
 serve_pid=""
+edge_url="" # set by serve: the edge runtime container's delete-account URL, if reachable
 stop_serve() {
   if [[ -n $serve_pid ]]; then
     kill -INT "$serve_pid" 2>/dev/null || true
@@ -35,22 +36,32 @@ serve() { # serve <SB_SECRET_KEY> [extra serve flags...]
   [[ -n ${EXTRA_FUNCTIONS_ENV:-} ]] && cat "$EXTRA_FUNCTIONS_ENV" >>"$tmp/functions.env"
   $SUPABASE functions serve --env-file "$tmp/functions.env" "${@:2}" </dev/null >"$tmp/serve.log" 2>&1 &
   serve_pid=$!
+  # Within the same 60 s, also find the edge runtime container's own address (the CORS tests skip
+  # the gateway). Its IP is only assigned once serve has replaced the container, so keep retrying.
+  local serving="" edge_ip
+  edge_url=""
   for _ in $(seq 1 60); do
-    grep -q "Serving functions" "$tmp/serve.log" && return 0
+    [[ -z $serving ]] && grep -q "Serving functions" "$tmp/serve.log" && serving=1
+    if [[ -z $edge_url ]]; then
+      edge_ip=$($DOCKER inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{"\n"}}{{end}}' \
+        "supabase_edge_runtime_$project_id" 2>/dev/null | grep -m1 . || true)
+      if [[ -n $edge_ip ]] &&
+        curl -s -o /dev/null --max-time 3 -X OPTIONS "http://$edge_ip:8081/delete-account"; then
+        edge_url="http://$edge_ip:8081/delete-account"
+      fi
+    fi
+    [[ -n $serving && -n $edge_url ]] && return 0
     sleep 1
   done
+  [[ -n $serving ]] && return 0
   cat "$tmp/serve.log" >&2
   return 1
 }
 
 run_pass() { # run_pass <mode>
-  local edge_ip edge_url=""
-  edge_ip=$($DOCKER inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
-    "supabase_edge_runtime_$project_id" 2>/dev/null || true)
-  if [[ -n $edge_ip ]] && curl -s -o /dev/null --max-time 3 -X OPTIONS "http://$edge_ip:8081/delete-account"; then
-    edge_url="http://$edge_ip:8081/delete-account"
-  else
-    echo "edge runtime not reachable directly; CORS integration tests will be ignored" >&2
+  if [[ $1 == gateway && -z $edge_url ]]; then
+    echo "edge runtime not reachable directly; the gateway pass needs it for the CORS tests" >&2
+    return 1
   fi
   DELETE_ACCOUNT_TEST_MODE=$1 SUPABASE_URL=$API_URL SB_SECRET_KEY=$SECRET_KEY \
     SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY JWT_SECRET=$JWT_SECRET \
