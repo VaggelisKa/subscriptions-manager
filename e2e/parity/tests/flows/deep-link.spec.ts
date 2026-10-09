@@ -44,5 +44,7 @@ test.describe("flow 8: deep link", () => {
     await open(page, `/?s=${subscriptionId(USERS.writerAdd, SUBS.dsb.n)}`);
     await expect(page).toHaveURL(/\/$/);
     await expect(desktop.selectedRow(page)).toHaveCount(0);
+    // writerAdd's row has the same name as populated's: no detail under that name either.
+    await expect(desktop.inspector(page, SUBS.dsb.name)).toHaveCount(0);
   });
 });

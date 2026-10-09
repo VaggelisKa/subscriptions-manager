@@ -28,7 +28,7 @@ test.describe("flow 7: ledger", () => {
 
   test("sorts: next charge (bucketed), price per month, name", async ({ page }) => {
     await expect(desktop.ledger(page).getByRole("heading")).toHaveText(["Next 7 days", "Later this month", "Later"]);
-    expect(await ledgerNames(page)).toEqual([
+    await expect.poll(() => ledgerNames(page)).toEqual([
       S.netflix.name, S.fitness.name, S.photon.name, S.spotify.name, S.electricity.name,
       S.duolingo.name, S.dsb.name,
       S.accountant.name, S.claude.name, S.podcast.name, S.adobe.name, S.allotment.name,
@@ -36,19 +36,19 @@ test.describe("flow 7: ledger", () => {
 
     await sortBy(page, "Price");
     await expect(desktop.ledger(page).getByRole("heading")).toHaveCount(0);
-    expect(await ledgerNames(page)).toEqual([
+    await expect.poll(() => ledgerNames(page)).toEqual([
       S.accountant.name, S.dsb.name, S.electricity.name, S.adobe.name, S.fitness.name, S.spotify.name,
       S.claude.name, S.netflix.name, S.duolingo.name, S.photon.name, S.allotment.name, S.podcast.name,
     ]);
 
     await sortBy(page, "Name");
-    expect(await ledgerNames(page)).toEqual([
+    await expect.poll(() => ledgerNames(page)).toEqual([
       S.accountant.name, S.adobe.name, S.claude.name, S.dsb.name, S.duolingo.name, S.fitness.name,
       S.allotment.name, S.netflix.name, S.electricity.name, S.photon.name, S.podcast.name, S.spotify.name,
     ]);
 
     await sortBy(page, "Next charge");
-    expect((await ledgerNames(page))[0]).toBe(S.netflix.name);
+    await expect.poll(async () => (await ledgerNames(page))[0]).toBe(S.netflix.name);
   });
 
   test("month calendar: a 2-charge day filters, the chip and Esc clear it; a 1-charge day opens it", async ({ page }) => {
@@ -57,17 +57,18 @@ test.describe("flow 7: ledger", () => {
     const chip = page.getByRole("button", { name: "Clear filter: Thu 15 Oct, 2 charges" });
     await expect(chip).toHaveText("Thu 15 Oct · 2 charges");
     await expect(desktop.calendarDay(page, "Thu 15 Oct")).toHaveAttribute("aria-pressed", "true");
-    expect(await ledgerNames(page)).toEqual([S.fitness.name, S.photon.name]);
+    await expect.poll(() => ledgerNames(page)).toEqual([S.fitness.name, S.photon.name]);
 
     await chip.click();
-    expect(await ledgerNames(page)).toHaveLength(12);
+    await expect.poll(() => ledgerNames(page)).toHaveLength(12);
 
     await desktop.calendarDay(page, "Thu 15 Oct").click();
     await expect(chip).toBeVisible();
-    await page.mouse.click(5, 895); // focus off the calendar, so Esc reaches the window
+    // Focus off the calendar, so Esc reaches the window.
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Escape");
     await expect(chip).toBeHidden();
-    expect(await ledgerNames(page)).toHaveLength(12);
+    await expect.poll(() => ledgerNames(page)).toHaveLength(12);
 
     await desktop.calendarDay(page, "Tue 20 Oct").click();
     await expect(desktop.inspector(page, S.electricity.name)).toBeVisible();

@@ -40,6 +40,7 @@ test.describe("flow 9: theme", () => {
     test("toolbar menu: Dark mode, persisted; Match system", async ({ page }) => {
       await open(page, "/");
       await mobile.menuButton(page).click();
+      await expect(page.getByRole("menuitem", { name: "Dark mode" })).toBeVisible();
       await expect(page.getByRole("menuitem", { name: "Match system" })).toHaveCount(0);
       await page.getByRole("menuitem", { name: "Dark mode" }).click();
       await expect(html(page)).toHaveClass(/\bdark\b/);

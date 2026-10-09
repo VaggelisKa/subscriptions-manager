@@ -162,6 +162,7 @@ test.describe("desktop", () => {
     await pickSegment(page, "Period", "Week");
     await panel.getByRole("button", { name: /^Entertainment/ }).click();
     await expect(panel.getByText("Spend per week")).toBeVisible();
+    await expect(panel.getByRole("button", { name: /^Netflix,/ })).toBeVisible();
     await shot("desktop", "insights-week-expanded");
   });
 
@@ -255,6 +256,7 @@ test.describe("desktop hotkeys", () => {
 
   test("⌘/Ctrl+Enter submits the add form (here: name required)", DESKTOP, async ({ page, shot }) => {
     await page.keyboard.press("n");
+    await expect(desktop.inspector(page, "New subscription").getByLabel("Name")).toBeFocused();
     await page.keyboard.press("ControlOrMeta+Enter");
     await expect(desktop.inspector(page, "New subscription").getByText("Give the subscription a name.")).toBeVisible();
     await shot("desktop", "hotkey-mod-enter");

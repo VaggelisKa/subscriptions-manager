@@ -31,6 +31,7 @@ test.describe("flow 12: realtime", () => {
       await second.clock.setFixedTime(new Date(FIXED_TIME));
       await open(second, "/");
       await desktop.row(second, SUBS.claude.name).click();
+      await expect(desktop.inspector(second, SUBS.claude.name)).toBeVisible();
       await second.keyboard.press("e");
       await desktop.inspector(second, "Edit subscription").getByLabel("Name").fill("Claude Max");
       await second.keyboard.press("ControlOrMeta+Enter");
