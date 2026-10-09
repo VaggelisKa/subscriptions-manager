@@ -36,6 +36,10 @@ const signedIn = (method: string, ageSeconds: number) => ({
   error: null,
 });
 
+// supabase-js is mocked, so auth errors are built by shape (the classifier checks name/status).
+const authError = (name: string, message: string, status?: number) =>
+  Object.assign(new Error(message), { name, status });
+
 const REAUTH = {
   error: "Please sign in again or update the app to delete your account.",
   code: "reauth_required",
@@ -84,11 +88,39 @@ describe("POST /api/account/delete", () => {
     expect(auth.deleteUser).not.toHaveBeenCalled();
   });
 
-  it("unreadable claims → 403", async () => {
-    auth.getClaims.mockResolvedValue({ data: null, error: new Error("bad jwt") });
+  it.each([
+    ["invalid JWT", authError("AuthInvalidJwtError", "Invalid JWT signature")],
+    ["401 from Auth", authError("AuthApiError", "bad_jwt", 401)],
+  ])("rejected claims (%s) → 403", async (_, error) => {
+    auth.getClaims.mockResolvedValue({ data: null, error });
     const res = await POST(request("token"));
     expect(res.status).toBe(403);
     expect(await res.json()).toEqual(REAUTH);
+    expect(auth.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("missing claims without an error → 403", async () => {
+    auth.getClaims.mockResolvedValue({ data: null, error: null });
+    const res = await POST(request("token"));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual(REAUTH);
+    expect(auth.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["network failure", authError("AuthRetryableFetchError", "fetch failed", 0)],
+    ["500 from Auth", authError("AuthApiError", "unexpected_failure", 500)],
+    ["unexpected error", new Error("boom")],
+  ])("claims lookup outage (%s) → 500 delete_failed, nothing deleted", async (_, error) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    auth.getClaims.mockResolvedValue({ data: null, error });
+    const res = await POST(request("token"));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({
+      error: "Failed to delete account",
+      code: "delete_failed",
+    });
+    expect(auth.deleteSubscriptions).not.toHaveBeenCalled();
     expect(auth.deleteUser).not.toHaveBeenCalled();
   });
 

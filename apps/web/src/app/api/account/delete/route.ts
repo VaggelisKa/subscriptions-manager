@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { Database } from "@subscriptions-manager/shared";
 import { hasRecentSignIn } from "@supabase-functions/_shared/recent-auth";
+import { isAuthRejection } from "@supabase-functions/delete-account/auth-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,15 @@ export async function POST(request: Request) {
   }
 
   // Same rule as the Edge Function: a password/OTP sign-in within the last 10 minutes.
-  const { data: claimsData } = await supabaseAuth.auth.getClaims(token);
+  const { data: claimsData, error: claimsError } =
+    await supabaseAuth.auth.getClaims(token);
+  if (claimsError && !isAuthRejection(claimsError)) {
+    console.error("Failed to read token claims:", claimsError);
+    return NextResponse.json(
+      { error: "Failed to delete account", code: "delete_failed" },
+      { status: 500 },
+    );
+  }
   const claims = claimsData?.claims;
   if (
     !claims ||
