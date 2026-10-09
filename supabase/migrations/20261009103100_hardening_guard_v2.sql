@@ -35,9 +35,10 @@ $fn$;
 
 revoke all on function private.hardening_exclusions() from public, anon, authenticated;
 
--- `exclusions` defaults to private.hardening_exclusions(). Only pgTAP passes another list (to prove the owner
--- gate); migrations call the zero-arg form, enforced by supabase/tests/guard_usage.test.sql.
-create or replace function private.hardening_violations(exclusions jsonb default null)
+-- Zero-arg only (Architect ruling on PR #58): the exclusion list is the internal constant
+-- private.hardening_exclusions(); there is no overload that takes a list. pgTAP builds a parameterised
+-- pg_temp copy from this function's own definition (supabase/tests/hardening.test.sql).
+create or replace function private.hardening_violations()
 returns setof text
 language plpgsql
 stable
@@ -120,11 +121,11 @@ begin
            or p.proacl is null
            or exists (select 1 from aclexplode(p.proacl) a
                       where a.grantee = 0 and a.privilege_type = 'EXECUTE'))
-  $q$, scope, rel_excluded_d, fn_excluded_e3) using coalesce(exclusions, private.hardening_exclusions());
+  $q$, scope, rel_excluded_d, fn_excluded_e3) using private.hardening_exclusions();
 end
 $fn$;
 
-revoke all on function private.hardening_violations(jsonb) from public, anon, authenticated;
+revoke all on function private.hardening_violations() from public, anon, authenticated;
 
 create or replace function private.assert_hardening()   -- no arguments: always the constant list
 returns void

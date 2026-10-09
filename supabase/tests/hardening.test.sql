@@ -7,7 +7,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(47);
+select plan(50);
 
 -- KEEP IN SYNC: same scope predicate as the guard in
 -- supabase/migrations/20261009083122_hardening.sql. Change both together.
@@ -56,6 +56,39 @@ $$, '(C) no SECURITY DEFINER function in scope is executable by PUBLIC/anon/auth
 -- ── Phase 1b: guard v2 ──
 select is_empty($$ select * from private.hardening_violations() $$, 'no hardening violations (guard v2, checks A–E3)');
 
+-- ── Parameterised test copy (Architect ruling on PR #58) ──
+-- Production has only the zero-arg private.hardening_violations(). Tests that need a custom exclusion
+-- list use pg_temp.hardening_violations_with(exclusions jsonb), generated here from the production
+-- function's own definition (pg_get_functiondef), so there is no hand-maintained duplicate. It lives in
+-- this session's pg_temp and disappears with the rolled-back transaction.
+do $gen$
+declare
+  def text := pg_get_functiondef('private.hardening_violations()'::regprocedure);
+  hdr constant text := 'CREATE OR REPLACE FUNCTION private.hardening_violations()';
+  src constant text := 'using private.hardening_exclusions()';
+  n int;
+begin
+  n := (length(def) - length(replace(def, src, ''))) / length(src);
+  if strpos(def, hdr) <> 1 or n <> 1 then
+    raise exception 'test copy generator: unexpected definition of private.hardening_violations() (header at %, % list reference(s))',
+      strpos(def, hdr), n;
+  end if;
+  execute replace(replace(def, hdr, 'CREATE FUNCTION pg_temp.hardening_violations_with(exclusions jsonb)'),
+                  src, 'using exclusions');
+end $gen$;
+
+-- Drift test: the copy, run with the constant list, returns exactly the production rows, on a
+-- non-empty set (probe table with RLS off), so a logic change to one without the other fails.
+create table public.__drift_probe (id int);
+select ok((select count(*) from private.hardening_violations()) > 0, 'drift probe makes the compared set non-empty');
+select set_eq($$ select * from pg_temp.hardening_violations_with(private.hardening_exclusions()) $$,
+              $$ select * from private.hardening_violations() $$,
+              'drift: test copy with the constant list = production hardening_violations()');
+select ok(exists (select 1 from pg_temp.hardening_violations_with('[]'::jsonb) v where v like 'function graphql_public.graphql(%')
+          and not exists (select 1 from private.hardening_violations() v where v like 'function graphql_public.graphql(%'),
+          'the list is really applied: the stub appears with an empty list, not in production');
+drop table public.__drift_probe;
+
 -- ── Owner-gated exclusions (Architect ruling on PR #58) ──
 -- KEEP IN SYNC: copy of private.hardening_exclusions() in
 -- supabase/migrations/20261009103100_hardening_guard_v2.sql. Change both together.
@@ -70,18 +103,17 @@ select results_eq($$ select kind, object, owner, "check" from jsonb_to_recordset
 
 -- Owner change on the real excluded objects: the migration role can't ALTER ... OWNER on
 -- supabase_admin's objects, so the changed owner is simulated by passing the same list with a different
--- expected owner. Each object must then be reported again. (assert_hardening() takes no arguments, so
--- injected lists are only ever passed to hardening_violations().)
+-- expected owner (passed to the pg_temp test copy). Each object must then be reported again.
 create temporary table owner_changed_list as
 select jsonb_agg(e || jsonb_build_object('owner', 'postgres')) as l
 from jsonb_array_elements(private.hardening_exclusions()) e;
-select ok(exists (select 1 from private.hardening_violations((select l from owner_changed_list)) v
+select ok(exists (select 1 from pg_temp.hardening_violations_with((select l from owner_changed_list)) v
                   where v like 'function graphql_public.graphql(%executable by anon or PUBLIC'),
           'owner mismatch: graphql_public.graphql stub is reported again');
-select ok((select count(*) from private.hardening_violations((select l from owner_changed_list)) v
+select ok((select count(*) from pg_temp.hardening_violations_with((select l from owner_changed_list)) v
            where v like 'table _realtime.% has row level security disabled') = 4,
           'owner mismatch: the four _realtime tables are reported again');
-select is((select count(*)::int from private.hardening_violations((select l from owner_changed_list))), 5,
+select is((select count(*)::int from pg_temp.hardening_violations_with((select l from owner_changed_list))), 5,
           'owner mismatch on the listed objects: exactly those 5 violations come back');
 
 -- Real owner change, on an object the migration role owns: an entry stops applying once the owner changes.
@@ -90,17 +122,17 @@ create temporary table probe_list as
 select private.hardening_exclusions()
        || '[{"kind": "relation", "object": "hardening_test_new_app_schema.__owned", "owner": "postgres", "check": "D"},
             {"kind": "function", "object": "hardening_test_new_app_schema.__fprobe()", "owner": "postgres", "check": "E3"}]'::jsonb as l;
-select is_empty($$ select * from private.hardening_violations((select l from probe_list)) $$,
+select is_empty($$ select * from pg_temp.hardening_violations_with((select l from probe_list)) $$,
                 'probe table excluded from (D) while owned by the listed owner');
 -- a relation entry exempts (D) only: an anon grant on the same table still trips (E1)
 grant select on hardening_test_new_app_schema.__owned to anon;
-select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+select ok(exists (select 1 from pg_temp.hardening_violations_with((select l from probe_list)) v
                   where v like 'relation hardening_test_new_app_schema.__owned grants privileges to anon%'),
           'relation entry does not exempt (E1)');
 revoke select on hardening_test_new_app_schema.__owned from anon;
 grant create, usage on schema hardening_test_new_app_schema to service_role;
 alter table hardening_test_new_app_schema.__owned owner to service_role;
-select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+select ok(exists (select 1 from pg_temp.hardening_violations_with((select l from probe_list)) v
                   where v like 'table hardening_test_new_app_schema.__owned has row level security disabled%'),
           'same entry, owner changed → reported again');
 drop table hardening_test_new_app_schema.__owned;
@@ -108,13 +140,13 @@ drop table hardening_test_new_app_schema.__owned;
 -- a function entry exempts (E3) only, and only while NOT security definer (PR #58 review)
 create function hardening_test_new_app_schema.__fprobe() returns int language sql as 'select 1';
 grant execute on function hardening_test_new_app_schema.__fprobe() to public;
-select is_empty($$ select * from private.hardening_violations((select l from probe_list)) $$,
+select is_empty($$ select * from pg_temp.hardening_violations_with((select l from probe_list)) $$,
                 'listed non-SECURITY-DEFINER function is exempt from (E3)');
 alter function hardening_test_new_app_schema.__fprobe() security definer;
-select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+select ok(exists (select 1 from pg_temp.hardening_violations_with((select l from probe_list)) v
                   where v like 'security definer hardening_test_new_app_schema.__fprobe()%'),
           'SECURITY DEFINER flip of a listed function trips (C)');
-select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+select ok(exists (select 1 from pg_temp.hardening_violations_with((select l from probe_list)) v
                   where v like 'function hardening_test_new_app_schema.__fprobe()%executable by anon or PUBLIC'),
           'SECURITY DEFINER flip of a listed function also trips (E3)');
 drop function hardening_test_new_app_schema.__fprobe();
@@ -216,7 +248,7 @@ select ok(to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is nu
 select ok(to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is null
           or not (select prosecdef from pg_proc where oid = to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)')),
           'graphql_public.graphql stub is not SECURITY DEFINER');
-select function_privs_are('private','hardening_violations', array['jsonb'], 'anon', array[]::text[]);
+select function_privs_are('private','hardening_violations', array[]::text[], 'anon', array[]::text[]);
 select function_privs_are('private','hardening_exclusions', array[]::text[], 'anon', array[]::text[]);
 select function_privs_are('private','assert_hardening', array[]::text[], 'authenticated', array[]::text[]);
 

@@ -3,7 +3,7 @@
 -- supabase/migrations/20261009103100_hardening_guard_v2.sql) as a plain query, because the function
 -- does not exist on prod before push B. NO exclusion list is applied, so every hit is shown.
 -- KEEP IN SYNC with hardening_violations(); generated from it, verified locally to return exactly
--- `select * from private.hardening_violations('[]')`.
+-- the generated pg_temp test copy run with an empty list (see supabase/tests/hardening.test.sql).
 -- Expected on prod: exactly ONE row, the graphql placeholder:
 --   function graphql_public.graphql("operationName" text, query text, variables jsonb, extensions jsonb) executable by anon or PUBLIC
 -- Anything else: stop and report (do not push).
