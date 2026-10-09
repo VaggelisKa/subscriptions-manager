@@ -259,7 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /** Confirms the current user's password, which also counts as a fresh sign-in. */
   async function reauthenticate(password: string) {
-    const email = session?.user.email;
+    // The stored session, not React state, which can lag behind a token refresh or sign-in.
+    const {
+      data: { session: current },
+    } = await supabase.auth.getSession();
+    const email = current?.user.email ?? session?.user.email;
     if (!email) return { error: "Not signed in" };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
@@ -272,27 +276,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * false when the user cancels) and the request is retried once.
    */
   async function deleteAccount(confirmIdentity: () => Promise<boolean>) {
-    let { error } = await supabase.functions.invoke("delete-account", {
-      method: "POST",
-    });
-    if (error && (await functionErrorCode(error)) === "reauth_required") {
-      if (!(await confirmIdentity())) return { cancelled: true };
-      ({ error } = await supabase.functions.invoke("delete-account", {
+    try {
+      let { error } = await supabase.functions.invoke("delete-account", {
         method: "POST",
-      }));
-    }
-    if (error) {
+      });
+      if (error && (await functionErrorCode(error)) === "reauth_required") {
+        if (!(await confirmIdentity())) return { cancelled: true };
+        ({ error } = await supabase.functions.invoke("delete-account", {
+          method: "POST",
+        }));
+      }
+      if (error) {
+        console.warn("Account deletion failed:", error);
+        return {
+          error:
+            isFunctionsFetchError(error)
+              ? "Couldn't reach the server. Check your connection and try again."
+              : "Couldn't delete your account. Try again.",
+        };
+      }
+    } catch (error) {
       console.warn("Account deletion failed:", error);
-      return {
-        error:
-          isFunctionsFetchError(error)
-            ? "Couldn't reach the server. Check your connection and try again."
-            : "Couldn't delete your account. Try again.",
-      };
+      return { error: "Couldn't delete your account. Try again." };
     }
 
     // The user and all their sessions are gone server-side; just clear this device.
-    await supabase.auth.signOut({ scope: "local" });
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.warn("Local sign-out after account deletion failed:", error);
+    }
     return {};
   }
 
