@@ -10,22 +10,19 @@ export const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 export type AxeViolation = { rule: string; impact: string | null; targets: string[] };
 export type AxeBaseline = { axeVersion: string; tags: string[]; states: Record<string, AxeViolation[]> };
 
-/**
- * Selectors with generated ids (React `useId`, Radix) are stable for one build but not
- * meaningful across targets, so they're compared without the id.
- */
+/** Generated ids (React `useId`, Radix) in a selector, so they don't show as churn in the file. */
 function normalizeTarget(selector: string) {
   return selector.replace(/#[^\s>.,:[]*(radix|«|»|_r_|:r)[^\s>.,[]*/g, "#<generated>");
 }
 
-function key(v: { rule: string }, target: string) {
-  return `${v.rule} @ ${target}`;
-}
-
 /**
  * Runs axe on the current page state. `record` stores the result for globalTeardown to merge
- * into axe-baseline.json; `compare` returns every violation (rule + element) that the
- * baseline doesn't have for this state.
+ * into axe-baseline.json. `compare` returns what's new for this state: a rule the baseline
+ * doesn't have, or more failing nodes for a rule than it recorded.
+ *
+ * Nodes are compared by count, not by selector: axe builds the shortest unique selector for
+ * each node, which shifts with unrelated DOM (and means nothing against the Expo app's DOM).
+ * The recorded targets are there for people reading the file.
  */
 export async function checkAxe(page: Page, state: string): Promise<string[]> {
   if (AXE_MODE === "off") return [];
@@ -46,10 +43,10 @@ export async function checkAxe(page: Page, state: string): Promise<string[]> {
   }
 
   const baseline: AxeBaseline = JSON.parse(fs.readFileSync(AXE_BASELINE, "utf8"));
-  const known = new Set((baseline.states[state] ?? []).flatMap((v) => v.targets.map((t) => key(v, t))));
-  return violations.flatMap((v) =>
-    v.targets.filter((t) => !known.has(key(v, t))).map((t) => `${key(v, t)} (${v.impact})`),
-  );
+  const recorded = new Map((baseline.states[state] ?? []).map((v) => [v.rule, v.targets.length]));
+  return violations
+    .filter((v) => v.targets.length > (recorded.get(v.rule) ?? 0))
+    .map((v) => `${v.rule} (${v.impact}): ${v.targets.length} nodes, baseline ${recorded.get(v.rule) ?? 0}; ${v.targets.join(" | ")}`);
 }
 
 /** globalTeardown (record mode): merges this run's states into axe-baseline.json, sorted. */

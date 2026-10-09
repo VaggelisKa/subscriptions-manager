@@ -31,8 +31,10 @@ SUPABASE_CLI="npx supabase" e2e/parity/run.sh   # if the CLI isn't on PATH as `s
 - Report: `e2e/parity/playwright-report/` (expected / actual / diff for failed shots).
 - Thresholds: `toHaveScreenshot({ threshold: 0.2, maxDiffPixelRatio: 0.005 })`. Per-screen
   overrides go in `thresholds.ts` only, with a reason, capped at 2%.
-- axe: WCAG 2.1 A/AA on every captured state. `PARITY_AXE=compare` (the default) fails on any
-  violation that isn't in `axe-baseline.json` for that state. `--update` records it again.
+- axe: WCAG 2.1 A/AA on every captured state. `PARITY_AXE=compare` (the default) fails when a
+  state has a rule that `axe-baseline.json` doesn't list for it, or more failing nodes for a rule
+  than recorded. Nodes are counted rather than matched by selector, because axe's selectors shift
+  with unrelated DOM. `--update` records the file again.
 
 ## How it stays deterministic
 
