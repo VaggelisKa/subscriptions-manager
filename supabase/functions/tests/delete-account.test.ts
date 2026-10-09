@@ -181,7 +181,7 @@ gatewayTest("valid token from a sign-in older than 10 minutes → 401 reauth_req
   }
 });
 
-gatewayTest("fresh sign-in by a method other than password/otp → 401 reauth_required", async () => {
+gatewayTest("fresh sign-in by a method other than password/otp/magiclink/totp → 401 reauth_required", async () => {
   const user = await createUser(["Kept"]);
   try {
     for (const method of ["oauth", "recovery", "invite"]) {
@@ -353,7 +353,7 @@ failureTest("missing or unparseable tokens are rejected by the function itself �
   }
 });
 
-failureTest("stale or non-password/otp sign-in is still checked before the Admin API → 401 reauth_required", async () => {
+failureTest("stale or non-password/otp/magiclink/totp sign-in is still checked before the Admin API → 401 reauth_required", async () => {
   const user = await createUser();
   try {
     for (const [age, method] of [[11 * 60, "password"], [5, "oauth"], [5, "recovery"]] as const) {

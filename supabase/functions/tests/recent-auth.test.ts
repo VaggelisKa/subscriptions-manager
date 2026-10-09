@@ -9,9 +9,11 @@ Deno.test("recent-auth: window is 10 minutes", () => {
   assertEquals(RECENT_SIGN_IN_SECONDS, 600);
 });
 
-Deno.test("recent-auth: fresh password or otp sign-in → true", () => {
+Deno.test("recent-auth: fresh password, otp, magiclink or totp sign-in → true", () => {
   assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(5) }], NOW), true);
   assertEquals(hasRecentSignIn([{ method: "otp", timestamp: ago(60) }], NOW), true);
+  assertEquals(hasRecentSignIn([{ method: "magiclink", timestamp: ago(5) }], NOW), true);
+  assertEquals(hasRecentSignIn([{ method: "totp", timestamp: ago(5) }], NOW), true);
   assertEquals(hasRecentSignIn([{ method: "oauth", timestamp: ago(3600) }, { method: "otp", timestamp: ago(1) }], NOW), true);
 });
 
@@ -34,12 +36,13 @@ Deno.test("recent-auth: millisecond timestamps → false", () => {
 });
 
 Deno.test("recent-auth: stale sign-in (> 10 min) → false", () => {
+  assertEquals(hasRecentSignIn([{ method: "magiclink", timestamp: ago(11 * 60) }], NOW), false);
   assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(11 * 60) }], NOW), false);
   assertEquals(hasRecentSignIn([{ method: "otp", timestamp: ago(24 * 3600) }], NOW), false);
 });
 
 Deno.test("recent-auth: other methods never count, however fresh", () => {
-  for (const method of ["oauth", "recovery", "invite", "magiclink", "email/signup", "sso/saml", "anonymous", "mfa/totp", "pwd"]) {
+  for (const method of ["oauth", "recovery", "invite", "email/signup", "sso/saml", "anonymous", "mfa/totp", "pwd"]) {
     assertEquals(hasRecentSignIn([{ method, timestamp: ago(1) }], NOW), false, method);
   }
 });

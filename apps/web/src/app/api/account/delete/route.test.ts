@@ -127,6 +127,8 @@ describe("POST /api/account/delete", () => {
   it.each([
     ["password", "password"],
     ["otp", "otp"],
+    ["magiclink", "magiclink"],
+    ["totp", "totp"],
   ])("fresh %s sign-in → 200 and deletes the account", async (_, method) => {
     auth.getClaims.mockResolvedValue(signedIn(method, 5));
     const res = await POST(request("token"));

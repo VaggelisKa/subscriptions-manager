@@ -1,4 +1,4 @@
-// Deletes the caller's account. Requires a password/OTP sign-in within the last
+// Deletes the caller's account. Requires a password/OTP/magic link/TOTP sign-in within the last
 // 10 minutes; subscriptions are removed by the ON DELETE CASCADE FK on user_id.
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import { corsHeaders, preflight } from "../_shared/cors.ts";

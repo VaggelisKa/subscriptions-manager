@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Same rule as the Edge Function: a password/OTP sign-in within the last 10 minutes.
+  // Same rule as the Edge Function: a password/OTP/magic link/TOTP sign-in within the last 10 minutes.
   const { data: claimsData, error: claimsError } =
     await supabaseAuth.auth.getClaims(token);
   if (claimsError && !isAuthRejection(claimsError)) {
