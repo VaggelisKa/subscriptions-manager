@@ -1,6 +1,9 @@
+// TODO: delete this route together with apps/web in Phase 6 (tracking issue: TODO-ISSUE-LINK).
+// Clients delete accounts through the delete-account Edge Function.
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { Database } from "@subscriptions-manager/shared";
+import { hasRecentSignIn } from "@supabase-functions/_shared/recent-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +47,23 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: authError?.message ?? "Invalid or expired token" },
       { status: 401 },
+    );
+  }
+
+  // Same rule as the Edge Function: a password/OTP sign-in within the last 10 minutes.
+  const { data: claimsData } = await supabaseAuth.auth.getClaims(token);
+  const claims = claimsData?.claims;
+  if (
+    !claims ||
+    claims.sub !== user.id ||
+    !hasRecentSignIn(claims.amr, Date.now() / 1000)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Please sign in again or update the app to delete your account.",
+        code: "reauth_required",
+      },
+      { status: 403 },
     );
   }
 
