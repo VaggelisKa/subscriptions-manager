@@ -3,7 +3,6 @@ import * as Linking from "expo-linking";
 import { supabase } from "@/lib/supabase";
 import {
   FunctionsFetchError,
-  FunctionsHttpError,
   type Session,
   type User,
 } from "@supabase/supabase-js";
@@ -65,11 +64,17 @@ function parseHashParams(url: string): Record<string, string> {
 
 /** The `code` from an Edge Function's JSON error body, if there is one. */
 async function functionErrorCode(error: unknown) {
-  if (!(error instanceof FunctionsHttpError)) return undefined;
-  const response: unknown = error.context;
-  if (!(response instanceof Response)) return undefined;
+  // Checked by shape, not `instanceof`: a second copy of supabase-js (or a polyfilled `Response`)
+  // makes the class checks fail even for a real `reauth_required` reply.
+  if (!error || typeof error !== "object") return undefined;
+  if (!("name" in error) || error.name !== "FunctionsHttpError") return undefined;
+  const context: unknown = "context" in error ? error.context : undefined;
+  if (!context || typeof context !== "object" || !("json" in context)) return undefined;
+  if (typeof context.json !== "function") return undefined;
   try {
-    const body: unknown = await response.clone().json();
+    const response: { json: () => Promise<unknown> } =
+      "clone" in context && typeof context.clone === "function" ? context.clone() : context;
+    const body = await response.json();
     if (body && typeof body === "object" && "code" in body) {
       return typeof body.code === "string" ? body.code : undefined;
     }
