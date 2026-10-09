@@ -112,7 +112,11 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ code: "PARITY", message: "parity proxy: injected failure", details: null, hint: null }));
   }
   req.pause();
-  held.push({ sub, url: req.url, resume: () => forward(req, res) });
+  // A client that gives up (test over, server timeout) drops out of the queue instead of being
+  // forwarded onto a dead socket when the rule goes.
+  const entry = { sub, url: req.url, resume: () => !res.destroyed && !res.writableEnded && forward(req, res) };
+  held.push(entry);
+  res.on("close", () => (held = held.filter((h) => h !== entry)));
 });
 
 // Realtime (WebSocket) passes straight through.

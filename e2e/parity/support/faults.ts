@@ -15,6 +15,10 @@ export async function addFault(user: UserKey, mode: "hold" | "error", path = "/r
   if (!res.ok) throw new Error(`proxy rejected fault: ${res.status} ${await res.text()}`);
   const { id } = (await res.json()) as { id: number };
   return async () => {
-    await fetch(`${PROXY_URL}/__parity/faults?id=${id}`, { method: "DELETE" });
+    const del = await fetch(`${PROXY_URL}/__parity/faults?id=${id}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!del.ok) throw new Error(`proxy failed to clear fault ${id}: ${del.status} ${await del.text()}`);
   };
 }
