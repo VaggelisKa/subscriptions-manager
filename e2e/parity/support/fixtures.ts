@@ -25,10 +25,20 @@ type Fixtures = {
 export const test = base.extend<Fixtures>({
   target: TARGET,
 
-  // Every page starts on the fixed clock (spec §12A.2); timers keep running.
+  // Every page starts on the fixed clock (spec §12A.2); timers keep running. And no page may
+  // hit a React hydration error: server-rendered HTML that differs from the browser's render
+  // (e.g. the server on another day than page.clock) shows up as one (#418 and friends), even
+  // where React recovers and the final pixels match.
   page: async ({ page }, use) => {
+    const hydrationErrors: string[] = [];
+    page.on("pageerror", (error) => {
+      if (/hydrat|react\.dev\/errors\/(418|419|422|423|425)\b/i.test(error.message)) {
+        hydrationErrors.push(error.message.split("\n")[0]);
+      }
+    });
     await page.clock.setFixedTime(new Date(FIXED_TIME));
     await use(page);
+    expect(hydrationErrors, "React hydration errors (server and browser rendered differently)").toEqual([]);
   },
 
   login: async ({ context }, use) => {

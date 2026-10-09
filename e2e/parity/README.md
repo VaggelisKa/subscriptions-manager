@@ -45,7 +45,10 @@ SUPABASE_CLI="npx supabase" e2e/parity/run.sh   # if the CLI isn't on PATH as `s
   server computes "today" during SSR too (`lib/billing.ts` `today()` → `new Date()`), so
   `next start` preloads `support/fake-clock.cjs`. That makes the server's wall clock (`new Date()`)
   start at the same instant and tick from there. `Date.now()` stays real, because Supabase token
-  expiry is checked with it and GoTrue issues tokens on the real clock.
+  expiry is checked with it and GoTrue issues tokens on the real clock. Every test fails on a
+  React hydration error, which is what a server on a different day produces. The suite was also
+  re-run with the server's real clock moved by libfaketime (20 Sep 2026; 15 Jan 2026 23:50), and
+  every shot matched.
 - **Auth:** globalSetup signs each fixture user in once (password, supabase-js). That stays well
   under GoTrue's limit of 30 sign-ins per 5 min. `loginAs()` writes the session into the
   `@supabase/ssr` cookie (`sb-127-auth-token`, `base64-` + base64url JSON, chunked). Its `expires_at`
