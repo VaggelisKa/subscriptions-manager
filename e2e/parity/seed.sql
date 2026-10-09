@@ -38,8 +38,6 @@ insert into parity_users values
   (6, '00000000-0000-4000-a000-000000000006', 'writer-edit@parity.test',   true),   -- flow 3 (writes)
   (7, '00000000-0000-4000-a000-000000000007', 'writer-delete@parity.test', true),   -- flow 4 (writes)
   (8, '00000000-0000-4000-a000-000000000008', 'signout@parity.test',       true),   -- flow 1 (global sign-out revokes its sessions)
-  (9, '00000000-0000-4000-a000-000000000009', 'slow@parity.test',          true),   -- flow 11 loading (held, then released)
-  (10,'00000000-0000-4000-a000-000000000010', 'retry@parity.test',         true),   -- flow 11 error + retry (fails, then recovers)
   (11,'00000000-0000-4000-a000-000000000011', 'realtime@parity.test',      true);   -- flow 12 (writes; skipped on Next)
 
 delete from parity_users

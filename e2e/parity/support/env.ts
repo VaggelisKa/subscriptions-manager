@@ -56,8 +56,6 @@ export type UserKey =
   | "writerEdit"
   | "writerDelete"
   | "signout"
-  | "slow"
-  | "retry"
   | "realtime";
 
 export type FixtureUser = { id: string; email: string };
@@ -72,10 +70,21 @@ export const USERS: Record<UserKey, FixtureUser> = {
   writerEdit: { id: "00000000-0000-4000-a000-000000000006", email: "writer-edit@parity.test" },
   writerDelete: { id: "00000000-0000-4000-a000-000000000007", email: "writer-delete@parity.test" },
   signout: { id: "00000000-0000-4000-a000-000000000008", email: "signout@parity.test" },
-  slow: { id: "00000000-0000-4000-a000-000000000009", email: "slow@parity.test" },
-  retry: { id: "00000000-0000-4000-a000-000000000010", email: "retry@parity.test" },
   realtime: { id: "00000000-0000-4000-a000-000000000011", email: "realtime@parity.test" },
 };
+
+/**
+ * A user only the tests in one worker slot (`testInfo.parallelIndex`) use, for flows that make
+ * the proxy fail or hold their user's requests: a fault is per user, so on a shared user it
+ * reaches copies of the test running in other workers (`--repeat-each`). Not in seed.sql; the
+ * `ownUser` fixture (support/fixtures.ts) creates it and gives it the populated subscriptions.
+ */
+export function workerUser(parallelIndex: number): FixtureUser {
+  return {
+    id: `00000000-0000-4000-a001-${String(parallelIndex).padStart(12, "0")}`,
+    email: `worker-${parallelIndex}@parity.test`,
+  };
+}
 
 /** Subscription ids follow seed.sql: `0000000<user no>-0000-4000-b000-0000000000<nn>`. */
 export function subscriptionId(user: FixtureUser, n: number) {

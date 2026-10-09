@@ -34,12 +34,17 @@ export async function signIn(user: FixtureUser): Promise<Session> {
  */
 export async function createSessions() {
   fs.mkdirSync(AUTH_DIR, { recursive: true });
-  for (const [key, user] of Object.entries(USERS)) {
-    const file = path.join(AUTH_DIR, `${key}.json`);
-    // Back-to-back runs reuse a session that's still good for a run (real clock).
-    if (fs.existsSync(file) && (await stillValid(file))) continue;
-    fs.writeFileSync(file, JSON.stringify(await signIn(user)));
-  }
+  for (const [key, user] of Object.entries(USERS)) await cachedSignIn(key, user);
+}
+
+/** The session cached as `.auth/<name>.json`, signing `user` in only when it's missing or stale. */
+export async function cachedSignIn(name: string, user: FixtureUser): Promise<Session> {
+  const file = path.join(AUTH_DIR, `${name}.json`);
+  // Back-to-back runs reuse a session that's still good for a run (real clock).
+  if (fs.existsSync(file) && (await stillValid(file))) return JSON.parse(fs.readFileSync(file, "utf8"));
+  const session = await signIn(user);
+  fs.writeFileSync(file, JSON.stringify(session));
+  return session;
 }
 
 /** A cached session that can't be read or checked counts as stale (it's signed in again). */
@@ -103,6 +108,12 @@ export function ssrCookies(session: Session, appSupabaseUrl = PROXY_URL) {
  */
 export async function loginAs(context: BrowserContext, key: UserKey, options: { fresh?: boolean } = {}) {
   const session = options.fresh ? await signIn(USERS[key]) : cachedSession(key);
+  await loginWith(context, session);
+  return session;
+}
+
+/** loginAs() for a session in hand (a user that isn't one of the fixed USERS). */
+export async function loginWith(context: BrowserContext, session: Session) {
   if (TARGET === "next") {
     await context.addCookies(ssrCookies(session));
   } else {
@@ -114,5 +125,4 @@ export async function loginAs(context: BrowserContext, key: UserKey, options: { 
       window.localStorage.setItem(key, value);
     }, entry);
   }
-  return session;
 }
