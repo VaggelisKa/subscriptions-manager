@@ -1,6 +1,11 @@
+// TODO: delete this route together with apps/web in Phase 6 (tracking issue: https://github.com/VaggelisKa/subscriptions-manager/issues/64).
+// Clients delete accounts through the delete-account Edge Function.
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { Database } from "@subscriptions-manager/shared";
+import { hasRecentSignIn } from "@supabase-functions/_shared/recent-auth";
+import { isUserNotFound } from "@supabase-functions/_shared/user-not-found";
+import { isAuthRejection } from "@supabase-functions/delete-account/auth-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +52,31 @@ export async function POST(request: Request) {
     );
   }
 
+  // Same rule as the Edge Function: a password/OTP/magic link/TOTP sign-in within the last 10 minutes.
+  const { data: claimsData, error: claimsError } =
+    await supabaseAuth.auth.getClaims(token);
+  if (claimsError && !isAuthRejection(claimsError)) {
+    console.error("Failed to read token claims:", claimsError);
+    return NextResponse.json(
+      { error: "Failed to delete account", code: "delete_failed" },
+      { status: 500 },
+    );
+  }
+  const claims = claimsData?.claims;
+  if (
+    !claims ||
+    claims.sub !== user.id ||
+    !hasRecentSignIn(claims.amr, Date.now() / 1000)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Please sign in again or update the app to delete your account.",
+        code: "reauth_required",
+      },
+      { status: 403 },
+    );
+  }
+
   const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
     auth: {
       persistSession: false,
@@ -70,7 +100,8 @@ export async function POST(request: Request) {
   const { error: deleteUserError } =
     await supabaseAdmin.auth.admin.deleteUser(user.id);
 
-  if (deleteUserError) {
+  // user_not_found: a concurrent request already deleted this user, which is the outcome asked for.
+  if (deleteUserError && !isUserNotFound(deleteUserError)) {
     console.error("Failed to delete user:", deleteUserError);
     return NextResponse.json(
       { error: deleteUserError.message },

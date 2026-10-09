@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
@@ -13,14 +13,27 @@ import { SubscriptionOverviewSkeletons } from "@/components/subscription-overvie
 import { MonthlySummary } from "@/components/home/monthly-summary";
 import { DayStrip } from "@/components/home/day-strip";
 import { TimelineList } from "@/components/home/timeline-list";
+import { PasswordPrompt } from "@/components/auth/password-prompt";
 
 export default function HomeScreen() {
   const colors = useThemeColors();
   const { colorScheme, toggleTheme } = useTheme();
-  const { user, loading: authLoading, signOut, deleteAccount } = use(AuthContext);
+  const {
+    user,
+    loading: authLoading,
+    signOut,
+    reauthenticate,
+    deleteAccount,
+  } = use(AuthContext);
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Open while deletion waits for the password; `confirmed` once it has been accepted.
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    confirmed: boolean;
+  } | null>(null);
+  // Continues (true) or cancels (false) the pending deletion. A ref, so no render can lose it.
+  const resolvePassword = useRef<((confirmed: boolean) => void) | null>(null);
   const todayKey = useTodayKey();
 
   // Refetches also flip `loading`; keep showing the list instead of the skeleton.
@@ -32,6 +45,64 @@ export default function HomeScreen() {
     setRefreshing(false);
   }
 
+  function askForPassword() {
+    return new Promise<boolean>((resolve) => {
+      resolvePassword.current?.(false); // Never leave an earlier request hanging.
+      resolvePassword.current = resolve;
+      setPasswordPrompt({ confirmed: false });
+    });
+  }
+
+  async function confirmPassword(password: string) {
+    const result = await reauthenticate(password);
+    if (result.error) {
+      haptics.error();
+      return result.error;
+    }
+    // Stays open with a spinner while the deletion is retried; runDeleteAccount closes it.
+    setPasswordPrompt((prompt) => prompt && { ...prompt, confirmed: true });
+    const resolve = resolvePassword.current;
+    resolvePassword.current = null;
+    resolve?.(true);
+  }
+
+  function cancelPasswordPrompt() {
+    const resolve = resolvePassword.current;
+    if (!resolve) return; // Already confirmed.
+    resolvePassword.current = null;
+    resolve(false);
+    setPasswordPrompt(null);
+  }
+
+  async function runDeleteAccount() {
+    setDeleting(true);
+    let result: Awaited<ReturnType<typeof deleteAccount>>;
+    let prompted = false;
+    try {
+      result = await deleteAccount(() => {
+        prompted = true;
+        return askForPassword();
+      });
+    } catch {
+      result = { error: "Something went wrong. Please try again." };
+    } finally {
+      resolvePassword.current = null;
+      setPasswordPrompt(null);
+      setDeleting(false);
+    }
+    if (result.cancelled) return;
+    if (result.error) {
+      haptics.error();
+      const message = result.error;
+      const showError = () => Alert.alert("Couldn't delete account", message);
+      // Presented while the password Modal fades out, the alert would be dismissed along with it.
+      if (prompted) setTimeout(showError, 400);
+      else showError();
+    } else {
+      haptics.success();
+    }
+  }
+
   function confirmDeleteAccount() {
     haptics.warning();
     Alert.alert(
@@ -39,21 +110,7 @@ export default function HomeScreen() {
       "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            const result = await deleteAccount();
-            if (result.error) {
-              haptics.error();
-              Alert.alert("Error", result.error);
-            } else {
-              haptics.success();
-            }
-            setDeleting(false);
-          },
-        },
+        { text: "Delete", style: "destructive", onPress: runDeleteAccount },
       ],
     );
   }
@@ -134,6 +191,16 @@ export default function HomeScreen() {
           </LayoutAnimationConfig>
         )}
       </ScrollView>
+      {passwordPrompt ? (
+        <PasswordPrompt
+          title="Confirm it's you"
+          message="Enter your password to permanently delete your account."
+          confirmTitle="Delete account"
+          busy={passwordPrompt.confirmed}
+          onConfirm={confirmPassword}
+          onCancel={cancelPasswordPrompt}
+        />
+      ) : null}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, Renderer2, computed, inject, signal } from "@angular/core";
+import { Component, DestroyRef, ElementRef, Renderer2, computed, inject, signal } from "@angular/core";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "@ng-native/components";
 import { Dialogs } from "@ng-native/device";
 import { Haptics } from "@ng-native/expo/haptics";
@@ -10,6 +10,7 @@ import { Today } from "../data/today.ts";
 import { bucketByTime, scheduleSubscriptions } from "../lib/billing.ts";
 import { formatWholeKr } from "../lib/format.ts";
 import { BarItems, type BarItem } from "../ui/bar-items.ts";
+import { PasswordPrompt } from "../ui/password-prompt.ts";
 import { SectionHeader } from "../ui/section-header.ts";
 import { Sheets } from "../ui/sheets.ts";
 import { DayStrip } from "./day-strip.ts";
@@ -31,6 +32,7 @@ import { SubscriptionRow } from "./subscription-row.ts";
     EmptyState,
     MonthlySummary,
     NativeHeader,
+    PasswordPrompt,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -92,6 +94,18 @@ import { SubscriptionRow } from "./subscription-row.ts";
       [leftItems]="leftItems"
       [rightItems]="rightItems()"
     />
+
+    @if (passwordPrompt()) {
+      <app-password-prompt
+        title="Confirm it's you"
+        message="Enter your password to permanently delete your account."
+        confirmLabel="Delete account"
+        [busy]="passwordBusy()"
+        [error]="passwordError()"
+        (confirm)="confirmPassword($event)"
+        (cancel)="cancelPasswordPrompt()"
+      />
+    }
   `,
   styles: `
     :host {
@@ -123,6 +137,11 @@ export class Home {
   protected readonly error = this.store.error;
   protected readonly refreshing = signal(false);
   private readonly deleting = signal(false);
+  /** Open while deletion waits for the password; `resolve` continues (true) or cancels (false) it. */
+  protected readonly passwordPrompt = signal<{ resolve: (confirmed: boolean) => void } | null>(null);
+  protected readonly passwordBusy = signal(false);
+  protected readonly passwordError = signal<string | null>(null);
+  private destroyed = false;
 
   protected readonly status = this.store.status;
   protected readonly buckets = computed(() => {
@@ -181,6 +200,12 @@ export class Home {
     // The page's host element is its `RNSScreen`. Without a bar background, iOS 26's blur under
     // the bar would be the only thing there, so it goes too (apps/native's `scrollEdgeEffects`).
     inject(Renderer2).setProperty(inject(ElementRef).nativeElement, "topScrollEdgeEffect", "hidden");
+    // Never leave a deletion waiting on a prompt that can no longer be answered, including one
+    // asked for after this screen is gone.
+    inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
+      this.passwordPrompt()?.resolve(false);
+    });
   }
 
   protected async refresh(): Promise<void> {
@@ -212,13 +237,59 @@ export class Home {
     if (!sure) return;
 
     this.deleting.set(true);
-    const result = await this.auth.deleteAccount();
-    this.deleting.set(false);
+    let result: Awaited<ReturnType<Auth["deleteAccount"]>>;
+    try {
+      result = await this.auth.deleteAccount(() => this.askForPassword());
+    } finally {
+      this.passwordPrompt.set(null);
+      this.deleting.set(false);
+    }
+    if (result.cancelled) return;
     if (result.error) {
       this.haptics.notify("error");
-      await this.dialogs.tell("Error", result.error);
+      await this.dialogs.tell("Couldn't delete account", result.error);
       return;
     }
     this.haptics.notify("success");
+  }
+
+  private askForPassword(): Promise<boolean> {
+    if (this.destroyed) return Promise.resolve(false);
+    this.passwordPrompt()?.resolve(false); // Never leave an earlier request hanging.
+    this.passwordBusy.set(false);
+    this.passwordError.set(null);
+    return new Promise((resolve) => this.passwordPrompt.set({ resolve }));
+  }
+
+  protected async confirmPassword(password: string): Promise<void> {
+    this.passwordBusy.set(true);
+    this.passwordError.set(null);
+    let confirmed = false;
+    try {
+      const result = await this.auth.reauthenticate(password);
+      if (result.error) {
+        this.haptics.notify("error");
+        this.passwordError.set(result.error);
+        return;
+      }
+      confirmed = true;
+    } catch (e) {
+      console.warn("Re-authentication failed:", e);
+      this.haptics.notify("error");
+      this.passwordError.set("Couldn't verify password. Try again.");
+    } finally {
+      this.passwordBusy.set(false);
+    }
+    if (!confirmed) return;
+    // Closes the prompt; `deleting` covers the retried deletion.
+    const prompt = this.passwordPrompt();
+    this.passwordPrompt.set(null);
+    prompt?.resolve(true);
+  }
+
+  protected cancelPasswordPrompt(): void {
+    if (this.passwordBusy()) return;
+    this.passwordPrompt()?.resolve(false);
+    this.passwordPrompt.set(null);
   }
 }

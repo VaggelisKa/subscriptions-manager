@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import * as Linking from "expo-linking";
 import { supabase } from "@/lib/supabase";
-import type { Session, User } from "@supabase/supabase-js";
+import { type Session, type User } from "@supabase/supabase-js";
 
 type AuthContextType = {
   session: Session | null;
@@ -18,7 +18,10 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updatePassword: (password: string) => Promise<{ error?: string }>;
-  deleteAccount: () => Promise<{ error?: string }>;
+  reauthenticate: (password: string) => Promise<{ error?: string }>;
+  deleteAccount: (
+    confirmIdentity: () => Promise<boolean>,
+  ) => Promise<{ error?: string; cancelled?: boolean }>;
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -36,6 +39,7 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   resetPassword: async () => ({}),
   updatePassword: async () => ({}),
+  reauthenticate: async () => ({}),
   deleteAccount: async () => ({}),
 });
 
@@ -52,6 +56,39 @@ function parseHashParams(url: string): Record<string, string> {
     }
   });
   return params;
+}
+
+/** True if `invoke` couldn't reach the function at all. Checked by shape, like `functionErrorCode`. */
+function isFunctionsFetchError(error: unknown) {
+  return !!error && typeof error === "object" && "name" in error && error.name === "FunctionsFetchError";
+}
+
+/** The `code` from an Edge Function's JSON error body, if there is one. */
+async function functionErrorCode(error: unknown) {
+  // Checked by shape, not `instanceof`: a second copy of supabase-js (or a polyfilled `Response`)
+  // makes the class checks fail even for a real `reauth_required` reply.
+  if (!error || typeof error !== "object") return undefined;
+  if (!("name" in error) || error.name !== "FunctionsHttpError") return undefined;
+  const context: unknown = "context" in error ? error.context : undefined;
+  if (!context || typeof context !== "object" || !("json" in context)) return undefined;
+  if (typeof context.json !== "function") return undefined;
+  type Body = { json: () => Promise<unknown> };
+  const response = context as Body & { clone: () => Body };
+  let body: unknown;
+  try {
+    body = await response.clone().json();
+  } catch {
+    // No `clone`, or the clone couldn't be read: read the original response instead.
+    try {
+      body = await response.json();
+    } catch {
+      return undefined; // Not JSON (e.g. a gateway error page).
+    }
+  }
+  if (body && typeof body === "object" && "code" in body) {
+    return typeof body.code === "string" ? body.code : undefined;
+  }
+  return undefined;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -220,43 +257,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {};
   }
 
-  async function deleteAccount() {
+  /** Confirms the current user's password, which also counts as a fresh sign-in. */
+  async function reauthenticate(password: string) {
+    // The stored session, not React state, which can lag behind a token refresh or sign-in.
     const {
-      data: { session: currentSession },
+      data: { session: current },
     } = await supabase.auth.getSession();
-    if (!currentSession?.access_token) {
-      return { error: "Not signed in" };
-    }
+    const email = current?.user.email ?? session?.user.email;
+    if (!email) return { error: "Not signed in" };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    return {};
+  }
 
+  /**
+   * Deletes the account through the `delete-account` Edge Function. It needs a sign-in from the
+   * last 10 minutes; if the session is older, `confirmIdentity` asks for the password (resolving
+   * false when the user cancels) and the request is retried once.
+   */
+  async function deleteAccount(confirmIdentity: () => Promise<boolean>) {
     try {
-      const { getApiUrl } = await import("@/lib/api-config");
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/account/delete`, {
+      let { error } = await supabase.functions.invoke("delete-account", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${currentSession.access_token}`,
-        },
       });
-
-      const data = (await response.json().catch(() => ({}))) as
-        | { success?: boolean }
-        | { error?: string };
-
-      if (!response.ok) {
+      if (error && (await functionErrorCode(error)) === "reauth_required") {
+        if (!(await confirmIdentity())) return { cancelled: true };
+        ({ error } = await supabase.functions.invoke("delete-account", {
+          method: "POST",
+        }));
+      }
+      if (error) {
+        console.warn("Account deletion failed:", error);
         return {
           error:
-            (data && "error" in data && data.error) ||
-            `Request failed (${response.status})`,
+            isFunctionsFetchError(error)
+              ? "Couldn't reach the server. Check your connection and try again."
+              : "Couldn't delete your account. Try again.",
         };
       }
-
-      await supabase.auth.signOut();
-      return {};
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to delete account";
-      return { error: message };
+    } catch (error) {
+      console.warn("Account deletion failed:", error);
+      return { error: "Couldn't delete your account. Try again." };
     }
+
+    // The user and all their sessions are gone server-side; just clear this device.
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) console.warn("Local sign-out after account deletion failed:", error);
+    } catch (error) {
+      console.warn("Local sign-out after account deletion failed:", error);
+    }
+    setSession(null);
+    return {};
   }
 
   return (
@@ -276,6 +328,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         resetPassword,
         updatePassword,
+        reauthenticate,
         deleteAccount,
       }}
     >
