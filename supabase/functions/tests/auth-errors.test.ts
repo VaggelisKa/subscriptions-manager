@@ -7,7 +7,7 @@ import {
   AuthSessionMissingError,
   AuthUnknownError,
 } from "npm:@supabase/supabase-js@2.97.0";
-import { isAuthRejection } from "../delete-account/auth-errors.ts";
+import { isAuthRejection, isGetClaimsThrowRejection } from "../delete-account/auth-errors.ts";
 
 Deno.test("auth-errors: invalid JWTs and 400/401/403/404 auth errors are rejections", () => {
   assertEquals(isAuthRejection(new AuthInvalidJwtError("Invalid JWT signature")), true);
@@ -21,7 +21,17 @@ Deno.test("auth-errors: token decoding failures are rejections", () => {
   for (const message of ["JWT has expired", "Missing exp claim", "Invalid UTF-8 sequence", 'Invalid Base64-URL character "!"']) {
     assertEquals(isAuthRejection(new Error(message)), true, message);
   }
-  assertEquals(isAuthRejection(new SyntaxError("Unexpected token")), true);
+});
+
+Deno.test("auth-errors: a SyntaxError is a rejection only when getClaims threw it", () => {
+  assertEquals(isAuthRejection(new SyntaxError("Unexpected token '<'")), false);
+  assertEquals(isGetClaimsThrowRejection(new SyntaxError("Unexpected token")), true);
+  assertEquals(isGetClaimsThrowRejection(new AuthInvalidJwtError("Invalid JWT structure")), true);
+  assertEquals(isGetClaimsThrowRejection(new AuthRetryableFetchError("fetch failed", 0)), false);
+  assertEquals(isGetClaimsThrowRejection(new TypeError("fetch failed")), false);
+  for (const value of [undefined, null, {}]) {
+    assertEquals(isGetClaimsThrowRejection(value), false, String(value));
+  }
 });
 
 Deno.test("auth-errors: network failures, 5xx and unexpected errors are outages", () => {

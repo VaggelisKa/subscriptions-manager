@@ -3,7 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import { corsHeaders, preflight } from "../_shared/cors.ts";
 import { hasRecentSignIn } from "../_shared/recent-auth.ts";
-import { isAuthRejection } from "./auth-errors.ts";
+import { isAuthRejection, isGetClaimsThrowRejection } from "./auth-errors.ts";
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
@@ -28,8 +28,8 @@ Deno.serve(async (req) => {
     return json({ code: "delete_failed" }, 500);
   }
   // A rejected token is a 401; an Auth outage (network, 5xx, unexpected throw) is a logged 500.
-  const authFailure = (e: unknown) => {
-    if (isAuthRejection(e)) return json({ code: "unauthorized" }, 401);
+  const authFailure = (e: unknown, rejected = isAuthRejection(e)) => {
+    if (rejected) return json({ code: "unauthorized" }, 401);
     console.error("delete-account: token verification failed", e);
     return json({ code: "delete_failed" }, 500);
   };
@@ -45,21 +45,27 @@ Deno.serve(async (req) => {
     if (!data?.claims?.sub) return json({ code: "unauthorized" }, 401);
     claims = data.claims;
   } catch (e) {
-    return authFailure(e);
+    return authFailure(e, isGetClaimsThrowRejection(e));
   }
 
+  // Authoritative check: the user still exists and the session is valid.
+  let userId: string;
   try {
-    // Authoritative check: the user still exists and the session is valid.
     const { data: { user }, error } = await admin.auth.getUser(jwt);
     if (error) return authFailure(error);
     if (!user || user.id !== claims.sub) return json({ code: "unauthorized" }, 401);
+    userId = user.id;
+  } catch (e) {
+    return authFailure(e);
+  }
 
-    if (!hasRecentSignIn(claims.amr, Date.now() / 1000)) {
-      return json({ code: "reauth_required" }, 401);
-    }
+  if (!hasRecentSignIn(claims.amr, Date.now() / 1000)) {
+    return json({ code: "reauth_required" }, 401);
+  }
 
-    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-    if (deleteError) throw deleteError;
+  try {
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) throw error;
     return json({ success: true }, 200);
   } catch (e) {
     console.error("delete-account failed", e);

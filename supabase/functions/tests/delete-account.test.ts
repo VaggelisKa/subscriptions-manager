@@ -58,7 +58,11 @@ async function removeUser(user: TestUser) {
 
 async function userExists(id: string) {
   const { data, error } = await admin.auth.admin.getUserById(id);
-  return !error && data.user?.id === id;
+  if (error) {
+    if (error.status === 404 || error.code === "user_not_found") return false;
+    throw error;
+  }
+  return data.user?.id === id;
 }
 
 async function subscriptionIds(userId: string) {
@@ -204,16 +208,18 @@ gatewayTest("fresh sign-in by a method other than password/otp → 401 reauth_re
 gatewayTest("amr without numeric timestamps → 401, never treated as recent", async () => {
   const user = await createUser();
   try {
-    const cases: [unknown, string][] = [
-      [["pwd"], "reauth_required"], // RFC 8176 string form
-      [[{ method: "password" }], "reauth_required"],
-      [[], "reauth_required"],
-      [[{ method: "password", timestamp: "now" }], "unauthorized"], // Auth itself rejects this token
+    const cases: [unknown, string[]][] = [
+      [["pwd"], ["reauth_required"]], // RFC 8176 string form
+      [[{ method: "password" }], ["reauth_required"]],
+      [[], ["reauth_required"]],
+      // Auth may reject this token itself; either way it is never treated as recent.
+      [[{ method: "password", timestamp: "now" }], ["unauthorized", "reauth_required"]],
     ];
-    for (const [amr, code] of cases) {
+    for (const [amr, codes] of cases) {
       const res = await call(await signHs256({ ...decodePayload(user.token), amr }));
       assertEquals(res.status, 401, JSON.stringify(amr));
-      assertEquals(res.body, { code }, JSON.stringify(amr));
+      const { code } = res.body as { code?: string };
+      assert(codes.includes(code ?? ""), `${JSON.stringify(amr)}: ${JSON.stringify(res.body)}`);
     }
     assert(await userExists(user.id));
   } finally {

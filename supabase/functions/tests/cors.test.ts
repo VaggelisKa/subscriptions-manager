@@ -12,6 +12,10 @@ Deno.test("cors: allowed origins are echoed (list is trimmed)", () => {
     const headers = corsHeaders(request("POST", origin));
     assertEquals(headers["Access-Control-Allow-Origin"], origin);
     assertEquals(headers["Access-Control-Allow-Methods"], "POST, OPTIONS");
+    assertEquals(
+      headers["Access-Control-Allow-Headers"],
+      "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+    );
     assertEquals(headers["Vary"], "Origin");
   }
 });
