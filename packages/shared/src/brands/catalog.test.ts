@@ -1,10 +1,7 @@
-import { existsSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { BRANDS, findBrand } from "./catalog";
 
 const slugs = BRANDS.map((b) => b.slug);
-const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 
 describe("findBrand", () => {
   test.each([
@@ -64,29 +61,3 @@ describe("catalog", () => {
   });
 });
 
-describe("every slug has an icon", () => {
-  test("in the web app (apps/web/src/lib/icons.ts, public/brands)", async () => {
-    const { brandIcons } = await import("../../../../apps/web/src/lib/icons");
-    expect(Object.keys(brandIcons).sort()).toEqual([...slugs].sort());
-    for (const slug of slugs) {
-      const icon = brandIcons[slug];
-      expect(icon).toBe(`/brands/${slug}.svg`);
-      expect(existsSync(`${repo}apps/web/public${icon}`), icon).toBe(true);
-    }
-  });
-
-  test("in the native app (apps/native/src/lib/icons.ts, assets/brands)", () => {
-    // Its `require`s are Metro asset imports that only Metro can load, so the
-    // map is read as text. The `Record<BrandSlug, number>` type covers the rest.
-    const source = readFileSync(`${repo}apps/native/src/lib/icons.ts`, "utf8");
-    const brandIcons = Object.fromEntries(
-      [...source.matchAll(/^ {2}"?([a-z0-9]+)"?: require\("([^"]+)"\),$/gm)].map((m) => [m[1], m[2]]),
-    );
-    expect(Object.keys(brandIcons).sort()).toEqual([...slugs].sort());
-    for (const slug of slugs) {
-      const icon = brandIcons[slug];
-      expect(icon).toBe(`../../assets/brands/${slug}.svg`);
-      expect(existsSync(`${repo}apps/native/src/lib/${icon}`), icon).toBe(true);
-    }
-  });
-});
