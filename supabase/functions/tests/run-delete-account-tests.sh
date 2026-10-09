@@ -59,7 +59,8 @@ run_pass() { # run_pass <mode>
 }
 
 status=0
-"$DENO" test --allow-env --no-lock supabase/functions/tests/cors.test.ts || status=1
+"$DENO" test --allow-env --no-lock supabase/functions/tests/cors.test.ts \
+  supabase/functions/tests/recent-auth.test.ts || status=1
 
 echo "── pass 1: gateway (verify_jwt = true, secret key) ──"
 serve "$SECRET_KEY"

@@ -91,10 +91,10 @@ async function signHs256(payload: Record<string, unknown>, secret = JWT_SECRET) 
   return `${input}.${b64url(signature)}`;
 }
 
-/** Same session and user, but the last sign-in was `ageSeconds` ago. */
-function tokenSignedInAgo(user: TestUser, ageSeconds: number) {
+/** Same session and user, but the last sign-in was `ageSeconds` ago with `method`. */
+function tokenSignedInAgo(user: TestUser, ageSeconds: number, method = "password") {
   const timestamp = Math.floor(Date.now() / 1000) - ageSeconds;
-  return signHs256({ ...decodePayload(user.token), amr: [{ method: "password", timestamp }] });
+  return signHs256({ ...decodePayload(user.token), amr: [{ method, timestamp }] });
 }
 
 // ── Calling the function ──
@@ -176,6 +176,31 @@ gatewayTest("valid token from a sign-in older than 10 minutes → 401 reauth_req
   }
 });
 
+gatewayTest("fresh sign-in by a method other than password/otp → 401 reauth_required", async () => {
+  const user = await createUser(["Kept"]);
+  try {
+    for (const method of ["oauth", "recovery", "invite"]) {
+      const res = await call(await tokenSignedInAgo(user, 5, method));
+      assertEquals(res.status, 401, method);
+      assertEquals(res.body, { code: "reauth_required" }, method);
+    }
+    const mixed = await signHs256({
+      ...decodePayload(user.token),
+      amr: [
+        { method: "oauth", timestamp: Math.floor(Date.now() / 1000) - 5 },
+        { method: "password", timestamp: Math.floor(Date.now() / 1000) - 11 * 60 },
+      ],
+    });
+    const res = await call(mixed);
+    assertEquals(res.status, 401, "fresh oauth + stale password");
+    assertEquals(res.body, { code: "reauth_required" }, "fresh oauth + stale password");
+    assert(await userExists(user.id));
+    assertEquals((await subscriptionIds(user.id)).length, 1);
+  } finally {
+    await removeUser(user);
+  }
+});
+
 gatewayTest("amr without numeric timestamps → 401, never treated as recent", async () => {
   const user = await createUser();
   try {
@@ -196,7 +221,19 @@ gatewayTest("amr without numeric timestamps → 401, never treated as recent", a
   }
 });
 
-gatewayTest("fresh token → 200; user and their subscriptions gone, other user untouched", async () => {
+gatewayTest("re-signed fresh otp sign-in → 200", async () => {
+  const user = await createUser(["Otp sub"]);
+  try {
+    const res = await call(await tokenSignedInAgo(user, 5, "otp"));
+    assertEquals(res.status, 200);
+    assertEquals(res.body, { success: true });
+    assertFalse(await userExists(user.id));
+  } finally {
+    await removeUser(user);
+  }
+});
+
+gatewayTest("fresh password token → 200; user and their subscriptions gone, other user untouched", async () => {
   const target = await createUser(["Target A", "Target B"]);
   const other = await createUser(["Other A", "Other B", "Other C"]);
   try {
@@ -283,12 +320,14 @@ failureTest("missing or unparseable tokens are rejected by the function itself �
   }
 });
 
-failureTest("sign-in 11 minutes ago is still checked before the Admin API → 401 reauth_required", async () => {
+failureTest("stale or non-password/otp sign-in is still checked before the Admin API → 401 reauth_required", async () => {
   const user = await createUser();
   try {
-    const res = await call(await tokenSignedInAgo(user, 11 * 60));
-    assertEquals(res.status, 401);
-    assertEquals(res.body, { code: "reauth_required" });
+    for (const [age, method] of [[11 * 60, "password"], [5, "oauth"], [5, "recovery"]] as const) {
+      const res = await call(await tokenSignedInAgo(user, age, method));
+      assertEquals(res.status, 401, method);
+      assertEquals(res.body, { code: "reauth_required" }, method);
+    }
   } finally {
     await removeUser(user);
   }

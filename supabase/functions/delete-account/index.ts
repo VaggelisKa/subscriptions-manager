@@ -2,19 +2,7 @@
 // 10 minutes; subscriptions are removed by the ON DELETE CASCADE FK on user_id.
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import { corsHeaders, preflight } from "../_shared/cors.ts";
-
-const RECENT_AUTH_SECONDS = 10 * 60;
-
-type AmrEntry = { method?: unknown; timestamp?: unknown };
-
-/** Latest sign-in time (unix seconds) from the `amr` claim, or 0 if there is none. */
-function lastSignInAt(amr: unknown): number {
-  if (!Array.isArray(amr)) return 0;
-  const timestamps = (amr as AmrEntry[])
-    .map((entry) => entry?.timestamp)
-    .filter((t): t is number => typeof t === "number" && Number.isFinite(t));
-  return Math.max(0, ...timestamps);
-}
+import { hasRecentSignIn } from "../_shared/recent-auth.ts";
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
@@ -57,7 +45,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error } = await admin.auth.getUser(jwt);
     if (error || !user || user.id !== claims.sub) return json({ code: "unauthorized" }, 401);
 
-    if (Date.now() / 1000 - lastSignInAt(claims.amr) > RECENT_AUTH_SECONDS) {
+    if (!hasRecentSignIn(claims.amr, Date.now() / 1000)) {
       return json({ code: "reauth_required" }, 401);
     }
 
