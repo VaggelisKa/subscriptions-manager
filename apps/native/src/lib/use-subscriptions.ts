@@ -60,7 +60,15 @@ export function useSubscriptions(userId: string | undefined) {
       .channel(`subscriptions-changes-${channelId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "subscriptions" },
+        {
+          event: "*",
+          schema: "public",
+          table: "subscriptions",
+          // Cuts server-side fan-out. DELETE events skip both RLS and this
+          // filter, so every client gets every delete (old row id only):
+          // treat an event only as "refetch", never as data.
+          filter: `user_id=eq.${userId}`,
+        },
         () => setRefreshTrigger((t) => t + 1),
       )
       .subscribe((status) => {
