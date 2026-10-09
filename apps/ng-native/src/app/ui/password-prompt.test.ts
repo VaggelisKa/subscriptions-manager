@@ -54,3 +54,32 @@ test("cancel emits, but not while busy", async () => {
   expect(disabled("Cancel")).toBe(true);
   expect(screen.getByText("Please wait…")).toBeTruthy();
 });
+
+test("a double tap confirms once, until the parent is done with the attempt", async () => {
+  const { events, result } = await open();
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText("Password"), "hunter22");
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  expect(events).toEqual([["confirm", "hunter22"]]);
+  expect(disabled("Delete account")).toBe(true);
+
+  await result.rerender({ inputs: { ...inputs, busy: true } });
+  await result.rerender({ inputs: { ...inputs, busy: false } });
+  expect(disabled("Delete account")).toBe(false);
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  expect(events).toEqual([["confirm", "hunter22"], ["confirm", "hunter22"]]);
+});
+
+test("an error from the parent unlocks confirm", async () => {
+  const { events, result } = await open();
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText("Password"), "hunter22");
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  expect(disabled("Delete account")).toBe(true);
+
+  await result.rerender({ inputs: { ...inputs, error: "Invalid login credentials" } });
+  expect(disabled("Delete account")).toBe(false);
+  await user.press(screen.getByRole("button", { name: "Delete account" }));
+  expect(events).toEqual([["confirm", "hunter22"], ["confirm", "hunter22"]]);
+});

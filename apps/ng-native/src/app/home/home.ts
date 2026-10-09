@@ -251,18 +251,24 @@ export class Home {
   protected async confirmPassword(password: string): Promise<void> {
     this.passwordBusy.set(true);
     this.passwordError.set(null);
-    const result = await this.auth.reauthenticate(password);
-    if (result.error) {
-      this.haptics.notify("error");
-      this.passwordError.set(result.error);
-      this.passwordBusy.set(false);
-      return;
+    let confirmed = false;
+    try {
+      const result = await this.auth.reauthenticate(password);
+      if (result.error) {
+        this.haptics.notify("error");
+        this.passwordError.set(result.error);
+        return;
+      }
+      confirmed = true;
+    } finally {
+      // Stays open, busy, while the deletion is retried.
+      if (!confirmed) this.passwordBusy.set(false);
     }
-    // Stays open, busy, while the deletion is retried.
     this.passwordPrompt()?.resolve(true);
   }
 
   protected cancelPasswordPrompt(): void {
+    if (this.passwordBusy()) return;
     this.passwordPrompt()?.resolve(false);
     this.passwordPrompt.set(null);
   }

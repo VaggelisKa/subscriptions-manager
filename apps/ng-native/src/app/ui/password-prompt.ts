@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from "@angular/core";
+import { Component, computed, input, linkedSignal, output, signal } from "@angular/core";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -140,10 +140,20 @@ export class PasswordPrompt {
   readonly cancel = output<void>();
 
   protected readonly password = signal("");
-  protected readonly disabled = computed(() => !this.password() || this.busy());
+  /**
+   * Set on submit, before the parent's `busy` arrives, so a double tap can't confirm twice. Cleared
+   * whenever `busy` or `error` changes: the parent has taken the attempt over or finished it.
+   */
+  private readonly submitted = linkedSignal({
+    source: () => [this.busy(), this.error()],
+    computation: () => false,
+  });
+  protected readonly disabled = computed(() => !this.password() || this.busy() || this.submitted());
 
   protected submit(): void {
-    if (!this.disabled()) this.confirm.emit(this.password());
+    if (this.disabled()) return;
+    this.submitted.set(true);
+    this.confirm.emit(this.password());
   }
 
   protected dismiss(): void {

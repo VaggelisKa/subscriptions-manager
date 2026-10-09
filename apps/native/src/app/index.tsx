@@ -68,9 +68,13 @@ export default function HomeScreen() {
 
   async function runDeleteAccount() {
     setDeleting(true);
-    const result = await deleteAccount(askForPassword);
-    setPasswordPrompt(null);
-    setDeleting(false);
+    let result: Awaited<ReturnType<typeof deleteAccount>>;
+    try {
+      result = await deleteAccount(askForPassword);
+    } finally {
+      setPasswordPrompt(null);
+      setDeleting(false);
+    }
     if (result.cancelled) return;
     if (result.error) {
       haptics.error();

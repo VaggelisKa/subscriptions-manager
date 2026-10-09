@@ -39,8 +39,12 @@ export function PasswordPrompt({
     if (!password || loading) return;
     setSubmitting(true);
     setError(null);
-    const result = await onConfirm(password);
-    setSubmitting(false);
+    let result: string | undefined;
+    try {
+      result = await onConfirm(password);
+    } finally {
+      setSubmitting(false);
+    }
     if (result) {
       setError(result);
       setPassword("");
