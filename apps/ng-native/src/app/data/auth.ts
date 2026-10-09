@@ -1,8 +1,25 @@
 import { DestroyRef, Service, computed, inject, signal } from "@angular/core";
-import type { Session } from "@supabase/supabase-js";
+import { FunctionsFetchError, FunctionsHttpError, type Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./supabase.ts";
 
 type Result = { error?: string };
+export type DeleteResult = Result & { cancelled?: boolean };
+
+/** The `code` from an Edge Function's JSON error body, if there is one. */
+async function functionErrorCode(error: unknown): Promise<string | undefined> {
+  if (!(error instanceof FunctionsHttpError)) return undefined;
+  const response: unknown = error.context;
+  if (!(response instanceof Response)) return undefined;
+  try {
+    const body: unknown = await response.clone().json();
+    if (body && typeof body === "object" && "code" in body) {
+      return typeof body.code === "string" ? body.code : undefined;
+    }
+  } catch {
+    // Not JSON (e.g. a gateway error page).
+  }
+  return undefined;
+}
 
 /** The Supabase session as signals. Replaces apps/native's `AuthProvider` context. */
 @Service()
@@ -51,26 +68,37 @@ export class Auth {
     if (error) await supabase.auth.signOut({ scope: "local" });
   }
 
-  /** Deletes the account through the web app's API, which holds the service role, then signs out. */
-  async deleteAccount(): Promise<Result> {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    if (!token) return { error: "Not signed in" };
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
-    if (!apiUrl) return { error: "EXPO_PUBLIC_API_URL is required for account deletion." };
+  /** Confirms the current user's password, which also counts as a fresh sign-in. */
+  async reauthenticate(password: string): Promise<Result> {
+    const email = this.user()?.email;
+    if (!email) return { error: "Not signed in" };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? { error: error.message } : {};
+  }
 
-    try {
-      const response = await fetch(`${apiUrl}/api/account/delete`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const body = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) return { error: body.error || `Request failed (${response.status})` };
-      await supabase.auth.signOut();
-      return {};
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : "Failed to delete account" };
+  /**
+   * Deletes the account through the `delete-account` Edge Function. It needs a sign-in from the
+   * last 10 minutes; if the session is older, `confirmIdentity` asks for the password (resolving
+   * false when the user cancels) and the request is retried once. On success only this device is
+   * signed out: the server has already removed the user and every session.
+   */
+  async deleteAccount(confirmIdentity: () => Promise<boolean>): Promise<DeleteResult> {
+    let { error } = await supabase.functions.invoke("delete-account", { method: "POST" });
+    if (error && (await functionErrorCode(error)) === "reauth_required") {
+      if (!(await confirmIdentity())) return { cancelled: true };
+      ({ error } = await supabase.functions.invoke("delete-account", { method: "POST" }));
     }
+    if (error) {
+      console.warn("Account deletion failed:", error);
+      return {
+        error:
+          error instanceof FunctionsFetchError
+            ? "Couldn't reach the server. Check your connection and try again."
+            : "Couldn't delete your account. Try again.",
+      };
+    }
+    await supabase.auth.signOut({ scope: "local" });
+    return {};
   }
 
   private async restore(): Promise<void> {

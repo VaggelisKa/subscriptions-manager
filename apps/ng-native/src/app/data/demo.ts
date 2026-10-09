@@ -79,7 +79,10 @@ export class DemoAuth {
   async signOut(): Promise<void> {
     this.current.set(null);
   }
-  async deleteAccount(): Promise<{ error?: string }> {
+  async reauthenticate(): Promise<{ error?: string }> {
+    return {};
+  }
+  async deleteAccount(): Promise<{ error?: string; cancelled?: boolean }> {
     this.current.set(null);
     return {};
   }

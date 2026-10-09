@@ -10,6 +10,7 @@ import { Today } from "../data/today.ts";
 import { bucketByTime, scheduleSubscriptions } from "../lib/billing.ts";
 import { formatWholeKr } from "../lib/format.ts";
 import { BarItems, type BarItem } from "../ui/bar-items.ts";
+import { PasswordPrompt } from "../ui/password-prompt.ts";
 import { SectionHeader } from "../ui/section-header.ts";
 import { Sheets } from "../ui/sheets.ts";
 import { DayStrip } from "./day-strip.ts";
@@ -31,6 +32,7 @@ import { SubscriptionRow } from "./subscription-row.ts";
     EmptyState,
     MonthlySummary,
     NativeHeader,
+    PasswordPrompt,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -92,6 +94,18 @@ import { SubscriptionRow } from "./subscription-row.ts";
       [leftItems]="leftItems"
       [rightItems]="rightItems()"
     />
+
+    @if (passwordPrompt()) {
+      <app-password-prompt
+        title="Confirm it's you"
+        message="Enter your password to permanently delete your account."
+        confirmLabel="Delete account"
+        [busy]="passwordBusy()"
+        [error]="passwordError()"
+        (confirm)="confirmPassword($event)"
+        (cancel)="cancelPasswordPrompt()"
+      />
+    }
   `,
   styles: `
     :host {
@@ -123,6 +137,10 @@ export class Home {
   protected readonly error = this.store.error;
   protected readonly refreshing = signal(false);
   private readonly deleting = signal(false);
+  /** Open while deletion waits for the password; `resolve` continues (true) or cancels (false) it. */
+  protected readonly passwordPrompt = signal<{ resolve: (confirmed: boolean) => void } | null>(null);
+  protected readonly passwordBusy = signal(false);
+  protected readonly passwordError = signal<string | null>(null);
 
   protected readonly status = this.store.status;
   protected readonly buckets = computed(() => {
@@ -212,13 +230,40 @@ export class Home {
     if (!sure) return;
 
     this.deleting.set(true);
-    const result = await this.auth.deleteAccount();
+    const result = await this.auth.deleteAccount(() => this.askForPassword());
+    this.passwordPrompt.set(null);
     this.deleting.set(false);
+    if (result.cancelled) return;
     if (result.error) {
       this.haptics.notify("error");
-      await this.dialogs.tell("Error", result.error);
+      await this.dialogs.tell("Couldn't delete account", result.error);
       return;
     }
     this.haptics.notify("success");
+  }
+
+  private askForPassword(): Promise<boolean> {
+    this.passwordBusy.set(false);
+    this.passwordError.set(null);
+    return new Promise((resolve) => this.passwordPrompt.set({ resolve }));
+  }
+
+  protected async confirmPassword(password: string): Promise<void> {
+    this.passwordBusy.set(true);
+    this.passwordError.set(null);
+    const result = await this.auth.reauthenticate(password);
+    if (result.error) {
+      this.haptics.notify("error");
+      this.passwordError.set(result.error);
+      this.passwordBusy.set(false);
+      return;
+    }
+    // Stays open, busy, while the deletion is retried.
+    this.passwordPrompt()?.resolve(true);
+  }
+
+  protected cancelPasswordPrompt(): void {
+    this.passwordPrompt()?.resolve(false);
+    this.passwordPrompt.set(null);
   }
 }

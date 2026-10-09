@@ -5,6 +5,10 @@ components render straight onto React Native's Fabric renderer with no React in 
 It talks to the same Supabase project as `apps/native` and `apps/web`, reuses
 `@subscriptions-manager/shared`, and ports the billing and formatting logic from `apps/native`.
 
+> **Frozen: bug fixes only.** As of the Supabase migration's Phase 2 (account deletion through the
+> `delete-account` Edge Function), this app takes no new features or migration work; only fixes
+> that keep it running against the shared backend. New work goes to `apps/native`.
+
 ```sh
 cp ../native/.env .env          # EXPO_PUBLIC_SUPABASE_URL and the anon key
 pnpm ng-native start            # Metro; press i for the iOS simulator
