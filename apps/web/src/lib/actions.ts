@@ -114,8 +114,7 @@ export async function updateSubscription(formData: FormData) {
   const { error } = await supabase
     .from("subscriptions")
     .update(parsed.data)
-    .eq("id", inputs.id)
-    .select();
+    .eq("id", inputs.id);
 
   if (error) {
     return { message: "Couldn't save the subscription. Try again." };
