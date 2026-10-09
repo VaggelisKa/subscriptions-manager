@@ -1,0 +1,4 @@
+.auth/
+.axe-results/
+test-results/
+playwright-report/
