@@ -7,7 +7,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(39);
+select plan(47);
 
 -- KEEP IN SYNC: same scope predicate as the guard in
 -- supabase/migrations/20261009083122_hardening.sql. Change both together.
@@ -59,18 +59,19 @@ select is_empty($$ select * from private.hardening_violations() $$, 'no hardenin
 -- ── Owner-gated exclusions (Architect ruling on PR #58) ──
 -- KEEP IN SYNC: copy of private.hardening_exclusions() in
 -- supabase/migrations/20261009103100_hardening_guard_v2.sql. Change both together.
-select results_eq($$ select kind, object, owner from jsonb_to_recordset(private.hardening_exclusions())
-                       x(kind text, object text, owner text) order by kind, object $$,
-                  $$ values ('function', 'graphql_public.graphql(text,text,jsonb,jsonb)', 'supabase_admin'),
-                            ('relation', '_realtime.extensions',        'supabase_admin'),
-                            ('relation', '_realtime.feature_flags',     'supabase_admin'),
-                            ('relation', '_realtime.schema_migrations', 'supabase_admin'),
-                            ('relation', '_realtime.tenants',           'supabase_admin') $$,
+select results_eq($$ select kind, object, owner, "check" from jsonb_to_recordset(private.hardening_exclusions())
+                       x(kind text, object text, owner text, "check" text) order by kind, object $$,
+                  $$ values ('function', 'graphql_public.graphql(text,text,jsonb,jsonb)', 'supabase_admin', 'E3'),
+                            ('relation', '_realtime.extensions',        'supabase_admin', 'D'),
+                            ('relation', '_realtime.feature_flags',     'supabase_admin', 'D'),
+                            ('relation', '_realtime.schema_migrations', 'supabase_admin', 'D'),
+                            ('relation', '_realtime.tenants',           'supabase_admin', 'D') $$,
                   'exclusion list is exactly the five owner-gated entries');
 
 -- Owner change on the real excluded objects: the migration role can't ALTER ... OWNER on
 -- supabase_admin's objects, so the changed owner is simulated by passing the same list with a different
--- expected owner. Each object must then be reported again and the guard must raise.
+-- expected owner. Each object must then be reported again. (assert_hardening() takes no arguments, so
+-- injected lists are only ever passed to hardening_violations().)
 create temporary table owner_changed_list as
 select jsonb_agg(e || jsonb_build_object('owner', 'postgres')) as l
 from jsonb_array_elements(private.hardening_exclusions()) e;
@@ -80,21 +81,43 @@ select ok(exists (select 1 from private.hardening_violations((select l from owne
 select ok((select count(*) from private.hardening_violations((select l from owner_changed_list)) v
            where v like 'table _realtime.% has row level security disabled') = 4,
           'owner mismatch: the four _realtime tables are reported again');
-select throws_ok($$ select private.assert_hardening((select l from owner_changed_list)) $$, 'P0001', null,
-                 'owner mismatch on the listed objects: assert_hardening() raises');
+select is((select count(*)::int from private.hardening_violations((select l from owner_changed_list))), 5,
+          'owner mismatch on the listed objects: exactly those 5 violations come back');
 
 -- Real owner change, on an object the migration role owns: an entry stops applying once the owner changes.
 create table hardening_test_new_app_schema.__owned (id int);           -- RLS off → (D)
 create temporary table probe_list as
 select private.hardening_exclusions()
-       || '[{"kind": "relation", "object": "hardening_test_new_app_schema.__owned", "owner": "postgres"}]'::jsonb as l;
-select lives_ok($$ select private.assert_hardening((select l from probe_list)) $$,
-                'probe table excluded while owned by the listed owner');
+       || '[{"kind": "relation", "object": "hardening_test_new_app_schema.__owned", "owner": "postgres", "check": "D"},
+            {"kind": "function", "object": "hardening_test_new_app_schema.__fprobe()", "owner": "postgres", "check": "E3"}]'::jsonb as l;
+select is_empty($$ select * from private.hardening_violations((select l from probe_list)) $$,
+                'probe table excluded from (D) while owned by the listed owner');
+-- a relation entry exempts (D) only: an anon grant on the same table still trips (E1)
+grant select on hardening_test_new_app_schema.__owned to anon;
+select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+                  where v like 'relation hardening_test_new_app_schema.__owned grants privileges to anon%'),
+          'relation entry does not exempt (E1)');
+revoke select on hardening_test_new_app_schema.__owned from anon;
 grant create, usage on schema hardening_test_new_app_schema to service_role;
 alter table hardening_test_new_app_schema.__owned owner to service_role;
-select throws_ok($$ select private.assert_hardening((select l from probe_list)) $$, 'P0001', null,
-                 'same entry, owner changed → assert_hardening() raises');
+select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+                  where v like 'table hardening_test_new_app_schema.__owned has row level security disabled%'),
+          'same entry, owner changed → reported again');
 drop table hardening_test_new_app_schema.__owned;
+
+-- a function entry exempts (E3) only, and only while NOT security definer (PR #58 review)
+create function hardening_test_new_app_schema.__fprobe() returns int language sql as 'select 1';
+grant execute on function hardening_test_new_app_schema.__fprobe() to public;
+select is_empty($$ select * from private.hardening_violations((select l from probe_list)) $$,
+                'listed non-SECURITY-DEFINER function is exempt from (E3)');
+alter function hardening_test_new_app_schema.__fprobe() security definer;
+select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+                  where v like 'security definer hardening_test_new_app_schema.__fprobe()%'),
+          'SECURITY DEFINER flip of a listed function trips (C)');
+select ok(exists (select 1 from private.hardening_violations((select l from probe_list)) v
+                  where v like 'function hardening_test_new_app_schema.__fprobe()%executable by anon or PUBLIC'),
+          'SECURITY DEFINER flip of a listed function also trips (E3)');
+drop function hardening_test_new_app_schema.__fprobe();
 
 -- New sibling objects are never covered by the list (exact identity only)
 create table _realtime.__sibling (id int);                              -- same schema, RLS off
@@ -119,6 +142,12 @@ select is_empty($$
   where d.defaclrole = 'postgres'::regrole and n.nspname = 'public'
     and a.grantee in ('anon'::regrole, 'authenticated'::regrole) $$,
   'postgres default privileges in public: nothing for anon/authenticated');
+select is_empty($$
+  select d.defaclobjtype, a.grantee::regrole
+  from pg_default_acl d cross join lateral aclexplode(d.defaclacl) a
+  where d.defaclrole = 'postgres'::regrole and d.defaclnamespace = 0
+    and a.grantee in ('anon'::regrole, 'authenticated'::regrole) $$,
+  'postgres global default privileges: nothing for anon/authenticated');
 
 -- Behavioural: new objects get no client privileges by default
 create table public.__t_default(id int);
@@ -147,6 +176,8 @@ create function public.__f_new() returns int language sql as 'select 2';
 select ok(not exists (select 1 from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
                       where p.oid = 'public.__f_new()'::regprocedure and a.grantee = 0),
           'global default: no PUBLIC EXECUTE on new functions');
+select function_privs_are('public','__f_new', array[]::text[], 'anon', array[]::text[], 'new function: anon has no EXECUTE');
+select function_privs_are('public','__f_new', array[]::text[], 'authenticated', array[]::text[], 'new function: authenticated has no EXECUTE');
 select is_empty($$ select 1 from pg_default_acl d, aclexplode(d.defaclacl) a
                    where d.defaclrole = 'postgres'::regrole and d.defaclnamespace = 0
                      and d.defaclobjtype = 'f' and a.grantee = 0 $$, 'global function default has no PUBLIC entry');
@@ -182,9 +213,12 @@ select ok(to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is nu
           or (select proowner::regrole::text from pg_proc
               where oid = to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)')) = 'supabase_admin',
           'graphql_public.graphql: absent, not anon-executable, or the supabase_admin-owned stub covered by the exclusion');
+select ok(to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is null
+          or not (select prosecdef from pg_proc where oid = to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)')),
+          'graphql_public.graphql stub is not SECURITY DEFINER');
 select function_privs_are('private','hardening_violations', array['jsonb'], 'anon', array[]::text[]);
 select function_privs_are('private','hardening_exclusions', array[]::text[], 'anon', array[]::text[]);
-select function_privs_are('private','assert_hardening', array['jsonb'], 'authenticated', array[]::text[]);
+select function_privs_are('private','assert_hardening', array[]::text[], 'authenticated', array[]::text[]);
 
 select * from finish();
 rollback;
