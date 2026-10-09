@@ -253,7 +253,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -280,7 +280,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -320,7 +320,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -347,7 +347,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -387,7 +387,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -414,7 +414,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -441,7 +441,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -468,7 +468,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -495,7 +495,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -535,7 +535,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -575,7 +575,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -615,7 +615,7 @@
         "rule": "aria-required-children",
         "impact": "critical",
         "targets": [
-          "#<generated>"
+          "#<generated> (role=\"menu\")"
         ]
       },
       {
@@ -661,10 +661,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -674,8 +674,8 @@
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -703,10 +703,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -724,8 +724,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -761,10 +761,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".\\!bg-primary",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
@@ -775,8 +775,8 @@
           ".pt-3\\.5 > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
@@ -825,10 +825,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".\\!bg-primary",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
@@ -847,8 +847,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.font-extrabold",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.font-extrabold",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.text-muted-foreground.tabular-nums",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.text-muted-foreground.tabular-nums",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.text-muted-foreground.tabular-nums",
@@ -882,10 +882,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -893,8 +893,8 @@
           ".text-\\[12\\.5px\\] > .text-right",
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -921,10 +921,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -940,8 +940,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -967,10 +967,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -980,8 +980,8 @@
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -1010,10 +1010,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -1031,8 +1031,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -1057,10 +1057,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -1069,8 +1069,8 @@
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -1098,10 +1098,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -1118,8 +1118,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -1142,10 +1142,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -1153,8 +1153,8 @@
           ".text-\\[12\\.5px\\] > .text-right",
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -1180,10 +1180,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".min-h-10 > p",
@@ -1199,8 +1199,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -2033,10 +2033,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .text-\\[14px\\].leading-\\[19px\\].font-semibold",
@@ -2047,8 +2047,8 @@
           ".text-\\[12\\.5px\\] > .text-right",
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -2074,10 +2074,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .text-\\[14px\\].leading-\\[19px\\].font-semibold",
@@ -2096,8 +2096,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -2120,9 +2120,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .text-\\[14px\\].leading-\\[19px\\].font-semibold",
@@ -2133,8 +2133,8 @@
           "button[title=\"New subscription (N)\"]",
           "button[type=\"submit\"]",
           "button[type=\"submit\"] > kbd",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -2160,10 +2160,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .text-\\[14px\\].leading-\\[19px\\].font-semibold",
@@ -2182,8 +2182,8 @@
           "button[title=\"New subscription (N)\"]",
           "button[type=\"submit\"]",
           "button[type=\"submit\"] > kbd",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -2208,9 +2208,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".gap-1\\.5.flex-col > p",
@@ -2218,8 +2218,8 @@
           ".text-\\[18px\\] > .text-faint",
           ".text-faint.truncate.leading-\\[22px\\]",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_0_-name\"]",
-          "label[for=\"_r_0_-price\"]"
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]"
         ]
       }
     ],
@@ -2241,9 +2241,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".gap-1\\.5.flex-col > p",
@@ -2251,8 +2251,8 @@
           ".text-\\[18px\\] > .text-faint",
           ".text-faint.truncate.leading-\\[22px\\]",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_0_-name\"]",
-          "label[for=\"_r_0_-price\"]"
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]"
         ]
       }
     ],
@@ -2986,10 +2986,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".disabled\\:opacity-70",
@@ -2999,8 +2999,8 @@
           ".text-\\[12\\.5px\\] > .text-right",
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -3026,10 +3026,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".bg-primary-soft > .items-end.text-right.flex-col > .leading-\\[21px\\].whitespace-nowrap.text-\\[16px\\] > .text-\\[12px\\].font-semibold.text-muted-foreground",
           ".bg-primary-soft > .min-w-0.flex-col.flex > .leading-\\[15px\\].text-\\[12px\\].font-semibold",
           ".disabled\\:opacity-70",
@@ -3047,8 +3047,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -3524,10 +3524,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -3537,8 +3537,8 @@
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -3567,10 +3567,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -3588,8 +3588,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -3614,10 +3614,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -3627,8 +3627,8 @@
           ".text-\\[12\\.5px\\] > span:nth-child(3)",
           ".text-\\[18px\\] > .text-faint",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -3656,10 +3656,10 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated> > .font-semibold",
           "#<generated> > .text-muted-foreground:nth-child(1)",
+          "#<generated>-billed",
+          "#<generated>-category",
+          "#<generated>-category > .font-semibold",
           ".disabled\\:opacity-70",
           ".disabled\\:opacity-70 > kbd",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
@@ -3677,8 +3677,8 @@
           "button[data-day=\"2026-09-30\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[data-day=\"2026-10-13\"] > .text-\\[13px\\].leading-4.tabular-nums",
           "button[title=\"New subscription (N)\"]",
-          "label[for=\"_r_4_-name\"]",
-          "label[for=\"_r_4_-price\"]",
+          "label[for=\"<generated>-name\"]",
+          "label[for=\"<generated>-price\"]",
           "section[aria-labelledby=\"ledger-later\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-month\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground",
           "section[aria-labelledby=\"ledger-week\"] > .pt-4.items-baseline.px-1\\.5 > .text-footnote.tabular-nums.text-muted-foreground"
@@ -4240,9 +4240,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
@@ -4272,9 +4272,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
@@ -4315,9 +4315,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".\\!bg-primary",
           ".leading-\\[22px\\].text-\\[17px\\].text-faint",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
@@ -4357,9 +4357,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
           ".text-faint.text-\\[15px\\].leading-\\[19px\\]",
@@ -4388,9 +4388,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".leading-\\[22px\\].text-faint.text-\\[17px\\]",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
@@ -4420,9 +4420,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
           ".text-\\[18px\\] > .text-faint",
@@ -4634,9 +4634,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
           ".text-faint.text-\\[15px\\].leading-\\[19px\\]",
@@ -4662,9 +4662,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > div[role=\"img\"][aria-label=\"5.469 kr per month\"] > .\\[\\&\\>span\\]\\:align-baseline > .tracking-normal.font-extrabold.text-muted-foreground",
           ".max-w-\\[640px\\] > .pt-1.px-1[aria-label=\"Monthly total\"] > p",
           ".text-faint.text-\\[15px\\].leading-\\[19px\\]",
@@ -4710,9 +4710,9 @@
         "rule": "color-contrast",
         "impact": "serious",
         "targets": [
-          "#<generated>",
-          "#<generated>",
-          "#<generated>",
+          "#<generated>-billed",
+          "#<generated>-details",
+          "#<generated>-price",
           ".leading-\\[21px\\]",
           ".px-1.pb-2.text-footnote",
           ".text-faint",
