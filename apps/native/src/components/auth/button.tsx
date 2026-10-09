@@ -8,7 +8,7 @@ import {
 import { useThemeColors } from "@/providers/theme-provider";
 import { fonts, radius } from "@/lib/theme";
 
-type Variant = "primary" | "secondary" | "plain";
+type Variant = "primary" | "destructive" | "secondary" | "plain";
 
 type Props = {
   title: string;
@@ -22,6 +22,7 @@ type Props = {
 /**
  * Full-width 52pt button.
  * - primary: orange fill, white text
+ * - destructive: red fill, white text
  * - secondary: translucent fill, foreground text
  * - plain: no fill, orange text
  */
@@ -39,15 +40,19 @@ export function Button({
   const backgroundColor =
     variant === "primary"
       ? colors.primary
-      : variant === "secondary"
-        ? colors.fill
-        : "transparent";
+      : variant === "destructive"
+        ? colors.destructive
+        : variant === "secondary"
+          ? colors.fill
+          : "transparent";
   const color =
     variant === "primary"
       ? colors.primaryForeground
-      : variant === "secondary"
-        ? colors.foreground
-        : colors.primaryText;
+      : variant === "destructive"
+        ? colors.destructiveForeground
+        : variant === "secondary"
+          ? colors.foreground
+          : colors.primaryText;
 
   return (
     <Pressable
@@ -75,7 +80,10 @@ export function Button({
       ) : (
         <Text
           style={{
-            fontFamily: variant === "primary" ? fonts.extraBold : fonts.bold,
+            fontFamily:
+              variant === "primary" || variant === "destructive"
+                ? fonts.extraBold
+                : fonts.bold,
             fontSize: 16.5,
             color,
           }}
