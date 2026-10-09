@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import { corsHeaders, preflight } from "../_shared/cors.ts";
 import { hasRecentSignIn } from "../_shared/recent-auth.ts";
+import { isUserNotFound } from "../_shared/user-not-found.ts";
 import { isAuthRejection, isGetClaimsThrowRejection } from "./auth-errors.ts";
 
 Deno.serve(async (req) => {
@@ -69,8 +70,8 @@ Deno.serve(async (req) => {
   try {
     const admin = createClient(url, secretKey, clientOptions);
     const { error } = await admin.auth.admin.deleteUser(userId);
-    // 404: a concurrent request already deleted this user, which is the outcome asked for.
-    if (error && error.status !== 404) throw error;
+    // user_not_found: a concurrent request already deleted this user, which is the outcome asked for.
+    if (error && !isUserNotFound(error)) throw error;
     return json({ success: true }, 200);
   } catch (e) {
     console.error("delete-account failed", e);

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { Database } from "@subscriptions-manager/shared";
 import { hasRecentSignIn } from "@supabase-functions/_shared/recent-auth";
+import { isUserNotFound } from "@supabase-functions/_shared/user-not-found";
 import { isAuthRejection } from "@supabase-functions/delete-account/auth-errors";
 
 export const dynamic = "force-dynamic";
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
   const { error: deleteUserError } =
     await supabaseAdmin.auth.admin.deleteUser(user.id);
 
-  if (deleteUserError) {
+  // user_not_found: a concurrent request already deleted this user, which is the outcome asked for.
+  if (deleteUserError && !isUserNotFound(deleteUserError)) {
     console.error("Failed to delete user:", deleteUserError);
     return NextResponse.json(
       { error: deleteUserError.message },

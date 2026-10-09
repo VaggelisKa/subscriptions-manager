@@ -135,4 +135,27 @@ describe("POST /api/account/delete", () => {
     expect(auth.deleteSubscriptions).toHaveBeenCalledWith("user_id", USER_ID);
     expect(auth.deleteUser).toHaveBeenCalledWith(USER_ID);
   });
+
+  it("user already deleted by a concurrent request (user_not_found) → 200", async () => {
+    auth.getClaims.mockResolvedValue(signedIn("password", 5));
+    auth.deleteUser.mockResolvedValue({
+      data: { user: null },
+      error: Object.assign(authError("AuthApiError", "User not found", 404), { code: "user_not_found" }),
+    });
+    const res = await POST(request("token"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ success: true });
+  });
+
+  it.each([
+    ["404 without user_not_found", authError("AuthApiError", "Not Found", 404)],
+    ["500 from Auth", Object.assign(authError("AuthApiError", "Database error", 500), { code: "unexpected_failure" })],
+  ])("deleteUser error (%s) → 500", async (_, error) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    auth.getClaims.mockResolvedValue(signedIn("password", 5));
+    auth.deleteUser.mockResolvedValue({ data: { user: null }, error });
+    const res = await POST(request("token"));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: error.message });
+  });
 });
