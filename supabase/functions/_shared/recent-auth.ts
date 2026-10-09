@@ -5,12 +5,16 @@
 /** How recent a password/OTP sign-in must be, in seconds. */
 export const RECENT_SIGN_IN_SECONDS = 10 * 60;
 
+/** How far in the future a sign-in timestamp may be (clock skew), in seconds. */
+export const CLOCK_SKEW_SECONDS = 60;
+
 /** `amr` methods that prove the user just entered a credential (not oauth, recovery, invite, …). */
 const RECENT_SIGN_IN_METHODS: readonly unknown[] = ["password", "otp"];
 
 /**
  * True if the token's `amr` claim has a `password` or `otp` entry with a numeric `timestamp`
- * (unix seconds) at most `RECENT_SIGN_IN_SECONDS` before `nowSeconds`.
+ * (unix seconds) at most `RECENT_SIGN_IN_SECONDS` before `nowSeconds` and at most
+ * `CLOCK_SKEW_SECONDS` after it (so millisecond timestamps are rejected too).
  */
 export function hasRecentSignIn(amr: unknown, nowSeconds: number): boolean {
   if (!Array.isArray(amr)) return false;
@@ -21,7 +25,8 @@ export function hasRecentSignIn(amr: unknown, nowSeconds: number): boolean {
       RECENT_SIGN_IN_METHODS.includes(method) &&
       typeof timestamp === "number" &&
       Number.isFinite(timestamp) &&
-      nowSeconds - timestamp <= RECENT_SIGN_IN_SECONDS
+      nowSeconds - timestamp <= RECENT_SIGN_IN_SECONDS &&
+      timestamp - nowSeconds <= CLOCK_SKEW_SECONDS
     );
   });
 }

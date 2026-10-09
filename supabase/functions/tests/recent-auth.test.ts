@@ -1,6 +1,6 @@
 // Unit tests for _shared/recent-auth.ts (no stack needed).
 import { assertEquals } from "jsr:@std/assert@1.0.19";
-import { hasRecentSignIn, RECENT_SIGN_IN_SECONDS } from "../_shared/recent-auth.ts";
+import { CLOCK_SKEW_SECONDS, hasRecentSignIn, RECENT_SIGN_IN_SECONDS } from "../_shared/recent-auth.ts";
 
 const NOW = 1_800_000_000;
 const ago = (seconds: number) => NOW - seconds;
@@ -19,6 +19,18 @@ Deno.test("recent-auth: boundary at exactly 600 s is accepted, 601 s is not", ()
   assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(600) }], NOW), true);
   assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(601) }], NOW), false);
   assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(600) }], NOW + 0.5), false);
+});
+
+Deno.test("recent-auth: future timestamps are allowed only within the 60 s clock skew", () => {
+  assertEquals(CLOCK_SKEW_SECONDS, 60);
+  assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(-30) }], NOW), true);
+  assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(-60) }], NOW), true);
+  assertEquals(hasRecentSignIn([{ method: "password", timestamp: ago(-120) }], NOW), false);
+});
+
+Deno.test("recent-auth: millisecond timestamps → false", () => {
+  assertEquals(hasRecentSignIn([{ method: "password", timestamp: NOW * 1000 }], NOW), false);
+  assertEquals(hasRecentSignIn([{ method: "otp", timestamp: ago(5) * 1000 }], NOW), false);
 });
 
 Deno.test("recent-auth: stale sign-in (> 10 min) → false", () => {
