@@ -53,7 +53,7 @@ export async function blankBilledAtOnSave(page: Page) {
   const handler = async (route: import("@playwright/test").Route) => {
     const request = route.request();
     const body = request.postData();
-    if (request.method() !== "POST" || !request.headers()["next-action"] || !body) return route.continue();
+    if (request.method() !== "POST" || !request.headers()["next-action"] || !body) return route.fallback();
     await route.continue({ postData: body.replace(/(name="[^"]*billed_at"\r\n\r\n)[^\r]*/, "$1") });
   };
   await page.route("**/*", handler);
