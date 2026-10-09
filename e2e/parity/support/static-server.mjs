@@ -30,7 +30,14 @@ const types = {
 
 http
   .createServer((req, res) => {
-    const pathname = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+    let pathname;
+    try {
+      pathname = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+    } catch {
+      res.writeHead(400, { "content-type": "text/plain; charset=utf-8" });
+      res.end("bad request path");
+      return;
+    }
     let file = path.join(root, pathname);
     const rel = path.relative(root, file);
     if (rel.startsWith("..") || path.isAbsolute(rel)) file = path.join(root, "index.html");

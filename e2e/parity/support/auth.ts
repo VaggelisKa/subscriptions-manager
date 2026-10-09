@@ -37,17 +37,23 @@ export async function createSessions() {
   for (const [key, user] of Object.entries(USERS)) {
     const file = path.join(AUTH_DIR, `${key}.json`);
     // Back-to-back runs reuse a session that's still good for a run (real clock).
-    if (fs.existsSync(file) && (await stillValid(JSON.parse(fs.readFileSync(file, "utf8"))))) continue;
+    if (fs.existsSync(file) && (await stillValid(file))) continue;
     fs.writeFileSync(file, JSON.stringify(await signIn(user)));
   }
 }
 
-async function stillValid(session: Session) {
-  if ((session.expires_at ?? 0) * 1000 - Date.now() < 30 * 60_000) return false;
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: publishableKey(), authorization: `Bearer ${session.access_token}` },
-  });
-  return res.ok;
+/** A cached session that can't be read or checked counts as stale (it's signed in again). */
+async function stillValid(file: string) {
+  try {
+    const session: Session = JSON.parse(fs.readFileSync(file, "utf8"));
+    if ((session.expires_at ?? 0) * 1000 - Date.now() < 30 * 60_000) return false;
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: publishableKey(), authorization: `Bearer ${session.access_token}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export function cachedSession(key: UserKey): Session {
