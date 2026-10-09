@@ -279,17 +279,36 @@ const corsTest = (name: string, fn: () => Promise<void>) =>
     },
   });
 
+/** A browser preflight: no `apikey` or `Authorization`, just the origin and the ACR headers. */
+async function preflightCall(origin: string, url = EDGE_RUNTIME_URL!) {
+  const res = await fetch(url, {
+    method: "OPTIONS",
+    headers: {
+      Origin: origin,
+      "Access-Control-Request-Method": "POST",
+      "Access-Control-Request-Headers": "authorization, apikey, content-type, x-client-info",
+    },
+  });
+  await res.body?.cancel();
+  return res;
+}
+
 corsTest("OPTIONS preflight from an allowed origin echoes it", async () => {
-  const res = await call(null, { method: "OPTIONS", origin: ALLOWED_ORIGIN, url: EDGE_RUNTIME_URL });
+  const res = await preflightCall(ALLOWED_ORIGIN);
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), ALLOWED_ORIGIN);
   assertEquals(res.headers.get("access-control-allow-methods"), "POST, OPTIONS");
-  assert(res.headers.get("access-control-allow-headers")?.includes("authorization"));
+  assert(res.headers.get("access-control-allow-headers")?.toLowerCase().includes("authorization"));
   assert(res.headers.get("vary")?.includes("Origin"));
 });
 
+gatewayTest("a preflight without a JWT gets through the gateway (verify_jwt = true)", async () => {
+  const res = await preflightCall(ALLOWED_ORIGIN, FUNCTION_URL);
+  assertEquals(res.status, 200);
+});
+
 corsTest("OPTIONS preflight from a disallowed origin gets no ACAO header", async () => {
-  const res = await call(null, { method: "OPTIONS", origin: "https://evil.example", url: EDGE_RUNTIME_URL });
+  const res = await preflightCall("https://evil.example");
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), null);
   assertEquals(res.headers.get("access-control-allow-methods"), null);

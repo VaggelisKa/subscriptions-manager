@@ -30,7 +30,13 @@ stop_serve() {
 trap 'stop_serve; rm -rf "$tmp"' EXIT
 
 # API_URL, SECRET_KEY, PUBLISHABLE_KEY, JWT_SECRET; read at runtime, never written to the repo.
-eval "$($SUPABASE status -o env 2>/dev/null </dev/null | grep -E '^(API_URL|SECRET_KEY|PUBLISHABLE_KEY|JWT_SECRET)=')"
+eval "$($SUPABASE status -o env </dev/null | grep -E '^(API_URL|SECRET_KEY|PUBLISHABLE_KEY|JWT_SECRET)=' || true)"
+for var in API_URL SECRET_KEY PUBLISHABLE_KEY JWT_SECRET; do
+  if [[ -z ${!var:-} ]]; then
+    echo "\`supabase status\` gave no $var: is the stack running, on a CLI that reports sb_ keys?" >&2
+    exit 1
+  fi
+done
 
 serve() { # serve <SB_SECRET_KEY> [extra serve flags...]
   printf 'SB_SECRET_KEY=%s\nALLOWED_ORIGINS=%s\n' "$1" "$ALLOWED_ORIGIN" >"$tmp/functions.env"
