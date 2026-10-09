@@ -42,10 +42,13 @@ export function PasswordPrompt({
     let result: string | undefined;
     try {
       result = await onConfirm(password);
-    } finally {
+    } catch (e) {
       setSubmitting(false);
+      throw e;
     }
+    // On success the dialog stays locked until it unmounts.
     if (result) {
+      setSubmitting(false);
       setError(result);
       setPassword("");
     }

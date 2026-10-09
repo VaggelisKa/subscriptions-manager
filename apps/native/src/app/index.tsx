@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
@@ -28,11 +28,12 @@ export default function HomeScreen() {
   const { subscriptions, loading, refresh } = useSubscriptions(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  // Open while deletion waits for the password; `resolve` continues (true) or cancels (false) it.
+  // Open while deletion waits for the password; `confirmed` once it has been accepted.
   const [passwordPrompt, setPasswordPrompt] = useState<{
-    resolve: (confirmed: boolean) => void;
     confirmed: boolean;
   } | null>(null);
+  // Continues (true) or cancels (false) the pending deletion. A ref, so no render can lose it.
+  const resolvePassword = useRef<((confirmed: boolean) => void) | null>(null);
   const todayKey = useTodayKey();
 
   // Refetches also flip `loading`; keep showing the list instead of the skeleton.
@@ -46,7 +47,8 @@ export default function HomeScreen() {
 
   function askForPassword() {
     return new Promise<boolean>((resolve) => {
-      setPasswordPrompt({ resolve, confirmed: false });
+      resolvePassword.current = resolve;
+      setPasswordPrompt({ confirmed: false });
     });
   }
 
@@ -56,13 +58,18 @@ export default function HomeScreen() {
       haptics.error();
       return result.error;
     }
-    // Stays open with a spinner while the deletion is retried.
+    // Stays open with a spinner while the deletion is retried; runDeleteAccount closes it.
     setPasswordPrompt((prompt) => prompt && { ...prompt, confirmed: true });
-    passwordPrompt?.resolve(true);
+    const resolve = resolvePassword.current;
+    resolvePassword.current = null;
+    resolve?.(true);
   }
 
   function cancelPasswordPrompt() {
-    passwordPrompt?.resolve(false);
+    const resolve = resolvePassword.current;
+    if (!resolve) return; // Already confirmed.
+    resolvePassword.current = null;
+    resolve(false);
     setPasswordPrompt(null);
   }
 
@@ -72,6 +79,7 @@ export default function HomeScreen() {
     try {
       result = await deleteAccount(askForPassword);
     } finally {
+      resolvePassword.current = null;
       setPasswordPrompt(null);
       setDeleting(false);
     }
