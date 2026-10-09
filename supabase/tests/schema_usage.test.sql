@@ -4,9 +4,10 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(5);
+select plan(6);
 
 select ok(not has_schema_privilege('public', 'public', 'USAGE'), 'schema public: no USAGE for PUBLIC');
+select ok(not has_schema_privilege('public', 'public', 'CREATE'), 'schema public: no CREATE for PUBLIC');
 select ok(not exists (
   select 1 from pg_namespace n, aclexplode(n.nspacl) a
   where n.nspname = 'public' and a.grantee = 0
