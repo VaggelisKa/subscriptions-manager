@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(31);
+select plan(33);
 
 -- ── FKs ──
 select is((select count(*)::int from pg_constraint
@@ -51,8 +51,14 @@ select col_type_is('public','subscriptions','price','numeric(12,2)', 'price is n
 select col_default_is('public','subscriptions','user_id','auth.uid()', 'user_id defaults to auth.uid()');
 select is((select count(*)::int from pg_constraint
            where conrelid = 'public.subscriptions'::regclass
-             and conname in ('subscriptions_name_not_blank','subscriptions_price_valid') and not convalidated),
-          2, 'subscriptions CHECKs exist, NOT VALID until 1d');
+             and conname in ('subscriptions_name_not_blank','subscriptions_price_valid') and convalidated),
+          2, 'subscriptions CHECKs exist and are validated');
+select is((select convalidated from pg_constraint
+           where conrelid = 'public.categories'::regclass and conname = 'categories_name_len'),
+          true, 'categories_name_len is validated');
+select is_empty($$ select conrelid::regclass, conname from pg_constraint
+                   where conrelid in ('public.subscriptions'::regclass, 'public.categories'::regclass)
+                     and not convalidated $$, 'no NOT VALID constraints left on subscriptions/categories');
 select has_index('public','subscriptions','subscriptions_user_id_idx', 'index on user_id');
 select has_index('public','subscriptions','subscriptions_category_id_idx', 'index on category_id');
 
