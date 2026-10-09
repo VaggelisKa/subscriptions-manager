@@ -100,21 +100,32 @@ export class Auth {
    * signed out: the server has already removed the user and every session.
    */
   async deleteAccount(confirmIdentity: () => Promise<boolean>): Promise<DeleteResult> {
-    let { error } = await supabase.functions.invoke("delete-account", { method: "POST" });
-    if (error && (await functionErrorCode(error)) === "reauth_required") {
-      if (!(await confirmIdentity())) return { cancelled: true };
-      ({ error } = await supabase.functions.invoke("delete-account", { method: "POST" }));
-    }
-    if (error) {
+    try {
+      let { error } = await supabase.functions.invoke("delete-account", { method: "POST" });
+      if (error && (await functionErrorCode(error)) === "reauth_required") {
+        if (!(await confirmIdentity())) return { cancelled: true };
+        ({ error } = await supabase.functions.invoke("delete-account", { method: "POST" }));
+      }
+      if (error) {
+        console.warn("Account deletion failed:", error);
+        return {
+          error:
+            isFunctionsFetchError(error)
+              ? "Couldn't reach the server. Check your connection and try again."
+              : "Couldn't delete your account. Try again.",
+        };
+      }
+    } catch (error) {
       console.warn("Account deletion failed:", error);
-      return {
-        error:
-          isFunctionsFetchError(error)
-            ? "Couldn't reach the server. Check your connection and try again."
-            : "Couldn't delete your account. Try again.",
-      };
+      return { error: "Couldn't delete your account. Try again." };
     }
-    await supabase.auth.signOut({ scope: "local" });
+    // The account is gone either way; a failed local sign-out must not report the delete as failed.
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) console.warn("Local sign-out after account deletion failed:", error);
+    } catch (error) {
+      console.warn("Local sign-out after account deletion failed:", error);
+    }
     return {};
   }
 

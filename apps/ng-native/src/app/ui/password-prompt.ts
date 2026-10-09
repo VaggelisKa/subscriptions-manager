@@ -44,7 +44,7 @@ import {
               [secureTextEntry]="true"
               [autoCorrect]="false"
               [autoFocus]="true"
-              [editable]="!busy()"
+              [editable]="!locked()"
               [(value)]="password"
               (submitEditing)="submit()"
             />

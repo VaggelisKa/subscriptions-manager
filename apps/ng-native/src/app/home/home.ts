@@ -141,6 +141,7 @@ export class Home {
   protected readonly passwordPrompt = signal<{ resolve: (confirmed: boolean) => void } | null>(null);
   protected readonly passwordBusy = signal(false);
   protected readonly passwordError = signal<string | null>(null);
+  private destroyed = false;
 
   protected readonly status = this.store.status;
   protected readonly buckets = computed(() => {
@@ -199,8 +200,12 @@ export class Home {
     // The page's host element is its `RNSScreen`. Without a bar background, iOS 26's blur under
     // the bar would be the only thing there, so it goes too (apps/native's `scrollEdgeEffects`).
     inject(Renderer2).setProperty(inject(ElementRef).nativeElement, "topScrollEdgeEffect", "hidden");
-    // Never leave a deletion waiting on a prompt that can no longer be answered.
-    inject(DestroyRef).onDestroy(() => this.passwordPrompt()?.resolve(false));
+    // Never leave a deletion waiting on a prompt that can no longer be answered, including one
+    // asked for after this screen is gone.
+    inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
+      this.passwordPrompt()?.resolve(false);
+    });
   }
 
   protected async refresh(): Promise<void> {
@@ -249,6 +254,7 @@ export class Home {
   }
 
   private askForPassword(): Promise<boolean> {
+    if (this.destroyed) return Promise.resolve(false);
     this.passwordPrompt()?.resolve(false); // Never leave an earlier request hanging.
     this.passwordBusy.set(false);
     this.passwordError.set(null);
