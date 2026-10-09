@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(4);
+select plan(6);
 
 -- KEEP IN SYNC: same scope predicate as the guard in
 -- supabase/migrations/20261009083122_hardening.sql. Change both together.
@@ -14,19 +14,16 @@ select n.oid, n.nspname
 from pg_namespace n
 where n.nspname not in ('pg_catalog','information_schema','auth','storage','realtime',
                       'extensions','graphql','vault','cron','pgsodium','pg_toast',
-                      -- platform schemas added after the real-image run (PR 55 review):
-                      'net',            -- pg_net: http_get/http_post are SECURITY DEFINER + client-executable; trips (C) when pg_net is enabled
-                      'pgmq',           -- Supabase Queues extension internals (app-facing wrappers live in pgmq_public, which stays in scope)
-                      '_realtime',      -- Realtime service's own schema (local image)
-                      '_analytics',     -- Logflare/analytics service schema (local image with analytics on)
-                      'pgsodium_masks', -- pgsodium-managed masking views (present on prod)
-                      'pgbouncer',      -- pooler auth: get_auth() is SECURITY DEFINER, platform-owned
-                      'graphql_public') -- pg_graphql entry point, platform-owned
+                      -- added after the real-image run (PR 55 review); only schemas that actually trip:
+                      'net')            -- pg_net: http_get/http_post are SECURITY DEFINER + client-executable; trips (C) when pg_net is enabled
     and n.nspname not like 'supabase\_%'      escape '\'   -- supabase_functions, supabase_migrations, ...
     and n.nspname not like 'pg\_temp%'        escape '\'
     and n.nspname not like 'pg\_toast\_temp%' escape '\';
 
 select ok((select count(*) from in_scope_ns where nspname = 'public') = 1, 'public is in scope');
+select ok((select count(*) from in_scope_ns where nspname = 'graphql_public') = 1, 'graphql_public (client-reachable) is in scope');
+create schema hardening_test_new_app_schema;  -- rolled back below
+select ok((select count(*) from in_scope_ns where nspname = 'hardening_test_new_app_schema') = 1, 'a newly created app schema is in scope');
 
 select is_empty($$
   select n.nspname, c.relname
