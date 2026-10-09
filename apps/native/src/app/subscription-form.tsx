@@ -24,15 +24,21 @@ import {
   onTapGesture,
   scrollDismissesKeyboard,
 } from "@expo/ui/swift-ui/modifiers";
-import type { IntervalEnum } from "@subscriptions-manager/shared";
+import type { IntervalEnum } from "@subscriptions-manager/shared/types";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { format, setHours, setMinutes } from "date-fns";
-import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
-import { nextChargeDate } from "@/lib/billing";
+import { utcToZonedTime } from "date-fns-tz";
+import { nextChargeDate } from "@subscriptions-manager/shared/billing";
+import { parsePrice } from "@subscriptions-manager/shared/price";
+import {
+  subscriptionFormSchema,
+  toSubscriptionWrite,
+  type SubscriptionWrite,
+} from "@subscriptions-manager/shared/schemas";
 import { haptics } from "@/lib/haptics";
-import { intervalName } from "@/lib/format";
+import { intervalName } from "@subscriptions-manager/shared/format";
 import { SubscriptionPreview } from "@/components/form/subscription-preview";
 import { CategoryPicker } from "@/components/form/category-picker";
 
@@ -43,38 +49,6 @@ const INTERVALS: IntervalEnum[] = ["week", "month", "year"];
 const ROW_MODIFIERS = [
   listRowBackground(PlatformColor("secondarySystemGroupedBackground")),
 ];
-
-/**
- * Accepts "79", "79,50", "79.50", "1.250" and "1.250,50". The decimal pad
- * shows "," in Danish; "." followed by exactly three digits is a thousands
- * separator, as the app itself formats amounts that way. Negative prices are
- * rejected and values are rounded to øre.
- */
-function parsePrice(text: string) {
-  let t = text.trim().replace(/\s/g, "");
-  if (!t) return null;
-  const lastComma = t.lastIndexOf(",");
-  const lastDot = t.lastIndexOf(".");
-  if (lastComma >= 0 && lastDot >= 0) {
-    // Whichever comes last is the decimal separator.
-    const decimal = lastComma > lastDot ? "," : ".";
-    const grouping = decimal === "," ? "." : ",";
-    t = t.split(grouping).join("").replace(decimal, ".");
-  } else if (lastComma >= 0) {
-    t = t.replace(",", ".");
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(t)) {
-    t = t.split(".").join("");
-  }
-  if (!/^\d+(\.\d+)?$/.test(t)) return null;
-  return Math.round(Number(t) * 100) / 100;
-}
-
-/** The calendar day shown in the picker, stored as noon in Copenhagen so the
- * day can't shift with the device's time zone. */
-function toBilledAt(date: Date) {
-  const day = format(date, "yyyy-MM-dd");
-  return zonedTimeToUtc(`${day}T12:00:00`, "Europe/Copenhagen").toISOString();
-}
 
 export default function SubscriptionFormScreen() {
   const { colorScheme } = useTheme();
@@ -121,9 +95,8 @@ export default function SubscriptionFormScreen() {
     paramInterval && INTERVALS.includes(paramInterval) ? paramInterval : "month",
   );
   // A stale `billed_at` is shown as its next charge (keeping the stored time
-  // of day), but it's only written back if the user picks a date. The web
-  // app's cron advances `billed_at` itself, so rewriting it on every save
-  // would shift the schedule.
+  // of day), but it's only written back if the user picks a date: it anchors
+  // the schedule, so rewriting it on every save would shift it.
   const [billedAt, setBilledAt] = useState(() => {
     if (!paramBilledAt) return new Date();
     const stored = utcToZonedTime(paramBilledAt, "Europe/Copenhagen");
@@ -149,31 +122,33 @@ export default function SubscriptionFormScreen() {
   }
 
   async function handleSave() {
-    if (!name.trim()) {
-      Alert.alert("Error", "Name of subscription is required");
+    const parsed = subscriptionFormSchema.safeParse({
+      name,
+      price,
+      interval,
+      // The stored anchor is only rewritten when the user picks a date.
+      billedAtDay:
+        !isEdit || billedAtChanged ? format(billedAt, "yyyy-MM-dd") : undefined,
+      categoryId: effectiveCategoryId,
+    });
+    if (!parsed.success) {
+      Alert.alert("Error", parsed.error.issues[0].message);
       return;
     }
-    if (parsedPrice === null) {
-      Alert.alert("Error", "Price of subscription should be given");
+
+    let data: SubscriptionWrite;
+    try {
+      data = toSubscriptionWrite(parsed.data, !isEdit);
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
       return;
     }
 
     setSaving(true);
 
-    const data = {
-      name: name.trim(),
-      price: parsedPrice,
-      interval,
-      billed_at:
-        isEdit && !billedAtChanged && paramBilledAt
-          ? paramBilledAt
-          : toBilledAt(billedAt),
-      ...(effectiveCategoryId ? { category_id: effectiveCategoryId } : {}),
-    };
-
     const result = isEdit
       ? await updateSubscription(id!, data)
-      : await addSubscription(data);
+      : await addSubscription({ ...data, billed_at: data.billed_at! });
 
     setSaving(false);
 

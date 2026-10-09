@@ -25,8 +25,8 @@ import {
   today,
   upcomingChargeDates,
   yearlyEquivalent,
-} from "@/lib/billing";
-import { formatWholeKr, intervalLabel } from "@/lib/format";
+} from "@subscriptions-manager/shared/billing";
+import { formatWholeKr, intervalLabel } from "@subscriptions-manager/shared/format";
 import { haptics } from "@/lib/haptics";
 import { fonts, radius, spacing, withAlpha } from "@/lib/theme";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";

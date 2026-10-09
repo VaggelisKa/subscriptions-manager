@@ -8,12 +8,12 @@ import {
   lineLimit,
   shapes,
 } from "@expo/ui/swift-ui/modifiers";
-import type { IntervalEnum } from "@subscriptions-manager/shared";
+import type { IntervalEnum } from "@subscriptions-manager/shared/types";
 import { useTheme } from "@/providers/theme-provider";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
-import { monthlyEquivalent, yearlyEquivalent } from "@/lib/billing";
-import { findBrand } from "@/lib/brands";
-import { formatNumber, formatWholeKr, intervalSuffix } from "@/lib/format";
+import { monthlyEquivalent, yearlyEquivalent } from "@subscriptions-manager/shared/billing";
+import { findBrand } from "@subscriptions-manager/shared/brands";
+import { formatNumber, formatWholeKr, intervalSuffix } from "@subscriptions-manager/shared/format";
 import { fonts, withAlpha } from "@/lib/theme";
 
 type Props = {

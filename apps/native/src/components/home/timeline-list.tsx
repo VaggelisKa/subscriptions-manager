@@ -4,11 +4,11 @@ import Animated, {
   LinearTransition,
 } from "react-native-reanimated";
 import { router } from "expo-router";
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
+import type { SubscriptionWithCategory } from "@subscriptions-manager/shared/types";
 import { Group, SectionHeader } from "@/components/ui/grouped";
 import { SubscriptionRow } from "@/components/subscription-row";
-import { bucketByTime, scheduleSubscriptions } from "@/lib/billing";
-import { formatWholeKr } from "@/lib/format";
+import { bucketByTime, scheduleSubscriptions } from "@subscriptions-manager/shared/billing";
+import { formatWholeKr } from "@subscriptions-manager/shared/format";
 
 type Props = {
   subscriptions: SubscriptionWithCategory[];

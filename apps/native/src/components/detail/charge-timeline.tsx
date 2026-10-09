@@ -2,14 +2,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { differenceInCalendarDays } from "date-fns";
 import { useThemeColors } from "@/providers/theme-provider";
 import { Group } from "@/components/ui/grouped";
-import { today } from "@/lib/billing";
+import { today } from "@subscriptions-manager/shared/billing";
 import { fonts, spacing } from "@/lib/theme";
 import {
   formatDayDate,
   formatDueLabel,
   formatKr,
   isDueSoon,
-} from "@/lib/format";
+} from "@subscriptions-manager/shared/format";
 
 type Props = {
   dates: Date[];

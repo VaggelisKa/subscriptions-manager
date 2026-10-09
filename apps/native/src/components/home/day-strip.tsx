@@ -1,9 +1,9 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
+import type { SubscriptionWithCategory } from "@subscriptions-manager/shared/types";
 import { useThemeColors } from "@/providers/theme-provider";
-import { chargesBetween, today } from "@/lib/billing";
-import { formatDayDate } from "@/lib/format";
+import { chargesBetween, today } from "@subscriptions-manager/shared/billing";
+import { formatDayDate } from "@subscriptions-manager/shared/format";
 import { fonts, spacing } from "@/lib/theme";
 
 const DAYS = 36;

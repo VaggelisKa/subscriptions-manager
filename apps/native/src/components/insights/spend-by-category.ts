@@ -1,5 +1,5 @@
-import type { SubscriptionWithCategory } from "@subscriptions-manager/shared";
-import { monthlyEquivalent } from "@/lib/billing";
+import type { SubscriptionWithCategory } from "@subscriptions-manager/shared/types";
+import { monthlyEquivalent } from "@subscriptions-manager/shared/billing";
 
 export type Period = "week" | "month" | "year";
 

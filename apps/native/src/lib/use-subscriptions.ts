@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import type {
   SubscriptionWithCategory,
   Category,
-} from "@subscriptions-manager/shared";
+} from "@subscriptions-manager/shared/types";
+import type { SubscriptionWrite } from "@subscriptions-manager/shared/schemas";
 
 export function useSubscriptions(userId: string | undefined) {
   const channelId = useId();
@@ -78,13 +79,9 @@ export function useSubscriptions(userId: string | undefined) {
     };
   }, [userId, channelId]);
 
-  async function addSubscription(data: {
-    name: string;
-    price: number;
-    interval: "week" | "month" | "year";
-    billed_at: string;
-    category_id?: string;
-  }) {
+  async function addSubscription(
+    data: SubscriptionWrite & { billed_at: string },
+  ) {
     if (!userId) return { error: "Not authenticated" };
 
     const { error } = await supabase.from("subscriptions").insert({
@@ -96,16 +93,8 @@ export function useSubscriptions(userId: string | undefined) {
     return {};
   }
 
-  async function updateSubscription(
-    id: string,
-    data: {
-      name: string;
-      price: number;
-      interval: "week" | "month" | "year";
-      billed_at: string;
-      category_id?: string;
-    },
-  ) {
+  /** `billed_at` is left out unless the user picked a new date (`toSubscriptionWrite`). */
+  async function updateSubscription(id: string, data: SubscriptionWrite) {
     const { error } = await supabase
       .from("subscriptions")
       .update(data)
