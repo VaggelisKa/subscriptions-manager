@@ -69,7 +69,8 @@ Deno.serve(async (req) => {
   try {
     const admin = createClient(url, secretKey, clientOptions);
     const { error } = await admin.auth.admin.deleteUser(userId);
-    if (error) throw error;
+    // 404: a concurrent request already deleted this user, which is the outcome asked for.
+    if (error && error.status !== 404) throw error;
     return json({ success: true }, 200);
   } catch (e) {
     console.error("delete-account failed", e);
