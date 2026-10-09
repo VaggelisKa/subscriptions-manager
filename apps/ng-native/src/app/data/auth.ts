@@ -1,9 +1,14 @@
 import { DestroyRef, Service, computed, inject, signal } from "@angular/core";
-import { FunctionsFetchError, type Session } from "@supabase/supabase-js";
+import { type Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./supabase.ts";
 
 type Result = { error?: string };
 export type DeleteResult = Result & { cancelled?: boolean };
+
+/** True if `invoke` couldn't reach the function at all. Checked by shape, like `functionErrorCode`. */
+export function isFunctionsFetchError(error: unknown): boolean {
+  return !!error && typeof error === "object" && "name" in error && error.name === "FunctionsFetchError";
+}
 
 /** The `code` from an Edge Function's JSON error body, if there is one. */
 export async function functionErrorCode(error: unknown): Promise<string | undefined> {
@@ -98,7 +103,7 @@ export class Auth {
       console.warn("Account deletion failed:", error);
       return {
         error:
-          error instanceof FunctionsFetchError
+          isFunctionsFetchError(error)
             ? "Couldn't reach the server. Check your connection and try again."
             : "Couldn't delete your account. Try again.",
       };

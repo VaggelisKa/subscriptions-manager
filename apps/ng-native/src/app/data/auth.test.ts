@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { functionErrorCode } from "./auth.ts";
+import { functionErrorCode, isFunctionsFetchError } from "./auth.ts";
 
 vi.mock("./supabase.ts", () => ({ supabase: {}, supabaseConfigured: true }));
 
@@ -25,4 +25,11 @@ test("a body that isn't JSON, or other errors, have no code", async () => {
   expect(await functionErrorCode(httpError(undefined))).toBeUndefined();
   expect(await functionErrorCode({ name: "FunctionsFetchError", context: notJson })).toBeUndefined();
   expect(await functionErrorCode(null)).toBeUndefined();
+});
+
+test("recognizes a look-alike FunctionsFetchError by name", () => {
+  expect(isFunctionsFetchError({ name: "FunctionsFetchError", message: "Failed to send a request" })).toBe(true);
+  expect(isFunctionsFetchError(httpError(undefined))).toBe(false);
+  expect(isFunctionsFetchError(new Error("FunctionsFetchError"))).toBe(false);
+  expect(isFunctionsFetchError(null)).toBe(false);
 });
