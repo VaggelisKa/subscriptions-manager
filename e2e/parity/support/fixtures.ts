@@ -1,4 +1,4 @@
-import { test as base, expect, type Page, type TestInfo } from "@playwright/test";
+import { test as base, expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { maxDiffPixelRatioFor } from "../thresholds";
 import { loginAs } from "./auth";
 import { checkAxe } from "./axe";
@@ -8,7 +8,11 @@ export { expect };
 
 export type Width = 375 | 1024 | 1440;
 
-type ShotOptions = { fullPage?: boolean };
+type ShotOptions = {
+  fullPage?: boolean;
+  /** Regions painted over before comparing; only for app behaviour that isn't deterministic (say why at the call). */
+  mask?: Locator[];
+};
 
 type Fixtures = {
   target: Target;
@@ -42,6 +46,7 @@ export const test = base.extend<Fixtures>({
       expect.soft(newViolations, `axe violations not in axe-baseline.json for ${shot}`).toEqual([]);
       await expect(page).toHaveScreenshot([area, `${state}--${width}-${theme}.png`], {
         fullPage: options.fullPage ?? false,
+        mask: options.mask,
         maxDiffPixelRatio: maxDiffPixelRatioFor(`${area}/${state}`, shot),
       });
     });
@@ -87,6 +92,17 @@ export async function frames(page: Page, count = 2) {
       }),
     count,
   );
+}
+
+/**
+ * Scrolls every scrolled element inside `container` back to the top. Clicking into a sheet can
+ * leave its body scrolled by however far Playwright scrolled the target into view, which
+ * varies run to run; shots of those states are taken from the top.
+ */
+export async function scrollToTop(container: Locator) {
+  await container.evaluate((root) => {
+    for (const el of [root, ...root.querySelectorAll("*")]) if (el.scrollTop > 0) el.scrollTop = 0;
+  });
 }
 
 /** Opens a path and waits for hydration. */

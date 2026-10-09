@@ -1,4 +1,4 @@
-import { at, expect, open, test } from "../../support/fixtures";
+import { at, expect, open, scrollToTop, test } from "../../support/fixtures";
 import { blankBilledAtOnSave, mobile, pickSegment } from "../../support/app";
 import { SUBS } from "../../support/env";
 
@@ -127,6 +127,7 @@ test.describe("mobile sheets", () => {
     await mobile.insightsButton(page).click();
     await pickSegment(page, "Period", "Week");
     await expect(mobile.sheet(page).getByText("Spend per week")).toBeVisible();
+    await scrollToTop(mobile.sheet(page));
     await shot("mobile", "insights-week");
   });
 
@@ -134,6 +135,7 @@ test.describe("mobile sheets", () => {
     await mobile.insightsButton(page).click();
     await pickSegment(page, "Period", "Year");
     await expect(mobile.sheet(page).getByText("Spend per year")).toBeVisible();
+    await scrollToTop(mobile.sheet(page));
     await shot("mobile", "insights-year");
   });
 
@@ -141,6 +143,7 @@ test.describe("mobile sheets", () => {
     await mobile.insightsButton(page).click();
     await mobile.sheet(page).getByRole("button", { name: /^Entertainment/ }).click();
     await expect(mobile.sheet(page).getByRole("button", { name: /^Entertainment/ })).toHaveAttribute("aria-expanded", "true");
+    await scrollToTop(mobile.sheet(page));
     await shot("mobile", "insights-expanded");
   });
 });

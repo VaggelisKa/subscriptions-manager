@@ -89,10 +89,21 @@ test.describe("desktop", () => {
   });
 
   test("inspector: add, date popover open", DESKTOP, async ({ page, shot }) => {
+    // App bug, not fixed here: opening the popover scrolls the panel to the bottom, where (at
+    // 1024×768) the sticky Cancel / Add bar flips between stuck and not stuck every few frames:
+    // its 4 px padding change feeds back into its own IntersectionObserver. For this shot only,
+    // the bar's padding and border are pinned (which stops the loop) and the bar is masked, so
+    // neither the flicker nor the override is part of the baseline.
+    await page.addStyleTag({
+      content: "aside div.sticky.bottom-0 { padding-top: 18px !important; border-top-color: transparent !important; }",
+    });
     await desktop.addButton(page).click();
-    await desktop.inspector(page, "New subscription").getByRole("button", { name: /^Next charge/ }).click();
+    const panel = desktop.inspector(page, "New subscription");
+    await panel.getByRole("button", { name: /^Next charge/ }).click();
     await expect(page.getByRole("grid")).toBeVisible();
-    await shot("desktop", "add-date-popover");
+    await shot("desktop", "add-date-popover", {
+      mask: [panel.getByRole("button", { name: "Cancel" }).locator("..")],
+    });
   });
 
   test("inspector: add, name required", DESKTOP, async ({ page, shot }) => {

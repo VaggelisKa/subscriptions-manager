@@ -50,7 +50,8 @@ test.describe("flow 1: sign in and out", () => {
     test.use({ viewport: { width: 375, height: 812 } });
 
     test("session → home; sign out from the toolbar menu", async ({ login, page, context }) => {
-      await login("signout");
+      // Fresh sessions: sign-out is global, so a cached one may already be revoked.
+      await login("signout", { fresh: true });
       await open(page, "/");
       await expect(page).toHaveTitle("Your subscriptions");
       await expect(page.getByRole("heading", { name: "Subscriptions", level: 1 })).toBeVisible();
@@ -68,7 +69,6 @@ test.describe("flow 1: sign in and out", () => {
   });
 
   test("session → home; sign out from the desktop account menu", async ({ login, page }) => {
-    // The mobile test's global sign-out revoked the cached session: sign in again.
     await login("signout", { fresh: true });
     await open(page, "/");
     await desktop.accountButton(page).click();
