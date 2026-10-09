@@ -1,4 +1,4 @@
-// TODO: delete this route together with apps/web in Phase 6 (tracking issue: TODO-ISSUE-LINK).
+// TODO: delete this route together with apps/web in Phase 6 (tracking issue: https://github.com/VaggelisKa/subscriptions-manager/issues/64).
 // Clients delete accounts through the delete-account Edge Function.
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
