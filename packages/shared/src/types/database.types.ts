@@ -238,11 +238,3 @@ export const Constants = {
     },
   },
 } as const;
-
-export type Subscription =
-  Database["public"]["Tables"]["subscriptions"]["Row"];
-export type SubscriptionWithCategory = Omit<Subscription, "category_id"> & {
-  categories: Category | null;
-};
-export type Category = Database["public"]["Tables"]["categories"]["Row"];
-export type IntervalEnum = Database["public"]["Enums"]["interval_enum"];
