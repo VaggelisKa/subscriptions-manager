@@ -7,7 +7,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 
-select plan(28);
+select plan(39);
 
 -- KEEP IN SYNC: same scope predicate as the guard in
 -- supabase/migrations/20261009083122_hardening.sql. Change both together.
@@ -55,6 +55,60 @@ $$, '(C) no SECURITY DEFINER function in scope is executable by PUBLIC/anon/auth
 
 -- ── Phase 1b: guard v2 ──
 select is_empty($$ select * from private.hardening_violations() $$, 'no hardening violations (guard v2, checks A–E3)');
+
+-- ── Owner-gated exclusions (Architect ruling on PR #58) ──
+-- KEEP IN SYNC: copy of private.hardening_exclusions() in
+-- supabase/migrations/20261009103100_hardening_guard_v2.sql. Change both together.
+select results_eq($$ select kind, object, owner from jsonb_to_recordset(private.hardening_exclusions())
+                       x(kind text, object text, owner text) order by kind, object $$,
+                  $$ values ('function', 'graphql_public.graphql(text,text,jsonb,jsonb)', 'supabase_admin'),
+                            ('relation', '_realtime.extensions',        'supabase_admin'),
+                            ('relation', '_realtime.feature_flags',     'supabase_admin'),
+                            ('relation', '_realtime.schema_migrations', 'supabase_admin'),
+                            ('relation', '_realtime.tenants',           'supabase_admin') $$,
+                  'exclusion list is exactly the five owner-gated entries');
+
+-- Owner change on the real excluded objects: the migration role can't ALTER ... OWNER on
+-- supabase_admin's objects, so the changed owner is simulated by passing the same list with a different
+-- expected owner. Each object must then be reported again and the guard must raise.
+create temporary table owner_changed_list as
+select jsonb_agg(e || jsonb_build_object('owner', 'postgres')) as l
+from jsonb_array_elements(private.hardening_exclusions()) e;
+select ok(exists (select 1 from private.hardening_violations((select l from owner_changed_list)) v
+                  where v like 'function graphql_public.graphql(%executable by anon or PUBLIC'),
+          'owner mismatch: graphql_public.graphql stub is reported again');
+select ok((select count(*) from private.hardening_violations((select l from owner_changed_list)) v
+           where v like 'table _realtime.% has row level security disabled') = 4,
+          'owner mismatch: the four _realtime tables are reported again');
+select throws_ok($$ select private.assert_hardening((select l from owner_changed_list)) $$, 'P0001', null,
+                 'owner mismatch on the listed objects: assert_hardening() raises');
+
+-- Real owner change, on an object the migration role owns: an entry stops applying once the owner changes.
+create table hardening_test_new_app_schema.__owned (id int);           -- RLS off → (D)
+create temporary table probe_list as
+select private.hardening_exclusions()
+       || '[{"kind": "relation", "object": "hardening_test_new_app_schema.__owned", "owner": "postgres"}]'::jsonb as l;
+select lives_ok($$ select private.assert_hardening((select l from probe_list)) $$,
+                'probe table excluded while owned by the listed owner');
+grant create, usage on schema hardening_test_new_app_schema to service_role;
+alter table hardening_test_new_app_schema.__owned owner to service_role;
+select throws_ok($$ select private.assert_hardening((select l from probe_list)) $$, 'P0001', null,
+                 'same entry, owner changed → assert_hardening() raises');
+drop table hardening_test_new_app_schema.__owned;
+
+-- New sibling objects are never covered by the list (exact identity only)
+create table _realtime.__sibling (id int);                              -- same schema, RLS off
+select throws_ok($$ select private.assert_hardening() $$, 'P0001', null,
+                 'new table next to the excluded _realtime tables → assert_hardening() raises');
+select ok(exists (select 1 from private.hardening_violations() v where v like 'table _realtime.__sibling has row level security disabled%'),
+          'the _realtime sibling is reported');
+drop table _realtime.__sibling;
+create function public.graphql(text, text, jsonb, jsonb) returns jsonb language sql as 'select null::jsonb';
+grant execute on function public.graphql(text, text, jsonb, jsonb) to public;   -- same name/signature, other schema
+select throws_ok($$ select private.assert_hardening() $$, 'P0001', null,
+                 'same-signature graphql() outside graphql_public → assert_hardening() raises');
+drop function public.graphql(text, text, jsonb, jsonb);
+select lives_ok($$ select private.assert_hardening() $$, 'clean again after dropping the probes');
 
 -- Default privileges for postgres in public grant nothing to client roles (tables, sequences, functions)
 select is_empty($$
@@ -121,11 +175,16 @@ select throws_ok($$ select private.assert_hardening() $$, 'P0001', null, 'assert
 
 -- Revision 7: pg_graphql gone, stub not client-executable
 select is_empty($$ select 1 from pg_extension where extname = 'pg_graphql' $$, 'pg_graphql dropped');
+-- (Ruling on PR #58: the platform-owned stub stays client-executable; postgres can't revoke it. It is
+--  covered only by the owner-gated exclusion, and graphql_public is no longer an exposed API schema.)
 select ok(to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)') is null
-          or not has_function_privilege('anon', 'graphql_public.graphql(text,text,jsonb,jsonb)', 'EXECUTE'),
-          'graphql_public.graphql not executable by anon');
-select function_privs_are('private','hardening_violations', array[]::text[], 'anon', array[]::text[]);
-select function_privs_are('private','assert_hardening', array[]::text[], 'authenticated', array[]::text[]);
+          or not has_function_privilege('anon', 'graphql_public.graphql(text,text,jsonb,jsonb)', 'EXECUTE')
+          or (select proowner::regrole::text from pg_proc
+              where oid = to_regprocedure('graphql_public.graphql(text,text,jsonb,jsonb)')) = 'supabase_admin',
+          'graphql_public.graphql: absent, not anon-executable, or the supabase_admin-owned stub covered by the exclusion');
+select function_privs_are('private','hardening_violations', array['jsonb'], 'anon', array[]::text[]);
+select function_privs_are('private','hardening_exclusions', array[]::text[], 'anon', array[]::text[]);
+select function_privs_are('private','assert_hardening', array['jsonb'], 'authenticated', array[]::text[]);
 
 select * from finish();
 rollback;
