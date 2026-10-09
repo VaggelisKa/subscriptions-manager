@@ -1,11 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import * as Linking from "expo-linking";
 import { supabase } from "@/lib/supabase";
-import {
-  FunctionsFetchError,
-  type Session,
-  type User,
-} from "@supabase/supabase-js";
+import { type Session, type User } from "@supabase/supabase-js";
 
 type AuthContextType = {
   session: Session | null;
@@ -60,6 +56,11 @@ function parseHashParams(url: string): Record<string, string> {
     }
   });
   return params;
+}
+
+/** True if `invoke` couldn't reach the function at all. Checked by shape, like `functionErrorCode`. */
+function isFunctionsFetchError(error: unknown) {
+  return !!error && typeof error === "object" && "name" in error && error.name === "FunctionsFetchError";
 }
 
 /** The `code` from an Edge Function's JSON error body, if there is one. */
@@ -278,7 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("Account deletion failed:", error);
       return {
         error:
-          error instanceof FunctionsFetchError
+          isFunctionsFetchError(error)
             ? "Couldn't reach the server. Check your connection and try again."
             : "Couldn't delete your account. Try again.",
       };
