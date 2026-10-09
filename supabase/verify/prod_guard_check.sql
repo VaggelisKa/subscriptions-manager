@@ -7,6 +7,8 @@
 -- Expected on prod: exactly ONE row, the graphql placeholder:
 --   function graphql_public.graphql("operationName" text, query text, variables jsonb, extensions jsonb) executable by anon or PUBLIC
 -- Anything else: stop and report (do not push).
+-- Run with psql: psql "$PROD_READONLY_URL" -f supabase/verify/prod_guard_check.sql (tools that show only the
+-- last statement's result display the empty rollback instead of the rows).
 begin transaction read only;
     -- (A) views without security_invoker
     select format('view %I.%I lacks security_invoker', n.nspname, c.relname)
