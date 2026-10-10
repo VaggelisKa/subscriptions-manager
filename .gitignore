@@ -15,6 +15,7 @@ node_modules/
 .expo/
 dist/
 dist-parity/
+dist-auth-e2e/
 ios/
 android/
 
