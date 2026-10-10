@@ -1,5 +1,5 @@
 import { use, useRef, useState } from "react";
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
 import Head from "expo-router/head";
@@ -7,6 +7,8 @@ import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { haptics } from "@/lib/haptics";
+import { confirm } from "@/lib/confirm";
+import { notify } from "@/lib/notify";
 import { useTodayKey } from "@/lib/use-today";
 import { spacing, type } from "@/lib/theme";
 import { EmptySubscriptionsState } from "@/components/empty-subscriptions-state";
@@ -95,7 +97,7 @@ export default function HomeScreen() {
     if (result.error) {
       haptics.error();
       const message = result.error;
-      const showError = () => Alert.alert("Couldn't delete account", message);
+      const showError = () => void notify("Couldn't delete account", message);
       // Presented while the password Modal fades out, the alert would be dismissed along with it.
       if (prompted) setTimeout(showError, 400);
       else showError();
@@ -104,16 +106,16 @@ export default function HomeScreen() {
     }
   }
 
-  function confirmDeleteAccount() {
+  async function confirmDeleteAccount() {
     haptics.warning();
-    Alert.alert(
-      "Delete account",
-      "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: runDeleteAccount },
-      ],
-    );
+    const confirmed = await confirm({
+      title: "Delete account",
+      message:
+        "This will permanently delete your account and all your subscriptions. This action cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (confirmed) void runDeleteAccount();
   }
 
   return (

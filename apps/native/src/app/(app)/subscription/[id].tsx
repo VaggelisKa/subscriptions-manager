@@ -1,7 +1,6 @@
 import { use, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +28,9 @@ import {
 } from "@subscriptions-manager/shared/billing";
 import { formatWholeKr, intervalLabel } from "@subscriptions-manager/shared/format";
 import { haptics } from "@/lib/haptics";
+import { confirm } from "@/lib/confirm";
+import { notify } from "@/lib/notify";
+import { deleteSubscriptionPrompt } from "@/lib/delete-subscription-prompt";
 import { fonts, radius, spacing, withAlpha } from "@/lib/theme";
 import { SubscriptionTile } from "@/components/ui/subscription-tile";
 import { Amount } from "@/components/ui/amount";
@@ -135,31 +137,19 @@ export default function SubscriptionDetailScreen() {
     });
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     haptics.warning();
-    Alert.alert(
-      "Delete subscription",
-      `Are you sure you want to delete "${sub.name}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            leaving.current = true;
-            const result = await deleteSubscription(sub.id);
-            if (result.error) {
-              leaving.current = false;
-              setDeleting(false);
-              Alert.alert("Error", result.error);
-              return;
-            }
-            router.back();
-          },
-        },
-      ],
-    );
+    if (!(await confirm(deleteSubscriptionPrompt(sub.name)))) return;
+    setDeleting(true);
+    leaving.current = true;
+    const result = await deleteSubscription(sub.id);
+    if (result.error) {
+      leaving.current = false;
+      setDeleting(false);
+      void notify("Error", result.error);
+      return;
+    }
+    router.back();
   }
 
   return (
