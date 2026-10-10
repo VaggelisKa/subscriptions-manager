@@ -14,6 +14,7 @@ import {
   useIsFocused,
   useLocalSearchParams,
 } from "expo-router";
+import Head from "expo-router/head";
 import { format, subDays } from "date-fns";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -63,6 +64,9 @@ export default function SubscriptionDetailScreen() {
     return (
       <>
         <Stack.Screen options={{ title: "" }} />
+        <Head>
+          <title>Subscription</title>
+        </Head>
         <Stack.Toolbar placement="left">
           <Stack.Toolbar.Button
           icon="xmark"
@@ -161,6 +165,9 @@ export default function SubscriptionDetailScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "" }} />
+      <Head>
+        <title>{subscription.name}</title>
+      </Head>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="xmark"

@@ -14,6 +14,7 @@ node_modules/
 # expo
 .expo/
 dist/
+dist-parity/
 ios/
 android/
 

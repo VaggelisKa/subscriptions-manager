@@ -1,6 +1,7 @@
 import { use, useRef, useState } from "react";
 import { View, Alert, ActivityIndicator, PlatformColor } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
+import Head from "expo-router/head";
 import {
   Picker,
   Host,
@@ -194,6 +195,9 @@ export default function SubscriptionFormScreen() {
           title: isEdit ? "Edit subscription" : "New subscription",
         }}
       />
+      <Head>
+        <title>{isEdit ? "Edit subscription" : "New subscription"}</title>
+      </Head>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="xmark"

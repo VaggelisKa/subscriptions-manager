@@ -29,8 +29,12 @@ DOCKER="sudo docker" e2e/parity/run.sh          # default: `docker`, else `sudo 
   `NEXT_PUBLIC_SUPABASE_URL` = the fault proxy, and the build is skipped with
   `PARITY_SKIP_BUILD=1`. The build goes to `apps/web/.next-parity` (`NEXT_DIST_DIR`), so it never
   replaces the regular `.next` build. `next start` listens on 127.0.0.1:3210 (`PARITY_PORT`).
-- `PARITY_TARGET=expo PARITY_EXPO_DIR=<expo export -p web output>` serves that directory instead
-  and compares it against the same baseline. Never use `--update` for it.
+- `PARITY_TARGET=expo` serves the Expo web app instead and compares it against the same
+  baseline. Never use `--update` for it. `run.sh` first builds it with `build-expo.sh`
+  (`expo export -p web` into `apps/native/dist-parity`, gitignored, with the fault proxy as the
+  Supabase URL; it refuses any host but localhost/127.0.0.1). `PARITY_SKIP_BUILD=1` reuses that
+  export, `PARITY_EXPO_DIR=<dir>` serves another one. `--project=smoke` runs only the boot
+  check (`tests/smoke/`, expo only).
 - Report: `e2e/parity/playwright-report/` (expected / actual / diff for failed shots).
 - Thresholds: `toHaveScreenshot({ threshold: 0.2, maxDiffPixelRatio: 0.005 })`. Per-screen
   overrides go in `thresholds.ts` only, with a reason and an entry in `APPROVED_DIFFS.md`, capped at 2%.
@@ -55,8 +59,8 @@ DOCKER="sudo docker" e2e/parity/run.sh          # default: `docker`, else `sudo 
 - **Auth:** globalSetup signs each fixture user in once (password, supabase-js). That stays well
   under GoTrue's limit of 30 sign-ins per 5 min. `loginAs()` writes the session into the
   `@supabase/ssr` cookie (`sb-127-auth-token`, `base64-` + base64url JSON, chunked). Its `expires_at`
-  is moved past the fixed date so nothing refreshes it. For `expo` it writes localStorage instead
-  (a stub until that app exists).
+  is moved past the fixed date so nothing refreshes it. For `expo` it writes supabase-js'
+  localStorage entry instead (same key, plain JSON).
 - **Loading / error states:** the home page loads on the server, out of reach of `page.route`.
   The app is therefore built against `support/supabase-proxy.mjs`, a transparent proxy to the local
   stack that can hold or fail one user's REST requests per test.

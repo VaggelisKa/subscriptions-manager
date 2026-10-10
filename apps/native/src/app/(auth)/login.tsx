@@ -1,6 +1,7 @@
 import { use, useState } from "react";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { Stack } from "expo-router/stack";
+import Head from "expo-router/head";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
@@ -50,6 +51,9 @@ export default function LoginScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Sign in", headerShown: false }} />
+      <Head>
+        <title>Sign in</title>
+      </Head>
       <KeyboardAvoidingView
         behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: colors.background }}

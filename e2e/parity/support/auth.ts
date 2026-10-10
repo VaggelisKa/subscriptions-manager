@@ -102,9 +102,10 @@ export function ssrCookies(session: Session, appSupabaseUrl = PROXY_URL) {
 /**
  * Signs `user` in for the next navigation, hiding how each target stores the session:
  * - next: `@supabase/ssr` cookies (the server renders the signed-in page).
- * - expo: supabase-js' localStorage entry, written before any page script runs. STUB until
- *   the Expo web app exists (Phase 5): the key assumes the app keeps supabase-js' default
- *   storage key for its Supabase URL; adjust when its client is configured.
+ * - expo: supabase-js' localStorage entry, written before any page script runs. The Expo app
+ *   keeps supabase-js' default storage on web (`apps/native/src/lib/supabase-auth-options.ts`),
+ *   so this is `sb-127-auth-token` for the proxy URL it's built with (build-expo.sh), holding
+ *   the session as plain JSON.
  */
 export async function loginAs(context: BrowserContext, key: UserKey, options: { fresh?: boolean } = {}) {
   const session = options.fresh ? await signIn(USERS[key]) : cachedSession(key);

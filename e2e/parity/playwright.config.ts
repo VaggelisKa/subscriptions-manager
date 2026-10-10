@@ -121,5 +121,15 @@ export default defineConfig({
       testMatch: /flows\/.*\.spec\.ts/,
       use: { viewport: { width: 1440, height: 900 }, colorScheme: "light" },
     },
+    // Does the Expo web export boot at all (Phase 5); `--project=smoke` or `--grep @smoke`.
+    ...(TARGET === "expo"
+      ? [
+          {
+            name: "smoke",
+            testMatch: /smoke\/.*\.spec\.ts/,
+            use: { viewport: { width: 375, height: 812 }, colorScheme: "light" as const },
+          },
+        ]
+      : []),
   ],
 });

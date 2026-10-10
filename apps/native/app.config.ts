@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   slug: "subscriptions-manager",
   version: "1.0.0",
   scheme: "subscriptions-manager",
-  platforms: ["ios", "android"],
+  platforms: ["ios", "android", "web"],
   userInterfaceStyle: "automatic",
   icon: "./assets/app-icon.jpg",
   ios: {
@@ -21,6 +21,10 @@ const config: ExpoConfig = {
       backgroundColor: "#ffffff",
     },
     package: "com.subscriptionsmanager.app",
+  },
+  web: {
+    bundler: "metro",
+    output: "single",
   },
   experiments: {
     typedRoutes: true,
