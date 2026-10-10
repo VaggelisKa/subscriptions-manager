@@ -65,6 +65,10 @@ const lightColors = {
   destructiveForeground: "hsl(60, 9.1%, 97.8%)",
   success: "hsl(121, 35%, 51%)",
   successForeground: "hsl(60, 9.1%, 97.8%)",
+  /** Floating chrome (toolbar buttons, menus) is glass over the content. */
+  glass: "hsla(0, 0%, 100%, 0.72)",
+  /** Opacity of a category colour's tint behind its letter or dot (`withAlpha`). */
+  tileAlpha: 0.14,
 };
 
 const darkColors: typeof lightColors = {
@@ -83,6 +87,8 @@ const darkColors: typeof lightColors = {
   destructiveForeground: "hsl(60, 9.1%, 97.8%)",
   success: "hsl(116, 46%, 49%)",
   successForeground: "hsl(60, 9.1%, 97.8%)",
+  glass: "hsla(24, 9.8%, 14%, 0.72)",
+  tileAlpha: 0.24,
 };
 
 export type ThemeColors = typeof lightColors;
@@ -91,6 +97,32 @@ export const themes = {
   light: lightColors,
   dark: darkColors,
 } as const;
+
+/**
+ * The web app's name for each token: the CSS custom property in
+ * `apps/web/src/app/globals.css` (`:root` is light, `.dark` is dark). The colours
+ * here are the same values written as `hsl()`/`hsla()`; `tileAlpha` is the
+ * percentage as a fraction.
+ */
+export const cssTokenNames: Record<keyof ThemeColors, `--${string}`> = {
+  background: "--background",
+  surface: "--surface",
+  foreground: "--foreground",
+  mutedForeground: "--muted-foreground",
+  faint: "--faint",
+  primary: "--primary",
+  primaryForeground: "--primary-foreground",
+  primaryText: "--primary-text",
+  primarySoft: "--primary-soft",
+  fill: "--fill",
+  separator: "--separator",
+  destructive: "--destructive",
+  destructiveForeground: "--destructive-foreground",
+  success: "--success",
+  successForeground: "--success-foreground",
+  glass: "--glass",
+  tileAlpha: "--tile-alpha",
+};
 
 /**
  * Category colours are user data (`#RRGGBB`). Returns the colour at the given
