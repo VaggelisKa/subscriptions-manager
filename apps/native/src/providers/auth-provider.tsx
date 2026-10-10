@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import React, { createContext, useState, useEffect } from "react";
 import * as Linking from "expo-linking";
 import { supabase } from "@/lib/supabase";
@@ -118,6 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const refreshToken = params.refresh_token;
 
       if (!accessToken || !refreshToken) return;
+
+      // On web the tokens arrive in the address bar: drop them from the URL and history.
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+      }
 
       if (isMounted) {
         setIsProcessingResetLink(true);

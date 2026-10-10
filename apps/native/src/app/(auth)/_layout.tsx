@@ -1,5 +1,5 @@
 import { use } from "react";
-import { Redirect } from "expo-router";
+import { Redirect, usePathname } from "expo-router";
 import { Stack } from "expo-router/stack";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
@@ -23,6 +23,7 @@ export default function AuthLayout() {
     retryBootstrap,
   } = use(AuthContext);
   const isLoggedIn = !!user;
+  const pathname = usePathname();
 
   if (loading || isProcessingResetLink) {
     return <AuthLoading />;
@@ -38,6 +39,11 @@ export default function AuthLayout() {
         onContinue={clearBootstrapError}
       />
     );
+  }
+
+  // A reset link always lands on /reset-password, signed in or not.
+  if (isPasswordRecovery && pathname !== "/reset-password") {
+    return <Redirect href="/reset-password" />;
   }
 
   if (isLoggedIn && !isPasswordRecovery) {
