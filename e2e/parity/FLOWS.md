@@ -25,7 +25,8 @@ they never touch the `populated`/`empty` users the visual shots read, whatever o
 ## 1. Sign in → home, sign out
 Today's login is a magic link, so the flow is split. The link request goes through the real UI.
 The session is created programmatically (password sign-in, written to the `@supabase/ssr` cookies by `loginAs`).
-- `/login` (title "Sign in"). Submitting an address → `/login/confirmation`, "Check your email" (title "Check your email"), and the email arrives in the local Mailpit inbox. "Use a different email" → `/login`.
+- `/login` (title "Sign in"). Submitting an existing account's address → `/login/confirmation`, "Check your email" (title "Check your email"), and the email arrives in the local Mailpit inbox. "Use a different email" → `/login`.
+- An unknown address also shows "Check your email", but no account is created and no email is sent (sign-in only).
 - `someone@localhost` → "Invalid email address", field `aria-invalid`, stays on `/login`.
 - Signed out, `/` → `/login`.
 - Signed in, `/` shows "Your subscriptions". `/login` → `/`.
