@@ -7,9 +7,10 @@
 #   e2e/parity/run.sh --update            re-capture baseline/ and axe-baseline.json
 #   e2e/parity/run.sh --project=flows     any other args go to `playwright test`
 #
-# Env: PARITY_TARGET=next|expo (default next), PARITY_EXPO_DIR (expo), PARITY_SKIP_BUILD=1
-# (reuse apps/web/.next-parity), PARITY_WORKERS, SUPABASE_CLI (default `supabase`), DOCKER
-# (default `docker`, or `sudo -n docker` when plain `docker` can't reach the daemon).
+# Env: PARITY_TARGET=next|expo (default next), PARITY_EXPO_DIR (expo; default
+# apps/native/dist-parity, built by build-expo.sh), PARITY_SKIP_BUILD=1 (reuse
+# apps/web/.next-parity or the Expo export), PARITY_WORKERS, SUPABASE_CLI (default `supabase`),
+# DOCKER (default `docker`, or `sudo -n docker` when plain `docker` can't reach the daemon).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -62,6 +63,15 @@ fi
 if [[ ! "$API_URL" =~ ^http://(127\.0\.0\.1|localhost): || ! "$DB_URL" =~ @(127\.0\.0\.1|localhost): ]]; then
   echo "run.sh: refusing to run against a non-local stack ($API_URL)" >&2
   exit 1
+fi
+
+# Expo: an `expo export -p web` against the local stack (through the fault proxy), unless a
+# directory is given or the build is skipped.
+if [[ "${PARITY_TARGET:-next}" == "expo" && -z "${PARITY_EXPO_DIR:-}" ]]; then
+  PARITY_EXPO_DIR="$ROOT/apps/native/dist-parity"
+  if [[ -z "${PARITY_SKIP_BUILD:-}" ]]; then
+    EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" "$HERE/build-expo.sh"
+  fi
 fi
 
 mounts=(-v "$ROOT:$ROOT")
