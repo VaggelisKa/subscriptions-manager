@@ -1,0 +1,6 @@
+<h2>Confirm your email</h2>
+<p>Enter this code in Subscriptions Manager to finish creating your account:</p>
+<p style="font-size: 28px; font-weight: 800; letter-spacing: 4px;">{{ .Token }}</p>
+<p>The code expires in an hour. If you didn't sign up, you can ignore this email.</p>
+<!-- Transitional (spec §9.3): for older app versions. Removed in Phase 7. -->
+<p>Using an older version of the app? <a href="{{ .ConfirmationURL }}">Confirm your email</a> instead.</p>
