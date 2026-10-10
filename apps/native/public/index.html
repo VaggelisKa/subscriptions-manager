@@ -10,8 +10,36 @@
     <title>%WEB_TITLE%</title>
     <!--
       The web document for `web.output: "single"` (an `app/+html.tsx` is only used for static
-      output). The pre-hydration theme script (no flash of the wrong scheme) goes here.
+      output).
     -->
+    <!--
+      No flash of the wrong scheme: before the bundle loads, apply the stored theme the way
+      next-themes does in apps/web (localStorage `theme`: "system" | "light" | "dark"; a light or
+      dark class on <html>, and `color-scheme`). src/lib/theme-storage.web.ts takes over from here.
+    -->
+    <script>
+      (function () {
+        var theme = "system";
+        try {
+          theme = localStorage.getItem("theme") || "system";
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        var root = document.documentElement;
+        root.classList.add(theme);
+        root.style.colorScheme = theme;
+      })();
+    </script>
+    <style id="theme-background">
+      /* The page behind the app, and all there is until it renders: `background` in src/lib/theme.ts. */
+      html.light {
+        background-color: #f5f5f4;
+      }
+      html.dark {
+        background-color: #0c0a09;
+      }
+    </style>
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */

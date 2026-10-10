@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
+import { themes } from "./theme";
 import { parseThemePreference, resolveColorScheme, type ThemePreference } from "./theme-preference";
 import {
   THEME_STORAGE_KEY,
@@ -106,4 +109,58 @@ test("follows a choice made in another tab", () => {
   expect(seen).toEqual(["dark", "system"]);
   unsubscribe();
   expect(listeners.has("storage")).toBe(false);
+});
+
+// ── public/index.html: what the page shows before the bundle has loaded ──
+
+const indexHtml = readFileSync(path.join(__dirname, "../../public/index.html"), "utf8");
+
+function runNoFlashScript() {
+  const scripts = [...indexHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  expect(scripts).toHaveLength(1);
+  new Function(scripts[0])();
+}
+
+test("the inline script applies the same scheme the app will render", () => {
+  for (const stored of [undefined, "system", "light", "dark", "garbage"]) {
+    for (const osDark of [false, true]) {
+      const { classes, root } = stubPage({ stored, osDark });
+      runNoFlashScript();
+      const expected = resolveColorScheme(readThemePreference(), osDark ? "dark" : "light");
+      expect([...classes], `stored ${stored}, OS ${osDark ? "dark" : "light"}`).toEqual([expected]);
+      expect(root.style.colorScheme).toBe(expected);
+    }
+  }
+});
+
+test("the inline script survives blocked storage", () => {
+  const { classes } = stubPage({ osDark: true });
+  vi.stubGlobal("localStorage", {
+    getItem: () => {
+      throw new Error("SecurityError");
+    },
+  });
+  runNoFlashScript();
+  expect([...classes]).toEqual(["dark"]);
+});
+
+/** `hsl(h, s%, l%)` → `#rrggbb`. */
+function hslToHex(hsl: string) {
+  const [h, s, l] = hsl.match(/[\d.]+/g)!.map(Number);
+  const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
+  const channel = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const value = l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(value * 255)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${channel(0)}${channel(8)}${channel(4)}`;
+}
+
+test("the page background before the app renders is the theme's background", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    const rule = indexHtml.match(new RegExp(`html\\.${scheme}\\s*{\\s*background-color:\\s*(#[0-9a-f]{6});`));
+    expect(rule?.[1], scheme).toBe(hslToHex(themes[scheme].background));
+  }
 });
