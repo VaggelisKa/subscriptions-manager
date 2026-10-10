@@ -160,8 +160,19 @@ enabled = true
 site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
-# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# A list of URLs that auth providers are permitted to redirect to post authentication.
+# Local only (spec §9.5): sign-in, sign-up and reset use emailed codes, which need no redirect;
+# these cover the transitional email links (old builds, the Next app) in local development.
+# Prod and staging lists are set separately and need Evangelos' OK.
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
+  "http://localhost:8081/**",
+  "http://127.0.0.1:8081/**",
+  "exp+subscriptions-manager://**",
+  "subscriptions-manager://**",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -244,10 +255,31 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Code-based email templates (spec §9.3), local stack only. Every email carries `{{ .Token }}` for
+# `verifyOtp`; confirmation, magic link and recovery keep a link alongside it until Phase 7.
+[auth.email.template.confirmation]
+subject = "Confirm your email"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.invite]
+subject = "You're invited to Subscriptions Manager"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.reauthentication]
+subject = "Confirm it's you"
+content_path = "./supabase/templates/reauthentication.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

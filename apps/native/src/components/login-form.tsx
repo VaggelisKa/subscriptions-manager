@@ -15,9 +15,13 @@ type Props = {
   setPassword: (value: string) => void;
   isSignUp: boolean;
   onToggleSignUp: () => void;
-  loading: boolean;
+  /** Which request is running: the password sign-in/up, or "Email me a code". */
+  loading: "password" | "code" | null;
   error: string | null;
   onSubmit: () => void;
+  onEmailCode: () => void;
+  /** Content is centred on the page (wide web), so the toggle follows the buttons. */
+  centered?: boolean;
 };
 
 export function LoginForm({
@@ -30,13 +34,20 @@ export function LoginForm({
   loading,
   error,
   onSubmit,
+  onEmailCode,
+  centered = false,
 }: Props) {
   const colors = useThemeColors();
   const passwordRef = useRef<TextInputInstance>(null);
 
   return (
     <View
-      style={{ flexGrow: 1, maxWidth: 420, width: "100%", alignSelf: "center" }}
+      style={{
+        flexGrow: centered ? 0 : 1,
+        maxWidth: 420,
+        width: "100%",
+        alignSelf: "center",
+      }}
     >
       <AppMark />
 
@@ -93,7 +104,13 @@ export function LoginForm({
             paddingHorizontal: spacing.xs,
           }}
         >
-          <Link href="/forgot-password" asChild>
+          <Link
+            href={{
+              pathname: "/reset-password",
+              params: email.trim() ? { email: email.trim() } : {},
+            }}
+            asChild
+          >
             <Pressable hitSlop={12}>
               <Text
                 style={{
@@ -109,14 +126,25 @@ export function LoginForm({
         </View>
       )}
 
-      <Button
-        title={isSignUp ? "Sign up" : "Sign in"}
-        onPress={onSubmit}
-        loading={loading}
-        style={{ marginTop: 6 }}
-      />
+      <View style={{ gap: 10, marginTop: 6 }}>
+        <Button
+          title={isSignUp ? "Sign up" : "Sign in"}
+          onPress={onSubmit}
+          loading={loading === "password"}
+          disabled={loading === "code"}
+        />
+        {isSignUp ? null : (
+          <Button
+            title="Email me a code"
+            variant="secondary"
+            onPress={onEmailCode}
+            loading={loading === "code"}
+            disabled={loading === "password"}
+          />
+        )}
+      </View>
 
-      <View style={{ flexGrow: 1, minHeight: spacing.xl }} />
+      <View style={{ flexGrow: centered ? 0 : 1, minHeight: spacing.xl }} />
 
       <Pressable
         onPress={onToggleSignUp}

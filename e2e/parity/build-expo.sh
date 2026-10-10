@@ -7,14 +7,20 @@
 #
 # Env: EXPO_PUBLIC_SUPABASE_URL (default: the parity fault proxy, http://127.0.0.1:$PARITY_PROXY_PORT),
 # EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY (default: from `supabase status`), SUPABASE_CLI (default
-# `supabase`). Fails unless the URL's host is localhost or 127.0.0.1.
+# `supabase`), PARITY_EXPO_OUT (default apps/native/dist-parity; e2e/auth uses its own). Fails
+# unless the URL's host is localhost or 127.0.0.1.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 NATIVE="$ROOT/apps/native"
-OUT="$NATIVE/dist-parity"
+OUT="${PARITY_EXPO_OUT:-$NATIVE/dist-parity}"
 SUPABASE_CLI="${SUPABASE_CLI:-supabase}"
+# The directory is wiped first: only ever a dist-* directory in apps/native.
+if [[ "$OUT" != "$NATIVE"/dist-* || "$OUT" == */../* ]]; then
+  echo "build-expo.sh: PARITY_EXPO_OUT must be $NATIVE/dist-<name> ($OUT)" >&2
+  exit 1
+fi
 
 # The app talks to Supabase through support/supabase-proxy.mjs (support/env.ts, PROXY_URL).
 URL="${EXPO_PUBLIC_SUPABASE_URL:-http://127.0.0.1:${PARITY_PROXY_PORT:-54399}}"
@@ -39,7 +45,7 @@ rm -rf "$OUT"
 # Metro doesn't reuse a bundle with other inlined EXPO_PUBLIC_* values.
 (cd "$NATIVE" && EXPO_PUBLIC_SUPABASE_URL="$URL" EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$KEY" \
   EXPO_PUBLIC_SUPABASE_ANON_KEY="$KEY" EXPO_NO_TELEMETRY=1 \
-  npx expo export -p web --output-dir dist-parity --clear)
+  npx expo export -p web --output-dir "$OUT" --clear)
 
 # The URL that got inlined is the one checked above, and no hosted project made it in.
 if ! grep -rqF "$URL" "$OUT/_expo/static/js/web"; then

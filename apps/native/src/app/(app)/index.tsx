@@ -149,9 +149,16 @@ export default function HomeScreen() {
             <Stack.Toolbar.MenuAction
               icon="rectangle.portrait.and.arrow.right"
               destructive
-              onPress={signOut}
+              onPress={() => signOut()}
             >
               Sign out
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="iphone.and.arrow.forward"
+              destructive
+              onPress={() => signOut("global")}
+            >
+              Sign out of all devices
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
               icon="trash"

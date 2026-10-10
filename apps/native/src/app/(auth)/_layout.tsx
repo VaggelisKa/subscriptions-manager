@@ -6,10 +6,12 @@ import { useThemeColors } from "@/providers/theme-provider";
 import { stackScreenOptions } from "@/lib/stack-options";
 import { AuthLoading } from "@/components/auth/auth-loading";
 import { BootstrapErrorView } from "@/components/auth/bootstrap-error-view";
+import { canRedirectSignedIn } from "@/lib/password-reset";
 
 /**
  * Signed-out screens. With a session this group sends you home, except during a password
- * reset: the recovery link signs you in and only /reset-password stays open.
+ * reset: the recovery code signs you in, and /reset-password stays open until the new password
+ * is set or the reset is cancelled.
  */
 export default function AuthLayout() {
   const colors = useThemeColors();
@@ -17,14 +19,13 @@ export default function AuthLayout() {
     user,
     loading,
     bootstrapError,
-    isPasswordRecovery,
-    isProcessingResetLink,
+    passwordResetPending,
     clearBootstrapError,
     retryBootstrap,
   } = use(AuthContext);
   const isLoggedIn = !!user;
 
-  if (loading || isProcessingResetLink) {
+  if (loading) {
     return <AuthLoading />;
   }
 
@@ -40,7 +41,7 @@ export default function AuthLayout() {
     );
   }
 
-  if (isLoggedIn && !isPasswordRecovery) {
+  if (canRedirectSignedIn(isLoggedIn, passwordResetPending)) {
     return <Redirect href="/" />;
   }
 
@@ -48,18 +49,11 @@ export default function AuthLayout() {
     <Stack screenOptions={stackScreenOptions(colors)}>
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="forgot-password"
-          options={{ title: "" }}
-        />
       </Stack.Protected>
-
-      <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen
-          name="reset-password"
-          options={{ title: "" }}
-        />
-      </Stack.Protected>
+      {/* Signed out for the email and code steps, signed in for the new password. */}
+      <Stack.Screen name="reset-password" options={{ title: "" }} />
+      {/* Email links (token_hash); a recovery link continues at /reset-password. */}
+      <Stack.Screen name="auth/confirm" options={{ headerShown: false }} />
     </Stack>
   );
 }

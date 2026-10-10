@@ -1,6 +1,6 @@
-import { use, useEffect } from "react";
+import { use } from "react";
 import { PlatformColor } from "react-native";
-import { Redirect, router } from "expo-router";
+import { Redirect } from "expo-router";
 import { Stack } from "expo-router/stack";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
@@ -8,26 +8,22 @@ import { stackScreenOptions } from "@/lib/stack-options";
 import { AuthLoading } from "@/components/auth/auth-loading";
 import { BootstrapErrorView } from "@/components/auth/bootstrap-error-view";
 
-/** Signed-in screens. Without a session this group sends you to /login. */
+/**
+ * Signed-in screens. Without a session this group sends you to /login; mid password reset, to
+ * /reset-password.
+ */
 export default function AppLayout() {
   const colors = useThemeColors();
   const {
     user,
     loading,
     bootstrapError,
-    isPasswordRecovery,
-    isProcessingResetLink,
+    passwordResetPending,
     clearBootstrapError,
     retryBootstrap,
   } = use(AuthContext);
 
-  useEffect(() => {
-    if (isPasswordRecovery && !loading) {
-      router.replace("/reset-password");
-    }
-  }, [isPasswordRecovery, loading]);
-
-  if (loading || isProcessingResetLink) {
+  if (loading) {
     return <AuthLoading />;
   }
 
@@ -45,6 +41,11 @@ export default function AppLayout() {
 
   if (!user) {
     return <Redirect href="/login" />;
+  }
+
+  // A password reset signed in with its code; the new password comes first (spec §9.4).
+  if (passwordResetPending) {
+    return <Redirect href="/reset-password" />;
   }
 
   return (

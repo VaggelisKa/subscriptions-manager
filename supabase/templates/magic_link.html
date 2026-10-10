@@ -1,0 +1,6 @@
+<h2>Your sign-in code</h2>
+<p>Enter this code in Subscriptions Manager to sign in:</p>
+<p style="font-size: 28px; font-weight: 800; letter-spacing: 4px;">{{ .Token }}</p>
+<p>The code expires in an hour. If you didn't ask for it, you can ignore this email.</p>
+<!-- Transitional (spec §9.3, B4): for the web app. Removed in Phase 7. -->
+<p>Or <a href="{{ .SiteURL }}/api/auth/confirm?token_hash={{ .TokenHash }}&type=email">sign in with this link</a> on this device.</p>
