@@ -17,6 +17,8 @@
       next-themes does in apps/web (localStorage `theme`: "system" | "light" | "dark"; a light or
       dark class on <html>, and `color-scheme`). src/lib/theme-storage.web.ts takes over from here.
     -->
+    <!-- Inline no-flash theme script. When a Content-Security-Policy is added, allow it with a
+         sha256 hash of this script's exact contents (recompute on any edit), not 'unsafe-inline'. -->
     <script>
       (function () {
         var theme = "system";
