@@ -8,7 +8,8 @@ import {
   useTheme,
   useThemeColors,
 } from "@/providers/theme-provider";
-import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
+import type { ThemePreference } from "@/lib/theme-preference";
+import { loadThemePreference } from "@/lib/theme-storage";
 import { useFonts } from "expo-font";
 import { useColorScheme, View } from "react-native";
 
@@ -37,8 +38,8 @@ function RootStack() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [initialThemeOverride, setInitialThemeOverride] = useState<
-    ThemeOverride | undefined
+  const [initialTheme, setInitialTheme] = useState<
+    ThemePreference | undefined
   >(undefined);
 
   const [fontsLoaded, fontsError] = useFonts({
@@ -54,8 +55,8 @@ export default function RootLayout() {
     let isMounted = true;
 
     async function loadTheme() {
-      const stored = await loadThemeOverride();
-      if (isMounted) setInitialThemeOverride(stored);
+      const stored = await loadThemePreference();
+      if (isMounted) setInitialTheme(stored);
     }
 
     void loadTheme();
@@ -66,7 +67,7 @@ export default function RootLayout() {
   }, []);
 
   const appIsReady =
-    (fontsLoaded || !!fontsError) && initialThemeOverride !== undefined;
+    (fontsLoaded || !!fontsError) && initialTheme !== undefined;
 
   function onLayoutRootView() {
     if (appIsReady) {
@@ -82,7 +83,7 @@ export default function RootLayout() {
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <ThemeProvider
         colorScheme={colorScheme}
-        initialOverride={initialThemeOverride}
+        initialTheme={initialTheme}
       >
         <AuthProvider>
           <RootStack />
