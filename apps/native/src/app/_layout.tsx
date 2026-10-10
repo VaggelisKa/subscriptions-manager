@@ -1,9 +1,8 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Stack } from "expo-router/stack";
-import { router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { AuthContext, AuthProvider } from "@/providers/auth-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import {
   ThemeProvider,
   useTheme,
@@ -11,152 +10,26 @@ import {
 } from "@/providers/theme-provider";
 import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
 import { useFonts } from "expo-font";
-import {
-  ActivityIndicator,
-  PlatformColor,
-  useColorScheme,
-  View,
-} from "react-native";
-import { fonts } from "@/lib/theme";
-import { BootstrapErrorView } from "@/components/auth/bootstrap-error-view";
+import { useColorScheme, View } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
-function RootLayoutInner() {
+function RootStack() {
   const colors = useThemeColors();
   const { colorScheme } = useTheme();
-  const {
-    user,
-    loading,
-    bootstrapError,
-    isPasswordRecovery,
-    isProcessingResetLink,
-    clearBootstrapError,
-    retryBootstrap,
-  } = use(AuthContext);
-  const isLoggedIn = !!user;
-
-  useEffect(() => {
-    if (isPasswordRecovery && !loading) {
-      router.replace("/reset-password");
-    }
-  }, [isPasswordRecovery, loading]);
-
-  if (loading || isProcessingResetLink) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (bootstrapError && !isLoggedIn) {
-    return (
-      <BootstrapErrorView
-        message={bootstrapError}
-        onRetry={() => {
-          void retryBootstrap();
-        }}
-        onContinue={clearBootstrapError}
-      />
-    );
-  }
 
   return (
     <>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      {/* Each group has its own Stack, header styling and auth redirect. */}
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.foreground,
-          headerTitleStyle: {
-            fontFamily: fonts.extraBold,
-            color: colors.foreground,
-          },
-          headerLargeTitleStyle: {
-            fontFamily: fonts.black,
-            color: colors.foreground,
-          },
+          headerShown: false,
           contentStyle: { backgroundColor: colors.background },
-          headerShadowVisible: false,
-          headerLargeTitleShadowVisible: false,
-          headerBackButtonDisplayMode: "minimal",
         }}
       >
-        <Stack.Protected guard={isLoggedIn}>
-          <Stack.Screen
-            name="index"
-            options={{
-              title: "",
-              // Toolbar buttons float over the content with no bar or blur;
-              // the screen renders its own title that scrolls away.
-              headerTransparent: true,
-              headerStyle: { backgroundColor: "transparent" },
-              scrollEdgeEffects: { top: "hidden" },
-            }}
-          />
-          <Stack.Screen
-            name="reset-password"
-            options={{ title: "" }}
-          />
-          <Stack.Screen
-            name="subscription/[id]"
-            options={{
-              title: "",
-              presentation: "formSheet",
-              sheetGrabberVisible: true,
-              headerTransparent: true,
-              contentStyle: { backgroundColor: colors.background },
-              sheetAllowedDetents: [0.8, 1],
-            }}
-          >
-            <Stack.Header style={{ backgroundColor: "transparent" }} />
-          </Stack.Screen>
-          <Stack.Screen
-            name="subscription-form"
-            options={{
-              presentation: "formSheet",
-              sheetGrabberVisible: true,
-              headerTransparent: true,
-              // Solid from the first detent; a transparent background shows
-              // the sheet's glass until it's dragged to full height.
-              contentStyle: {
-                backgroundColor: PlatformColor("systemGroupedBackground"),
-              },
-              sheetAllowedDetents: [0.75, 1],
-            }}
-          >
-            <Stack.Header style={{ backgroundColor: "transparent" }} />
-          </Stack.Screen>
-          <Stack.Screen
-            name="insights"
-            options={{
-              title: "Insights",
-              presentation: "formSheet",
-              sheetGrabberVisible: true,
-              headerTransparent: true,
-              contentStyle: { backgroundColor: colors.background },
-              sheetAllowedDetents: [0.8, 1],
-            }}
-          >
-            <Stack.Header style={{ backgroundColor: "transparent" }} />
-          </Stack.Screen>
-        </Stack.Protected>
-
-        <Stack.Protected guard={!isLoggedIn}>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="forgot-password"
-            options={{ title: "" }}
-          />
-        </Stack.Protected>
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="(auth)" />
       </Stack>
     </>
   );
@@ -212,7 +85,7 @@ export default function RootLayout() {
         initialOverride={initialThemeOverride}
       >
         <AuthProvider>
-          <RootLayoutInner />
+          <RootStack />
         </AuthProvider>
       </ThemeProvider>
     </View>
