@@ -1,18 +1,26 @@
 import React, { createContext, useEffect, useState } from "react";
-import { Appearance, type ColorSchemeName } from "react-native";
+import type { ColorSchemeName } from "react-native";
 import { themes, type ThemeColors } from "@/lib/theme";
+import { resolveColorScheme, type ThemePreference } from "@/lib/theme-preference";
 import {
-  type ThemeOverride,
-  saveThemeOverride,
-} from "@/lib/user-options";
+  applyThemePreference,
+  saveThemePreference,
+  subscribeToThemePreference,
+} from "@/lib/theme-storage";
 
 type ThemeContextType = {
+  /** The setting: "system" follows the OS. */
+  theme: ThemePreference;
+  setTheme: (theme: ThemePreference) => void;
+  /** What is rendered. */
   colorScheme: "light" | "dark";
   colors: ThemeColors;
   toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType>({
+  theme: "system",
+  setTheme: () => {},
   colorScheme: "light",
   colors: themes.light,
   toggleTheme: () => {},
@@ -21,33 +29,34 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({
   children,
   colorScheme: systemScheme,
-  initialOverride,
+  initialTheme,
 }: {
   children: React.ReactNode;
   colorScheme: ColorSchemeName | null;
-  initialOverride: ThemeOverride;
+  initialTheme: ThemePreference;
 }) {
-  const [override, setOverride] = useState<ThemeOverride>(initialOverride);
-  const colorScheme = override ?? (systemScheme === "dark" ? "dark" : "light");
+  const [theme, setThemeState] = useState<ThemePreference>(initialTheme);
+  const colorScheme = resolveColorScheme(theme, systemScheme);
   const colors = themes[colorScheme];
 
+  // Native: the window's appearance. Web: the <html> class and `color-scheme`.
   useEffect(() => {
-    void saveThemeOverride(override);
-    // Native presentations outside our views (the date picker popup, alerts)
-    // take their appearance from the window, so push the override down to it.
-    // (Not on web, where react-native-web's Appearance has no setColorScheme.)
-    if (process.env.EXPO_OS !== "web") Appearance.setColorScheme(override ?? "auto");
-  }, [override]);
+    applyThemePreference(theme, colorScheme);
+  }, [theme, colorScheme]);
+
+  useEffect(() => subscribeToThemePreference(setThemeState), []);
+
+  function setTheme(next: ThemePreference) {
+    setThemeState(next);
+    saveThemePreference(next);
+  }
 
   function toggleTheme() {
-    setOverride((prev) => {
-      if (prev === null) return systemScheme === "dark" ? "light" : "dark";
-      return prev === "dark" ? "light" : "dark";
-    });
+    setTheme(colorScheme === "dark" ? "light" : "dark");
   }
 
   return (
-    <ThemeContext.Provider value={{ colorScheme, colors, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, colorScheme, colors, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

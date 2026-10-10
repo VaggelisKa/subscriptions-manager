@@ -8,8 +8,9 @@ import {
   useTheme,
   useThemeColors,
 } from "@/providers/theme-provider";
-import { loadThemeOverride, type ThemeOverride } from "@/lib/user-options";
-import { useFonts } from "expo-font";
+import type { ThemePreference } from "@/lib/theme-preference";
+import { loadThemePreference } from "@/lib/theme-storage";
+import { useAppFonts } from "@/lib/fonts";
 import { useColorScheme, View } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
@@ -37,25 +38,18 @@ function RootStack() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [initialThemeOverride, setInitialThemeOverride] = useState<
-    ThemeOverride | undefined
+  const [initialTheme, setInitialTheme] = useState<
+    ThemePreference | undefined
   >(undefined);
 
-  const [fontsLoaded, fontsError] = useFonts({
-    "Nunito-Regular": require("../../assets/fonts/Nunito-Regular.ttf"),
-    "Nunito-Medium": require("../../assets/fonts/Nunito-Medium.ttf"),
-    "Nunito-SemiBold": require("../../assets/fonts/Nunito-SemiBold.ttf"),
-    "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
-    "Nunito-ExtraBold": require("../../assets/fonts/Nunito-ExtraBold.ttf"),
-    "Nunito-Black": require("../../assets/fonts/Nunito-Black.ttf"),
-  });
+  const fontsReady = useAppFonts();
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadTheme() {
-      const stored = await loadThemeOverride();
-      if (isMounted) setInitialThemeOverride(stored);
+      const stored = await loadThemePreference();
+      if (isMounted) setInitialTheme(stored);
     }
 
     void loadTheme();
@@ -65,8 +59,7 @@ export default function RootLayout() {
     };
   }, []);
 
-  const appIsReady =
-    (fontsLoaded || !!fontsError) && initialThemeOverride !== undefined;
+  const appIsReady = fontsReady && initialTheme !== undefined;
 
   function onLayoutRootView() {
     if (appIsReady) {
@@ -82,7 +75,7 @@ export default function RootLayout() {
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <ThemeProvider
         colorScheme={colorScheme}
-        initialOverride={initialThemeOverride}
+        initialTheme={initialTheme}
       >
         <AuthProvider>
           <RootStack />
