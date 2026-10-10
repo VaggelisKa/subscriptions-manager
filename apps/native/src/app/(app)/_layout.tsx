@@ -82,7 +82,10 @@ export default function AppLayout() {
           // Solid from the first detent; a transparent background shows
           // the sheet's glass until it's dragged to full height.
           contentStyle: {
-            backgroundColor: PlatformColor("systemGroupedBackground"),
+            backgroundColor:
+              process.env.EXPO_OS === "ios"
+                ? PlatformColor("systemGroupedBackground")
+                : colors.background,
           },
           sheetAllowedDetents: [0.75, 1],
         }}

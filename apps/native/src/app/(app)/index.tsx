@@ -2,6 +2,7 @@ import { use, useRef, useState } from "react";
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { LayoutAnimationConfig } from "react-native-reanimated";
 import { Stack, router } from "expo-router";
+import Head from "expo-router/head";
 import { AuthContext } from "@/providers/auth-provider";
 import { useTheme, useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
@@ -118,6 +119,9 @@ export default function HomeScreen() {
   return (
     <>
       <Stack.Screen />
+      <Head>
+        <title>Your subscriptions</title>
+      </Head>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="chart.bar.fill"

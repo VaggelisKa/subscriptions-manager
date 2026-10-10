@@ -1,6 +1,7 @@
 import { use, useState } from "react";
 import { View, KeyboardAvoidingView, ScrollView } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import Head from "expo-router/head";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { haptics } from "@/lib/haptics";
@@ -53,6 +54,9 @@ export default function ForgotPasswordScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "" }} />
+      <Head>
+        <title>Forgot password</title>
+      </Head>
       <KeyboardAvoidingView
         behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: colors.background }}

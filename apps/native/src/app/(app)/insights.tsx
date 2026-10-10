@@ -1,6 +1,7 @@
 import { use, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Stack, router } from "expo-router";
+import Head from "expo-router/head";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { useSubscriptions } from "@/lib/use-subscriptions";
@@ -47,6 +48,9 @@ export default function InsightsScreen() {
 
   return (
     <>
+      <Head>
+        <title>Insights</title>
+      </Head>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           icon="xmark"

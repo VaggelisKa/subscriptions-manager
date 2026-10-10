@@ -35,7 +35,8 @@ export function ThemeProvider({
     void saveThemeOverride(override);
     // Native presentations outside our views (the date picker popup, alerts)
     // take their appearance from the window, so push the override down to it.
-    Appearance.setColorScheme(override ?? "auto");
+    // (Not on web, where react-native-web's Appearance has no setColorScheme.)
+    if (process.env.EXPO_OS !== "web") Appearance.setColorScheme(override ?? "auto");
   }, [override]);
 
   function toggleTheme() {
