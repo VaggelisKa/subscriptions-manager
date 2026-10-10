@@ -18,6 +18,8 @@ export async function loginWithMagicLinkAction(formData: FormData) {
       email,
       options: {
         emailRedirectTo: getURL(),
+        // Sign-in only: an unknown address must not create an account.
+        shouldCreateUser: false,
       },
     });
   } catch (error: any) {
