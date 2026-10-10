@@ -12,6 +12,7 @@ import { nextChargeDate } from "@subscriptions-manager/shared/billing";
 import { formatWholeNumber, intervalSuffix } from "@subscriptions-manager/shared/format";
 import { haptics } from "@/lib/haptics";
 import { fonts, radius, spacing, withAlpha } from "@/lib/theme";
+import { uiIcons } from "@/lib/ui-icons";
 import {
   periodFactor,
   type CategorySpend,
@@ -166,9 +167,11 @@ function CategoryRow({ category, period, open, onPress }: RowProps) {
       >
         <Image
           accessible={false}
-          source="sf:chevron.down"
+          source={
+            process.env.EXPO_OS === "ios" ? "sf:chevron.down" : uiIcons.chevronDown
+          }
           tintColor={colors.faint}
-          style={styles.chevron}
+          style={process.env.EXPO_OS === "ios" ? styles.chevron : styles.chevronSvg}
         />
       </Animated.View>
     </Pressable>
@@ -213,4 +216,6 @@ const styles = StyleSheet.create({
   },
   suffix: { fontFamily: fonts.semiBold, fontSize: 12 },
   chevron: { width: 12, height: 12, marginLeft: -2 },
+  // The web app's lucide chevron is drawn at 14px.
+  chevronSvg: { width: 14, height: 14, marginLeft: -2 },
 });

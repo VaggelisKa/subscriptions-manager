@@ -1,6 +1,4 @@
-import { Host, Picker, Text } from "@expo/ui/swift-ui";
-import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
-import { useTheme } from "@/providers/theme-provider";
+import { Segmented } from "@/components/ui/segmented";
 import { haptics } from "@/lib/haptics";
 import type { Period } from "./spend-by-category";
 
@@ -15,27 +13,17 @@ type Props = {
   onChange: (value: Period) => void;
 };
 
-/** Native segmented control for Week / Month / Year. */
+/** Segmented control for Week / Month / Year (SwiftUI on iOS, `.ios.tsx`). */
 export function PeriodPicker({ value, onChange }: Props) {
-  const { colorScheme } = useTheme();
-
   return (
-    <Host matchContents={{ vertical: true }} colorScheme={colorScheme}>
-      <Picker
-        selection={value}
-        onSelectionChange={(next) => {
-          if (next === value) return;
-          haptics.selection();
-          onChange(next as Period);
-        }}
-        modifiers={[pickerStyle("segmented")]}
-      >
-        {options.map((o) => (
-          <Text key={o.value} modifiers={[tag(o.value)]}>
-            {o.label}
-          </Text>
-        ))}
-      </Picker>
-    </Host>
+    <Segmented
+      label="Period"
+      options={options}
+      value={value}
+      onChange={(next) => {
+        haptics.selection();
+        onChange(next);
+      }}
+    />
   );
 }

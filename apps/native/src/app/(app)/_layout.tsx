@@ -1,10 +1,10 @@
 import { use, useEffect } from "react";
-import { PlatformColor } from "react-native";
 import { Redirect, router } from "expo-router";
 import { Stack } from "expo-router/stack";
 import { AuthContext } from "@/providers/auth-provider";
 import { useThemeColors } from "@/providers/theme-provider";
 import { stackScreenOptions } from "@/lib/stack-options";
+import { systemColor } from "@/lib/system-color";
 import { AuthLoading } from "@/components/auth/auth-loading";
 import { BootstrapErrorView } from "@/components/auth/bootstrap-error-view";
 
@@ -82,10 +82,7 @@ export default function AppLayout() {
           // Solid from the first detent; a transparent background shows
           // the sheet's glass until it's dragged to full height.
           contentStyle: {
-            backgroundColor:
-              process.env.EXPO_OS === "ios"
-                ? PlatformColor("systemGroupedBackground")
-                : colors.background,
+            backgroundColor: systemColor("systemGroupedBackground", colors.background),
           },
           sheetAllowedDetents: [0.75, 1],
         }}
