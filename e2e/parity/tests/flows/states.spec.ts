@@ -3,7 +3,8 @@ import { desktop, mobile } from "../../support/app";
 import { addFault } from "../../support/faults";
 
 // Flow 11: empty account, loading skeleton, load error + retry. Loading and error are made by
-// the Supabase proxy (support/supabase-proxy.mjs) for this flow's own users.
+// the Supabase proxy (support/supabase-proxy.mjs) for a user only this worker uses, so copies
+// of a test running in parallel (--repeat-each) can't see each other's faults.
 test.describe("flow 11: empty, loading, error", () => {
   test("empty account, desktop: the add form starts open; Cancel shows the empty state's button", async ({ login, page }) => {
     await login("empty");
@@ -30,9 +31,9 @@ test.describe("flow 11: empty, loading, error", () => {
     });
   });
 
-  test("loading skeleton while the data loads, then the ledger", async ({ login, page }) => {
-    await login("slow");
-    const release = await addFault("slow", "hold");
+  test("loading skeleton while the data loads, then the ledger", async ({ loginOwnUser, page }) => {
+    const user = await loginOwnUser();
+    const release = await addFault(user, "hold");
     try {
       await page.goto("/", { waitUntil: "commit" });
       await expect(page.getByRole("status", { name: "Loading subscriptions" })).toBeVisible();
@@ -44,9 +45,9 @@ test.describe("flow 11: empty, loading, error", () => {
     await expect(page.getByRole("status", { name: "Loading subscriptions" })).toHaveCount(0);
   });
 
-  test("load error, then Try again recovers", async ({ login, page }) => {
-    await login("retry");
-    const release = await addFault("retry", "error");
+  test("load error, then Try again recovers", async ({ loginOwnUser, page }) => {
+    const user = await loginOwnUser();
+    const release = await addFault(user, "error");
     try {
       await page.goto("/");
       await ready(page);

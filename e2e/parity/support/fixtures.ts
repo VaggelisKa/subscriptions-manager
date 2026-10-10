@@ -1,8 +1,9 @@
 import { test as base, expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { maxDiffPixelRatioFor } from "../thresholds";
-import { loginAs } from "./auth";
+import { cachedSignIn, loginAs, loginWith } from "./auth";
 import { checkAxe } from "./axe";
-import { FIXED_TIME, TARGET, type Target, type UserKey } from "./env";
+import { seedCopy } from "./db";
+import { FIXED_TIME, TARGET, workerUser, type FixtureUser, type Target, type UserKey } from "./env";
 
 export { expect };
 
@@ -18,6 +19,8 @@ type Fixtures = {
   target: Target;
   /** Signs a fixture user in for the next navigation (support/auth.ts). */
   login: (user: UserKey, options?: { fresh?: boolean }) => Promise<void>;
+  /** Signs in this worker slot's own copy of `populated` (env.ts workerUser), for tests that inject faults. */
+  loginOwnUser: () => Promise<FixtureUser>;
   /** Captures `<area>/<state>` at this project's width and theme: axe, then the screenshot. */
   shot: (area: string, state: string, options?: ShotOptions) => Promise<void>;
 };
@@ -44,6 +47,15 @@ export const test = base.extend<Fixtures>({
   login: async ({ context }, use) => {
     await use(async (user, options) => {
       await loginAs(context, user, options);
+    });
+  },
+
+  loginOwnUser: async ({ context }, use, testInfo) => {
+    await use(async () => {
+      const user = workerUser(testInfo.parallelIndex);
+      await seedCopy(user, "populated");
+      await loginWith(context, await cachedSignIn(`worker-${testInfo.parallelIndex}`, user));
+      return user;
     });
   },
 

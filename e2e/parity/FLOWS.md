@@ -16,7 +16,7 @@ Every flow must pass on `PARITY_TARGET=next` (proving the assertions aren't vacu
 | 8 | Deep link `/?s=<id>` | `deep-link.spec.ts` | `populated` | ✅ |
 | 9 | Theme system/light/dark, persisted | `theme.spec.ts` | `populated` | ✅ |
 | 10 | Resizing across 1024/1440 keeps the open item | `responsive.spec.ts` | `populated` | ✅ |
-| 11 | Empty account, loading skeleton, load error + retry | `states.spec.ts` | `empty`, `slow`, `retry` | ✅ |
+| 11 | Empty account, loading skeleton, load error + retry | `states.spec.ts` | `empty`, per-worker copies of `populated` | ✅ |
 | 12 | Realtime: a change in a second context appears without reload | `realtime.spec.ts` | `realtime` | ⏭ skipped (no Realtime in the Next app) |
 
 Write flows (2, 3, 4, 12) reseed their own user before and after each test (`seed(user)`), so

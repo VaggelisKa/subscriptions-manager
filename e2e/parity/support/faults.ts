@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { PROXY_URL, USERS, type UserKey } from "./env";
+import { PROXY_URL, USERS, type FixtureUser, type UserKey } from "./env";
 
 /**
  * Tells support/supabase-proxy.mjs to hold (`hold`: the request waits until the rule is
@@ -9,11 +9,11 @@ import { PROXY_URL, USERS, type UserKey } from "./env";
  * already failed, a failure to remove the rule is logged instead of thrown, so it doesn't hide
  * the original error.
  */
-export async function addFault(user: UserKey, mode: "hold" | "error", path = "/rest/v1/subscriptions") {
+export async function addFault(user: UserKey | FixtureUser, mode: "hold" | "error", path = "/rest/v1/subscriptions") {
   const res = await fetch(`${PROXY_URL}/__parity/faults`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ userId: USERS[user].id, path, mode }),
+    body: JSON.stringify({ userId: typeof user === "string" ? USERS[user].id : user.id, path, mode }),
   });
   if (!res.ok) throw new Error(`proxy rejected fault: ${res.status} ${await res.text()}`);
   const { id } = (await res.json()) as { id: number };
