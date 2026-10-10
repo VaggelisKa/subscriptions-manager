@@ -1,4 +1,5 @@
-import { withDb } from "../../support/db";
+import { randomUUID } from "node:crypto";
+import { seedCopy, withDb } from "../../support/db";
 import { MAILPIT_URL, USERS } from "../../support/env";
 import { expect, open, test } from "../../support/fixtures";
 import { desktop, mobile } from "../../support/app";
@@ -6,28 +7,49 @@ import { desktop, mobile } from "../../support/app";
 // Flow 1: sign in → home, sign out. Today's login is a magic link: the request is tested up to
 // "Check your email" (and the email reaching the local inbox); the session itself is created
 // programmatically. Uses its own user: sign-out is global and revokes all of its sessions.
+async function mailCount(email: string) {
+  const res = await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
+  return ((await res.json()) as { messages_count: number }).messages_count;
+}
+
 test.describe("flow 1: sign in and out", () => {
   test("magic link request shows Check your email", async ({ page }) => {
-    const email = `magic-${Date.now()}@parity.test`;
+    // Sign-in only (shouldCreateUser: false), so the address needs an account first.
+    const user = { id: randomUUID(), email: `magic-${Date.now()}@parity.test` };
     try {
+      await seedCopy(user, "empty");
       await open(page, "/login");
       await expect(page).toHaveTitle("Sign in");
-      await page.getByPlaceholder("Email").fill(email);
+      await page.getByPlaceholder("Email").fill(user.email);
       await page.getByRole("button", { name: "Email me a sign-in link" }).click();
       await expect(page).toHaveURL(/\/login\/confirmation$/);
       await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
       await expect(page).toHaveTitle("Check your email");
       // The link reached the local inbox (Mailpit).
-      await expect
-        .poll(async () => {
-          const res = await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
-          return ((await res.json()) as { messages_count: number }).messages_count;
-        })
-        .toBe(1);
+      await expect.poll(() => mailCount(user.email)).toBe(1);
       await page.getByRole("link", { name: "Use a different email" }).click();
       await expect(page).toHaveURL(/\/login$/);
     } finally {
-      // signInWithOtp signs the address up; don't leave it behind.
+      // Remove the account created for this test (its subscriptions cascade).
+      await withDb((sql) => sql`delete from auth.users where id = ${user.id}`);
+    }
+  });
+
+  test("an unknown address still shows Check your email, but no account or email is created", async ({ page }) => {
+    const email = `unknown-${Date.now()}@parity.test`;
+    try {
+      await open(page, "/login");
+      await page.getByPlaceholder("Email").fill(email);
+      await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+      await expect(page).toHaveURL(/\/login\/confirmation$/);
+      await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+      // Give a would-be email time to arrive before asserting there is none.
+      await page.waitForTimeout(2000);
+      expect(await mailCount(email)).toBe(0);
+      const rows = await withDb((sql) => sql`select 1 from auth.users where email = ${email}`);
+      expect(rows.length).toBe(0);
+    } finally {
+      // Only matters if the app regresses and signs the address up.
       await withDb((sql) => sql`delete from auth.users where email = ${email}`);
     }
   });
