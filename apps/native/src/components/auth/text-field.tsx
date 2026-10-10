@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import { useState, type Ref } from "react";
 import {
   Text,
   TextInput,
@@ -17,8 +17,11 @@ type Props = Omit<TextInputProps, "style"> & {
 };
 
 /** Filled, borderless text field. Errors draw a destructive ring. */
-export function TextField({ label, error = false, ref, placeholder, ...props }: Props) {
+export function TextField({ label, error = false, ref, placeholder, onFocus, onBlur, ...props }: Props) {
   const colors = useThemeColors();
+  // Web: like apps/web's fields, no browser outline; focus draws the primary ring instead.
+  const isWeb = process.env.EXPO_OS === "web";
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={{ gap: spacing.xs + 2 }}>
@@ -42,6 +45,14 @@ export function TextField({ label, error = false, ref, placeholder, ...props }: 
         accessibilityLabel={label ?? placeholder}
         selectionColor={colors.primary}
         {...props}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         style={{
           minHeight: 52,
           paddingHorizontal: 14,
@@ -49,7 +60,13 @@ export function TextField({ label, error = false, ref, placeholder, ...props }: 
           borderCurve: "continuous",
           backgroundColor: colors.surface,
           borderWidth: 1.5,
-          borderColor: error ? colors.destructive : "transparent",
+          borderColor: error
+            ? colors.destructive
+            : isWeb && focused
+              ? colors.primary
+              : "transparent",
+          // RN Web takes "none"; React Native's types only list solid/dotted/dashed.
+          ...(isWeb ? ({ outlineStyle: "none" } as object) : null),
           fontFamily: fonts.regular,
           fontSize: 16,
           color: colors.foreground,

@@ -1,24 +1,42 @@
 import React, { createContext, useState, useEffect } from "react";
-import * as Linking from "expo-linking";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
-import { type Session, type User } from "@supabase/supabase-js";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { createPasswordReset } from "@/lib/password-reset";
+import { type EmailOtpType, type Session, type User } from "@supabase/supabase-js";
+
+type Result = { error?: string };
+/** `needsConfirmation`: the account exists but its email isn't confirmed; a code was sent. */
+type ConfirmableResult = Result & { needsConfirmation?: boolean };
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
   bootstrapError: string | null;
-  isPasswordRecovery: boolean;
-  isProcessingResetLink: boolean;
+  /** A code-based password reset has signed the user in but no new password is set yet (§9.4). */
+  passwordResetPending: boolean;
   clearBootstrapError: () => void;
-  clearPasswordRecovery: () => void;
   retryBootstrap: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string) => Promise<{ error?: string }>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error?: string }>;
-  updatePassword: (password: string) => Promise<{ error?: string }>;
-  reauthenticate: (password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string) => Promise<ConfirmableResult>;
+  signUp: (email: string, password: string) => Promise<ConfirmableResult>;
+  /** Emails a sign-in code to an existing account (never creates one). */
+  sendSignInCode: (email: string) => Promise<Result>;
+  /** Emails a new sign-up confirmation code. */
+  resendSignUpCode: (email: string) => Promise<Result>;
+  /** Verifies a sign-in or sign-up confirmation code; signs the user in. */
+  verifyEmailCode: (email: string, code: string) => Promise<Result>;
+  /** Verifies a `token_hash` from an email link (/auth/confirm). */
+  verifyEmailLink: (tokenHash: string, type: EmailOtpType) => Promise<Result>;
+  /** Signs out on this device, or with `"global"` on every device. */
+  signOut: (scope?: "local" | "global") => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<Result>;
+  verifyPasswordResetCode: (email: string, code: string) => Promise<Result>;
+  /** Sets the new password; ends a pending reset. */
+  updatePassword: (password: string) => Promise<Result>;
+  /** Leaves a pending reset and signs out on this device. */
+  cancelPasswordReset: () => Promise<void>;
+  reauthenticate: (password: string) => Promise<Result>;
   deleteAccount: (
     confirmIdentity: () => Promise<boolean>,
   ) => Promise<{ error?: string; cancelled?: boolean }>;
@@ -29,34 +47,23 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   bootstrapError: null,
-  isPasswordRecovery: false,
-  isProcessingResetLink: false,
+  passwordResetPending: false,
   clearBootstrapError: () => {},
-  clearPasswordRecovery: () => {},
   retryBootstrap: async () => {},
   signIn: async () => ({}),
   signUp: async () => ({}),
+  sendSignInCode: async () => ({}),
+  resendSignUpCode: async () => ({}),
+  verifyEmailCode: async () => ({}),
+  verifyEmailLink: async () => ({}),
   signOut: async () => {},
-  resetPassword: async () => ({}),
+  requestPasswordReset: async () => ({}),
+  verifyPasswordResetCode: async () => ({}),
   updatePassword: async () => ({}),
+  cancelPasswordReset: async () => {},
   reauthenticate: async () => ({}),
   deleteAccount: async () => ({}),
 });
-
-function parseHashParams(url: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  const hashIndex = url.indexOf("#");
-  if (hashIndex === -1) return params;
-
-  const hash = url.substring(hashIndex + 1);
-  hash.split("&").forEach((pair) => {
-    const [key, value] = pair.split("=");
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
-  });
-  return params;
-}
 
 /** True if `invoke` couldn't reach the function at all. Checked by shape, like `functionErrorCode`. */
 function isFunctionsFetchError(error: unknown) {
@@ -95,9 +102,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
-  const [isProcessingResetLink, setIsProcessingResetLink] = useState(false);
+  const [passwordResetPending, setPasswordResetPending] = useState(false);
+  // The persisted reset flag is read with the session, so no layout redirects before it's known.
+  const [resetRestored, setResetRestored] = useState(false);
   const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
+
+  const passwordReset = createPasswordReset({
+    auth: supabase.auth,
+    storage: AsyncStorage,
+    setPending: setPasswordResetPending,
+    errorMessage: authErrorMessage,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -110,55 +125,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return "Could not reconnect to Supabase. Check your connection or backend status and try again.";
     }
 
-    async function processResetUrl(url: string) {
-      if (!url.includes("reset-password")) return;
-
-      const params = parseHashParams(url);
-      const accessToken = params.access_token;
-      const refreshToken = params.refresh_token;
-
-      if (!accessToken || !refreshToken) return;
-
-      if (isMounted) {
-        setIsProcessingResetLink(true);
-      }
-
-      try {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          console.warn(
-            "Failed to restore password recovery session:",
-            error.message,
-          );
-          return;
-        }
-
-        if (isMounted) {
-          setIsPasswordRecovery(true);
-        }
-      } catch (error) {
-        console.warn("Failed to process password recovery link:", error);
-      } finally {
-        if (isMounted) {
-          setIsProcessingResetLink(false);
-        }
-      }
-    }
-
     async function hydrateSession() {
       if (isMounted) {
         setLoading(true);
         setBootstrapError(null);
       }
 
+      // Unknown if restoring failed: then the flag is kept until a later attempt can tell.
+      let hasSession = true;
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
+        hasSession = !!session;
 
         if (isMounted) {
           setSession(session);
@@ -172,7 +151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setBootstrapError(getBootstrapErrorMessage(error));
         }
       } finally {
+        await passwordReset.restore(hasSession);
         if (isMounted) {
+          setResetRestored(true);
           setLoading(false);
         }
       }
@@ -188,32 +169,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setLoading(false);
       setBootstrapError(null);
-      if (event === "PASSWORD_RECOVERY") {
-        setIsPasswordRecovery(true);
-      }
-    });
-
-    void Linking.getInitialURL().then((url) => {
-      if (url) processResetUrl(url);
-    });
-
-    const linkingSub = Linking.addEventListener("url", ({ url }) => {
-      void processResetUrl(url);
+      // A reset can't continue without its session (e.g. it expired or was revoked).
+      if (event === "SIGNED_OUT") void passwordReset.abandon();
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-      linkingSub.remove();
     };
   }, [bootstrapAttempt]);
 
   function clearBootstrapError() {
     setBootstrapError(null);
-  }
-
-  function clearPasswordRecovery() {
-    setIsPasswordRecovery(false);
   }
 
   async function retryBootstrap() {
@@ -226,35 +193,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
     });
-    if (error) return { error: error.message };
+    if (error?.code === "email_not_confirmed") {
+      // Signed up but never entered the code: send a fresh one and continue there.
+      const resent = await resendSignUpCode(email);
+      if (resent.error) return resent;
+      return { needsConfirmation: true };
+    }
+    if (error) return { error: authErrorMessage(error) };
     return {};
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) return { error: error.message };
-    return {};
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { error: authErrorMessage(error) };
+    if (data.session) return {}; // Confirmations are off: already signed in.
+    // With confirmations on, an address that already has an account gets a user without
+    // identities and no email.
+    if (data.user && data.user.identities?.length === 0) {
+      return { error: "There's already an account for this email. Sign in instead." };
+    }
+    return { needsConfirmation: true };
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
-
-  async function resetPassword(email: string) {
-    const redirectTo = Linking.createURL("reset-password");
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
+  async function sendSignInCode(email: string) {
+    setBootstrapError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
     });
-
-    if (error) return { error: error.message };
-
+    if (error) return { error: authErrorMessage(error) };
     return {};
+  }
+
+  async function resendSignUpCode(email: string) {
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    if (error) return { error: authErrorMessage(error) };
+    return {};
+  }
+
+  async function verifyEmailCode(email: string, code: string) {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code.trim(),
+      type: "email",
+    });
+    if (error) return { error: authErrorMessage(error) };
+    return {};
+  }
+
+  async function verifyEmailLink(tokenHash: string, type: EmailOtpType) {
+    // A recovery link signs the user in too; hold the redirect like the code does.
+    if (type === "recovery") await passwordReset.begin();
+    try {
+      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) {
+        if (type === "recovery") await passwordReset.abandon();
+        return { error: authErrorMessage(error) };
+      }
+      return {};
+    } catch (error) {
+      if (type === "recovery") await passwordReset.abandon();
+      throw error;
+    }
+  }
+
+  async function signOut(scope: "local" | "global" = "local") {
+    const { error } = await supabase.auth.signOut({ scope });
+    if (error) console.warn(`Sign-out (${scope}) failed:`, error);
+  }
+
+  async function requestPasswordReset(email: string) {
+    return passwordReset.requestCode(email);
+  }
+
+  async function verifyPasswordResetCode(email: string, code: string) {
+    return passwordReset.verifyCode(email, code);
   }
 
   async function updatePassword(password: string) {
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) return { error: error.message };
-    return {};
+    return passwordReset.setPassword(password);
+  }
+
+  async function cancelPasswordReset() {
+    await passwordReset.cancel();
   }
 
   /** Confirms the current user's password, which also counts as a fresh sign-in. */
@@ -316,18 +337,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         user: session?.user ?? null,
-        loading,
+        loading: loading || !resetRestored,
         bootstrapError,
-        isPasswordRecovery,
-        isProcessingResetLink,
+        passwordResetPending,
         clearBootstrapError,
-        clearPasswordRecovery,
         retryBootstrap,
         signIn,
         signUp,
+        sendSignInCode,
+        resendSignUpCode,
+        verifyEmailCode,
+        verifyEmailLink,
         signOut,
-        resetPassword,
+        requestPasswordReset,
+        verifyPasswordResetCode,
         updatePassword,
+        cancelPasswordReset,
         reauthenticate,
         deleteAccount,
       }}
