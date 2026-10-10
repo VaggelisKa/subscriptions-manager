@@ -10,7 +10,7 @@ import {
 } from "@/providers/theme-provider";
 import type { ThemePreference } from "@/lib/theme-preference";
 import { loadThemePreference } from "@/lib/theme-storage";
-import { useFonts } from "expo-font";
+import { useAppFonts } from "@/lib/fonts";
 import { useColorScheme, View } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
@@ -42,14 +42,7 @@ export default function RootLayout() {
     ThemePreference | undefined
   >(undefined);
 
-  const [fontsLoaded, fontsError] = useFonts({
-    "Nunito-Regular": require("../../assets/fonts/Nunito-Regular.ttf"),
-    "Nunito-Medium": require("../../assets/fonts/Nunito-Medium.ttf"),
-    "Nunito-SemiBold": require("../../assets/fonts/Nunito-SemiBold.ttf"),
-    "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
-    "Nunito-ExtraBold": require("../../assets/fonts/Nunito-ExtraBold.ttf"),
-    "Nunito-Black": require("../../assets/fonts/Nunito-Black.ttf"),
-  });
+  const fontsReady = useAppFonts();
 
   useEffect(() => {
     let isMounted = true;
@@ -66,8 +59,7 @@ export default function RootLayout() {
     };
   }, []);
 
-  const appIsReady =
-    (fontsLoaded || !!fontsError) && initialTheme !== undefined;
+  const appIsReady = fontsReady && initialTheme !== undefined;
 
   function onLayoutRootView() {
     if (appIsReady) {

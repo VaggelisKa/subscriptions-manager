@@ -1,11 +1,17 @@
+/**
+ * On web, text that renders before Nunito has loaded (src/lib/fonts.web.ts) falls back to the
+ * stack apps/web uses instead of the browser's serif default.
+ */
+const webFallback = process.env.EXPO_OS === "web" ? ", ui-rounded, system-ui, sans-serif" : "";
+
 export const fonts = {
-  regular: "Nunito-Regular",
-  medium: "Nunito-Medium",
-  semiBold: "Nunito-SemiBold",
-  bold: "Nunito-Bold",
-  extraBold: "Nunito-ExtraBold",
-  black: "Nunito-Black",
-} as const;
+  regular: `Nunito-Regular${webFallback}`,
+  medium: `Nunito-Medium${webFallback}`,
+  semiBold: `Nunito-SemiBold${webFallback}`,
+  bold: `Nunito-Bold${webFallback}`,
+  extraBold: `Nunito-ExtraBold${webFallback}`,
+  black: `Nunito-Black${webFallback}`,
+};
 
 /**
  * Corner radii, always paired with `borderCurve: "continuous"`.
